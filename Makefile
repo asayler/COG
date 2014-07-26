@@ -4,8 +4,8 @@
 
 ECHO = @echo
 
-PYTHON = python2
-PIP = pip2
+PYTHON = python
+PIP = pip
 
 REQUIRMENTS = requirments.txt
 
