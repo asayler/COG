@@ -22,7 +22,7 @@ _KEY_ASSIGNMENTS = "assignments"
 #     permissions <Future>
 
 
-# Exceptions
+### Exceptions
 
 class RedisObjectError(Exception):
     """Base class for Redis Object Exceptions"""
@@ -50,7 +50,8 @@ class UUIDRedisObjectMissing(UUIDRedisObjectError):
         msg = "{:s} exists, but is missing.".format(obj)
         super(UUIDRedisObjectMissing, self).__init__(msg)
 
-# Objects
+
+### Objects
 
 class RedisObject(object):
     """
