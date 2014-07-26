@@ -119,13 +119,6 @@ class Server(RedisObject):
     def assignments_list(self):
         return self.db.smembers(_KEY_ASSIGNMENTS)
 
-    def assignments_create(self, a_dict):
-        return Assignment.from_new(a_dict)
-
-    def assignments_get(self, uuid_hex):
-        return Assignment.from_existing(uuid_hex)
-
-
 class Assignment(UUIDRedisObject):
     """
     COGS Assignment Class
@@ -135,6 +128,7 @@ class Assignment(UUIDRedisObject):
     def __init__(self, uuid_obj):
         """Base Constructor"""
         super(Assignment, self).__init__(uuid_obj)
+        self.key = "{:s}:{:s}".format(_KEY_ASSIGNMENTS, repr(self))
 
     @classmethod
     def from_new(cls, a_dict):
@@ -143,12 +137,15 @@ class Assignment(UUIDRedisObject):
         # Create Assignment
         asn = super(Assignment, cls).from_new()
 
-        # Add Assingmnet ID to Set
-        asn.db.sadd(_KEY_ASSIGNMENTS, repr(asn))
-
+        # Create Atomic Pipeline
+        p = asn.db.pipeline(transaction=True)
+        # Add Assingment ID to Set
+        p.sadd(_KEY_ASSIGNMENTS, repr(asn))
         # Add Assignment Data to DB
-        key = "{:s}:{:s}".format(_KEY_ASSIGNMENTS, repr(asn))
-        asn.db.hmset(key, a_dict)
+        p.hmset(asn.key, a_dict)
+        # Execute Pipeline
+        if not all(p.execute()):
+            raise UUIDRedisObjectError("Create Failed")
 
         # Return Assignment
         return asn
@@ -164,10 +161,20 @@ class Assignment(UUIDRedisObject):
         if not asn.db.sismember(_KEY_ASSIGNMENTS, repr(asn)):
             raise UUIDRedisObjectDNE(asn)
 
-        # Verify Assignment Data in DB
-        key = "{:s}:{:s}".format(_KEY_ASSIGNMENTS, repr(asn))
-        if not asn.db.exists(key):
-            raise UUIDRedisObjectMissing(asn)
-
         # Return Assignment
         return asn
+
+    def delete(self):
+        """Delete Assignment"""
+
+        # Create Atomic Pipeline
+        p = self.db.pipeline(transaction=True)
+        # Delete Assignment Data from DB
+        p.delete(self.key)
+        # Remove Assingment ID from Set
+        p.srem(_KEY_ASSIGNMENTS, repr(self))
+        # Execute Pipeline
+        if not all(p.execute()):
+            return False
+        else:
+            return True
