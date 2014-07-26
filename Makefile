@@ -19,7 +19,7 @@ all:
 	$(ECHO) "This is a python project; nothing to build!"
 
 reqs: $(REQUIRMENTS)
-	sudo $(PIP) install -r $(REQUIRMENTS)
+	$(PIP) install -r $(REQUIRMENTS) --use-mirrors
 
 test:
 	$(PYTHON) -m unittest discover -v -p $(UNITTEST_PATTERN)
