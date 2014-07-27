@@ -15,12 +15,7 @@ _REDIS_PORT = 6379
 _REDIS_DB   = 3
 
 _KEY_ASSIGNMENTS = "assignments"
-
-# assignment:
-#     name
-#     contact
-#     permissions <Future>
-
+_ASSIGNMENT_SCHEMA = ['name', 'contact']
 
 ### Exceptions
 
@@ -135,6 +130,10 @@ class Assignment(UUIDRedisObject):
     def from_new(cls, a_dict):
         """New Constructor"""
 
+        # Check dict
+        if (set(a_dict.keys()) != set(_ASSIGNMENT_SCHEMA)):
+            raise KeyError("Keys {:s} do not match schema {:s}".format(a_dict, _ASSIGNMENT_SCHEMA))
+
         # Create Assignment
         asn = super(Assignment, cls).from_new()
 
@@ -179,3 +178,15 @@ class Assignment(UUIDRedisObject):
             return False
         else:
             return True
+
+    def __getitem__(self, k):
+        if k in _ASSIGNMENT_SCHEMA:
+            return self.db.hget(self.key, k)
+        else:
+            raise KeyError("Key {:s} not valid in {:s}".format(k, self))
+
+    def __setitem__(self, k, v):
+        if k in _ASSIGNMENT_SCHEMA:
+            return self.db.hset(self.key, k, v)
+        else:
+            raise KeyError("Key {:s} not valid in {:s}".format(k, self))
