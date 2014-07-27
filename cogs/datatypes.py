@@ -115,6 +115,7 @@ class Server(RedisObject):
     def assignments_list(self):
         return self.db.smembers(_KEY_ASSIGNMENTS)
 
+
 class Assignment(UUIDRedisObject):
     """
     COGS Assignment Class
@@ -127,12 +128,12 @@ class Assignment(UUIDRedisObject):
         self.key = "{:s}:{:s}".format(_KEY_ASSIGNMENTS, repr(self))
 
     @classmethod
-    def from_new(cls, a_dict):
+    def from_new(cls, d):
         """New Constructor"""
 
         # Check dict
-        if (set(a_dict.keys()) != set(_ASSIGNMENT_SCHEMA)):
-            raise KeyError("Keys {:s} do not match schema {:s}".format(a_dict, _ASSIGNMENT_SCHEMA))
+        if (set(d.keys()) != set(_ASSIGNMENT_SCHEMA)):
+            raise KeyError("Keys {:s} do not match schema {:s}".format(d, _ASSIGNMENT_SCHEMA))
 
         # Create Assignment
         asn = super(Assignment, cls).from_new()
@@ -142,7 +143,7 @@ class Assignment(UUIDRedisObject):
         # Add Assingment ID to Set
         p.sadd(_KEY_ASSIGNMENTS, repr(asn))
         # Add Assignment Data to DB
-        p.hmset(asn.key, a_dict)
+        p.hmset(asn.key, d)
         # Execute Pipeline
         if not all(p.execute()):
             raise UUIDRedisObjectError("Create Failed")
@@ -175,9 +176,20 @@ class Assignment(UUIDRedisObject):
         p.srem(_KEY_ASSIGNMENTS, repr(self))
         # Execute Pipeline
         if not all(p.execute()):
-            return False
-        else:
-            return True
+            raise UUIDRedisObjectError("Delete Failed")
+
+    def get_dict(self):
+        """Get Dict from Assignment"""
+        d = self.db.hgetall(self.key)
+        return d
+
+    def set_dict(self, d):
+        """Set Dict for Assignment"""
+        # Check dict
+        if (set(d.keys()) != set(_ASSIGNMENT_SCHEMA)):
+            raise KeyError("Keys {:s} do not match schema {:s}".format(d, _ASSIGNMENT_SCHEMA))
+        # Set dict
+        self.db.hmset(self.key, d)
 
     def __getitem__(self, k):
         if k in _ASSIGNMENT_SCHEMA:

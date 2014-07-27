@@ -92,6 +92,32 @@ class AssignmentTestCase(DatatypesTestCase):
         a2 = datatypes.Assignment.from_existing(a2_uuid)
         self.assertEqual(a1, a2)
 
+    def test_get_dict(self):
+        # Generate 10 Assingments
+        for i in range(10):
+            d_in = {}
+            d_in['name'] = "Test_Assignment_{:02d}".format(i)
+            d_in['contact'] = "Andy Sayler"
+            a = datatypes.Assignment.from_new(d_in)
+            d_out = a.get_dict()
+            # Test Equal
+            self.assertEqual(d_in, d_out)
+
+    def test_set_dict(self):
+        # Generate 10 Assingments
+        for i in range(10):
+            d_1 = {}
+            d_1['name'] = "Test_Assignment_{:02d}".format(i)
+            d_1['contact'] = "Andy Sayler"
+            a = datatypes.Assignment.from_new(d_1)
+            self.assertEqual(d_1, a.get_dict())
+            d_2 = {}
+            d_2['name'] = "Test_Assignment_Updated".format(i)
+            d_2['contact'] = "Andy Sayler the 3rd"
+            a.set_dict(d_2)
+            # Test Equal
+            self.assertEqual(d_2, a.get_dict())
+
     def test_getitem(self):
 
         def get_item(d, k):
