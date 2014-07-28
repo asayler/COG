@@ -11,11 +11,13 @@ import cogs.datatypes as datatypes
 
 app = flask.Flask(__name__)
 
+_MSG_ROOT = "Welcome to the CU CS Online Grading System API"
+
 ### Endpoints
 
 @app.route("/", methods=['GET'])
 def get_root():
-    res = "Welcome to the CU CS Online Grading System API"
+    res = _MSG_ROOT
     return res
 
 @app.route("/assignments/", methods=['GET'])
