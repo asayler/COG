@@ -15,6 +15,8 @@ import cogs_api
 
 _REDIS_TESTDB_OFFSET = 1
 
+_ASSIGNMENTS_KEY = "assignments"
+
 class CogsApiTestCase(unittest.TestCase):
 
     @classmethod
@@ -143,7 +145,7 @@ class CogsApiTestCase(unittest.TestCase):
         res_a = self.app.get('/assignments/')
         self.assertEqual(res_a.status_code, 200, "Bad return status")
         a_dict = json.loads(res_a.data)
-        assignments_out = set(a_dict[cogs_api.datatypes._KEY_ASSIGNMENTS])
+        assignments_out = set(a_dict[_ASSIGNMENTS_KEY])
         self.assertEqual(assignments_in, assignments_out, "Assignment lists do not match")
 
         # Create Assignments
@@ -162,7 +164,7 @@ class CogsApiTestCase(unittest.TestCase):
         res_b = self.app.get('/assignments/')
         self.assertEqual(res_b.status_code, 200, "Bad return status")
         b_dict = json.loads(res_b.data)
-        assignments_out = set(b_dict[cogs_api.datatypes._KEY_ASSIGNMENTS])
+        assignments_out = set(b_dict[_ASSIGNMENTS_KEY])
         self.assertEqual(assignments_in, assignments_out, "Assignment lists do not match")
 
         # Delete Assignments
@@ -175,7 +177,7 @@ class CogsApiTestCase(unittest.TestCase):
         res_d = self.app.get('/assignments/')
         self.assertEqual(res_d.status_code, 200, "Bad return status")
         d_dict = json.loads(res_d.data)
-        assignments_out = set(d_dict[cogs_api.datatypes._KEY_ASSIGNMENTS])
+        assignments_out = set(d_dict[_ASSIGNMENTS_KEY])
         self.assertEqual(assignments_in, assignments_out, "Assignment lists do not match")
 
 
