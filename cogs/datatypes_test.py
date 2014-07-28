@@ -169,24 +169,118 @@ class ServerTestCase(DatatypesTestCase):
         del(self.s)
         super(ServerTestCase, self).tearDown()
 
-    def test_assignments_list(self):
+    def test_list_assignments(self):
 
         assignments_in = set([])
 
         # List Assignments (Empty DB)
-        assignments_out = self.s.assignments_list()
+        assignments_out = self.s.list_assignments()
         self.assertEqual(assignments_in, assignments_out, "Assignment Sets Differ")
 
         # Generate 10 Assingments
         for i in range(10):
-            a_dict = {}
-            a_dict['name'] = "Test_Assignment_{:02d}".format(i)
-            a_dict['contact'] = "Andy Sayler"
-            assignments_in.add(repr(datatypes.Assignment.from_new(a_dict)))
+            d = copy.deepcopy(_ASSIGNMENT_TESTDICT)
+            for k in d:
+                d[k] = d[k] + "_test_{:02d}".format(i)
+            assignments_in.add(repr(datatypes.Assignment.from_new(d)))
 
         # List Assignments
-        assignments_out = self.s.assignments_list()
+        assignments_out = self.s.list_assignments()
         self.assertEqual(assignments_in, assignments_out, "Assignment Sets Differ")
+
+
+class AssignmentTestCase(DatatypesTestCase):
+
+    def setUp(self):
+        super(AssignmentTestCase, self).setUp()
+
+    def tearDown(self):
+        super(AssignmentTestCase, self).tearDown()
+
+    def test_from_new(self):
+
+        # Test Empty Dict
+        d = {}
+        self.assertRaises(KeyError, datatypes.Assignment.from_new, d)
+
+        # Test Bad Dict
+        d = {'test': "test"}
+        self.assertRaises(KeyError, datatypes.Assignment.from_new, d)
+
+        # Test Sub Dict
+        d = copy.deepcopy(_ASSIGNMENT_TESTDICT)
+        d.pop(d.keys()[0])
+        self.assertRaises(KeyError, datatypes.Assignment.from_new, d)
+
+        # Test Super Dict
+        d = copy.deepcopy(_ASSIGNMENT_TESTDICT)
+        d['test'] = "test"
+        self.assertRaises(KeyError, datatypes.Assignment.from_new, d)
+
+        # Test Valid
+        d = copy.deepcopy(_ASSIGNMENT_TESTDICT)
+        a = datatypes.Assignment.from_new(d)
+
+    def test_from_existing(self):
+
+        # Test Invalid UUID
+        self.assertRaises(datatypes.UUIDRedisObjectDNE,
+                          datatypes.Assignment.from_existing,
+                          'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
+
+        # Test Valid UUID
+        d = copy.deepcopy(_ASSIGNMENT_TESTDICT)
+        obj1 = datatypes.Assignment.from_new(d)
+        obj1_uuid = repr(obj1)
+        obj2 = datatypes.Assignment.from_existing(obj1_uuid)
+        self.assertEqual(obj1, obj2)
+
+class AssignmentTestTestCase(DatatypesTestCase):
+
+    def setUp(self):
+        super(AssignmentTestTestCase, self).setUp()
+        self.asn = datatypes.Assignment.from_new(_ASSIGNMENT_TESTDICT)
+
+    def tearDown(self):
+        super(AssignmentTestTestCase, self).tearDown()
+
+    def test_create_test(self):
+
+        # Test Empty Dict
+        d = {}
+        self.assertRaises(KeyError, self.asn.create_test, d)
+
+        # Test Bad Dict
+        d = {'test': "test"}
+        self.assertRaises(KeyError, self.asn.create_test, d)
+
+        # Test Sub Dict
+        d = copy.deepcopy(_ASSIGNMENTTEST_TESTDICT)
+        d.pop(d.keys()[0])
+        self.assertRaises(KeyError, self.asn.create_test, d)
+
+        # Test Super Dict
+        d = copy.deepcopy(_ASSIGNMENTTEST_TESTDICT)
+        d['test'] = "test"
+        self.assertRaises(KeyError, self.asn.create_test, d)
+
+        # Test Valid
+        d = copy.deepcopy(_ASSIGNMENTTEST_TESTDICT)
+        tst = self.asn.create_test(d)
+
+    def test_from_existing(self):
+
+        # Test Invalid UUID
+        self.assertRaises(datatypes.UUIDRedisObjectDNE,
+                          self.asn.get_test,
+                          'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
+
+        # Test Valid UUID
+        d = copy.deepcopy(_ASSIGNMENTTEST_TESTDICT)
+        obj1 = self.asn.create_test(d)
+        obj1_uuid = repr(obj1)
+        obj2 = self.asn.get_test(obj1_uuid)
+        self.assertEqual(obj1, obj2)
 
 
 # Main
