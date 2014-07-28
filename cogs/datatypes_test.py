@@ -5,6 +5,7 @@
 # Summer 2014
 # Univerity of Colorado
 
+import copy
 import unittest
 
 import redis
@@ -13,11 +14,23 @@ import datatypes
 
 _REDIS_TESTDB_OFFSET = 1
 
+_UUIDREDISOBJECT_TESTDICT = {'key1': "val1",
+                             'key2': "val2",
+                             'key3': "val3"}
+_ASSIGNMENT_TESTDICT      = {'name': "Test_Assignment",
+                             'contact': "Andy Sayler"}
+_ASSIGNMENTTEST_TESTDICT  = {'name': "Test_Assignment",
+                             'contact': "Andy Sayler",
+                             'path': "/tmp/test.py",
+                             'maxscore': 10}
+
+
 class DatatypesTestError(Exception):
     """Base class for Redis Object Exceptions"""
 
     def __init__(self, *args, **kwargs):
         super(DatatypesTestError, self).__init__(*args, **kwargs)
+
 
 class DatatypesTestCase(unittest.TestCase):
 
@@ -41,115 +54,109 @@ class DatatypesTestCase(unittest.TestCase):
         self.db.flushdb()
         datatypes._REDIS_DB -= _REDIS_TESTDB_OFFSET
 
-class AssignmentTestCase(DatatypesTestCase):
+
+class UUIDRedisObjectTestCase(DatatypesTestCase):
 
     def setUp(self):
-        super(AssignmentTestCase, self).setUp()
+        super(UUIDRedisObjectTestCase, self).setUp()
 
     def tearDown(self):
-        super(AssignmentTestCase, self).tearDown()
+        super(UUIDRedisObjectTestCase, self).tearDown()
 
     def test_from_new(self):
 
         # Test Empty Dict
         d = {}
-        self.assertRaises(KeyError, datatypes.Assignment.from_new, d)
+        self.assertRaises(KeyError, datatypes.UUIDRedisObject.from_new, d)
 
         # Test Bad Dict
         d = {'test': "test"}
-        self.assertRaises(KeyError, datatypes.Assignment.from_new, d)
+        self.assertRaises(KeyError, datatypes.UUIDRedisObject.from_new, d)
 
         # Test Sub Dict
-        d = {'name': "Test_Assignment"}
-        self.assertRaises(KeyError, datatypes.Assignment.from_new, d)
+        d = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
+        d.pop(d.keys()[0])
+        self.assertRaises(KeyError, datatypes.UUIDRedisObject.from_new, d)
 
-        # Test Supper Dict
-        d = {'name': "Test_Assignment",
-             'contact': "Andy Sayler",
-             'Test': 'Test'}
-        self.assertRaises(KeyError, datatypes.Assignment.from_new, d)
+        # Test Super Dict
+        d = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
+        d['test'] = "test"
+        self.assertRaises(KeyError, datatypes.UUIDRedisObject.from_new, d)
 
         # Test Valid
-        d = {'name': "Test_Assignment",
-             'contact': "Andy Sayler"}
-        a = datatypes.Assignment.from_new(d)
+        d = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
+        a = datatypes.UUIDRedisObject.from_new(d)
 
     def test_from_existing(self):
 
         # Test Invalid UUID
         self.assertRaises(datatypes.UUIDRedisObjectDNE,
-                          datatypes.Assignment.from_existing,
+                          datatypes.UUIDRedisObject.from_existing,
                           'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
 
         # Test Valid UUID
-        d = {'name': "Test_Assignment",
-             'contact': "Andy Sayler"}
-        a1 = datatypes.Assignment.from_new(d)
-        a2_uuid = repr(a1)
-        a2 = datatypes.Assignment.from_existing(a2_uuid)
-        self.assertEqual(a1, a2)
+        d = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
+        obj1 = datatypes.UUIDRedisObject.from_new(d)
+        obj1_uuid = repr(obj1)
+        obj2 = datatypes.UUIDRedisObject.from_existing(obj1_uuid)
+        self.assertEqual(obj1, obj2)
 
     def test_get_dict(self):
-        # Generate 10 Assingments
-        for i in range(10):
-            d_in = {}
-            d_in['name'] = "Test_Assignment_{:02d}".format(i)
-            d_in['contact'] = "Andy Sayler"
-            a = datatypes.Assignment.from_new(d_in)
-            d_out = a.get_dict()
-            # Test Equal
-            self.assertEqual(d_in, d_out)
+
+        # Create and Get Object
+        d_in = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
+        obj = datatypes.UUIDRedisObject.from_new(d_in)
+        d_out = obj.get_dict()
+        self.assertEqual(d_in, d_out)
 
     def test_set_dict(self):
-        # Generate 10 Assingments
-        for i in range(10):
-            d_1 = {}
-            d_1['name'] = "Test_Assignment_{:02d}".format(i)
-            d_1['contact'] = "Andy Sayler"
-            a = datatypes.Assignment.from_new(d_1)
-            self.assertEqual(d_1, a.get_dict())
-            d_2 = {}
-            d_2['name'] = "Test_Assignment_Updated".format(i)
-            d_2['contact'] = "Andy Sayler the 3rd"
-            a.set_dict(d_2)
-            # Test Equal
-            self.assertEqual(d_2, a.get_dict())
+
+        # Create and Get Object
+        d1_in = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
+        obj = datatypes.UUIDRedisObject.from_new(d1_in)
+        d1_out = obj.get_dict()
+        self.assertEqual(d1_in, d1_out)
+
+        # Update and Get Object
+        d2_in = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
+        for k in d2_in:
+            d2_in[k] = "set_dict_test_val_{:s}".format(k)
+        self.assertNotEqual(d1_in, d2_in)
+        obj.set_dict(d2_in)
+        d2_out = obj.get_dict()
+        self.assertEqual(d2_in, d2_out)
 
     def test_getitem(self):
 
+        # Temp Get Funcation
         def get_item(d, k):
             return d[k]
 
-        # Generate 10 Assingments
-        for i in range(10):
-            d = {}
-            d['name'] = "Test_Assignment_{:02d}".format(i)
-            d['contact'] = "Andy Sayler"
-            a = datatypes.Assignment.from_new(d)
-            # Test Equal
-            self.assertEqual(a['name'], d['name'])
-            self.assertEqual(a['contact'], d['contact'])
-            # Test Bad Key
-            self.assertRaises(KeyError, get_item, a, 'test')
+        # Test Good Keys
+        d = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
+        obj = datatypes.UUIDRedisObject.from_new(d)
+        for k in d:
+            self.assertEqual(d[k], obj[k])
+
+        # Test Bad Key
+        self.assertRaises(KeyError, get_item, obj, 'test')
 
     def test_setitem(self):
 
+        # Temp Set Function
         def set_item(d, k, v):
             d[k] = v
 
-        # Generate 10 Assingments
-        for i in range(10):
-            d = {}
-            d['name'] = "Test_Assignment_{:02d}".format(i)
-            d['contact'] = "Andy Sayler"
-            a = datatypes.Assignment.from_new(d)
-            a['name'] = "Test_Assignment"
-            a['contact'] = "Nobody"
-            # Test Equal
-            self.assertEqual(a['name'], "Test_Assignment")
-            self.assertEqual(a['contact'], "Nobody")
-            # Test Bad Key
-            self.assertRaises(KeyError, set_item, a, 'test', 'test')
+        # Test Good Keys
+        d = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
+        obj = datatypes.UUIDRedisObject.from_new(d)
+        for k in d:
+            val = d[k] + "_updated"
+            obj[k] = val
+            self.assertEqual(val, obj[k])
+
+        # Test Bad Key
+        self.assertRaises(KeyError, set_item, obj, 'test', "test")
 
 
 class ServerTestCase(DatatypesTestCase):
