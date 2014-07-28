@@ -23,7 +23,7 @@ def get_root():
 @app.route("/assignments/", methods=['GET'])
 def get_assignments():
     s = datatypes.Server()
-    assignments = s.assignments_list()
+    assignments = s.list_assignments()
     out = {'assignments': list(assignments)}
     res = flask.jsonify(out)
     return res
