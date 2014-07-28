@@ -36,6 +36,7 @@ class CogsApiTestCase(unittest.TestCase):
 
     def tearDown(self):
         self.db.flushdb()
+        cogs_api.datatypes._REDIS_DB -= _REDIS_TESTDB_OFFSET
 
     def test_root_get(self):
         res = self.app.get('/')

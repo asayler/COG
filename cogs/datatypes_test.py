@@ -23,26 +23,23 @@ class DatatypesTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        datatypes._REDIS_DB += _REDIS_TESTDB_OFFSET
-        db = redis.StrictRedis(host=datatypes._REDIS_HOST,
-                               port=datatypes._REDIS_PORT,
-                               db=datatypes._REDIS_DB)
-        if (db.dbsize() != 0):
-            raise DatatypesTestError("Test Database Not Empty: {}".format(db.dbsize()))
+        pass
 
     @classmethod
     def tearDownClass(cls):
-        db = redis.StrictRedis(host=datatypes._REDIS_HOST,
-                               port=datatypes._REDIS_PORT,
-                               db=datatypes._REDIS_DB)
-        db.flushdb()
-        datatypes._REDIS_DB -= _REDIS_TESTDB_OFFSET
+        pass
 
     def setUp(self):
-        pass
+        datatypes._REDIS_DB += _REDIS_TESTDB_OFFSET
+        self.db = redis.StrictRedis(host=datatypes._REDIS_HOST,
+                                    port=datatypes._REDIS_PORT,
+                                    db=datatypes._REDIS_DB)
+        if (self.db.dbsize() != 0):
+            raise DatatypesTestError("Test Database Not Empty: {}".format(db.dbsize()))
 
     def tearDown(self):
-        pass
+        self.db.flushdb()
+        datatypes._REDIS_DB -= _REDIS_TESTDB_OFFSET
 
 class AssignmentTestCase(DatatypesTestCase):
 
@@ -167,8 +164,13 @@ class ServerTestCase(DatatypesTestCase):
 
     def test_assignments_list(self):
 
-        # Generate 10 Assingments
         assignments_in = set([])
+
+        # List Assignments (Empty DB)
+        assignments_out = self.s.assignments_list()
+        self.assertEqual(assignments_in, assignments_out, "Assignment Sets Differ")
+
+        # Generate 10 Assingments
         for i in range(10):
             a_dict = {}
             a_dict['name'] = "Test_Assignment_{:02d}".format(i)
@@ -177,8 +179,6 @@ class ServerTestCase(DatatypesTestCase):
 
         # List Assignments
         assignments_out = self.s.assignments_list()
-
-        # Verify Assignments
         self.assertEqual(assignments_in, assignments_out, "Assignment Sets Differ")
 
 
