@@ -199,7 +199,6 @@ class CogsApiAssignmentsTestCase(CogsApiTestCase):
             self.assertEqual(res.status_code, 200)
             r_dict = json.loads(res.data)
             r_uuid = uuid.UUID(r_dict.keys()[0])
-            self.assertEqual(d, r_dict[str(r_uuid)])
             assignments_in.add(str(r_uuid))
 
         # Get Assignments
@@ -361,7 +360,6 @@ class CogsApiAssignmentTestsTestCase(CogsApiTestCase):
             self.assertEqual(res.status_code, 200)
             tst = json.loads(res.data)
             tst_uuid = uuid.UUID(tst.keys()[0])
-            self.assertEqual(d, tst[str(tst_uuid)])
             tests_in.add(str(tst_uuid))
 
         # Get Assignments
