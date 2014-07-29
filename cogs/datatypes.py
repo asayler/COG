@@ -23,8 +23,8 @@ _ASSIGNMENTS_DIR_KEY = "assignments_list"
 _ASSIGNMENTS_OBJ_KEY = "assignment"
 
 _ASSIGNMENTTESTS_SCHEMA = ['name', 'contact', 'path', 'maxscore']
-_ASSIGNMENTTESTS_DIR_KEY = "assignmenttests_list"
-_ASSIGNMENTTESTS_OBJ_KEY = "assignmenttest"
+_ASSIGNMENTTESTS_DIR_KEY = "tests_list"
+_ASSIGNMENTTESTS_OBJ_KEY = "test"
 
 ### Exceptions
 
@@ -222,14 +222,25 @@ class Assignment(UUIDRedisObject):
         asn = super(Assignment, cls).from_existing(uuid_hex)
         return asn
 
+    def delete(self):
+        """Delete"""
+
+        # Delete Tests
+        for t_uuid in self.list_tests():
+            tst = self.get_test(t_uuid)
+            tst.delete()
+
+        # Delete Self
+        super(Assignment, self).delete()
+
     def create_test(self, d):
-        return AssignmentTest.from_new(d, repr(self))
+        return AssignmentTest.from_new(d, self.obj_key)
 
     def get_test(self, uuid_hex):
-        return AssignmentTest.from_existing(uuid_hex, repr(self))
+        return AssignmentTest.from_existing(uuid_hex, self.obj_key)
 
     def list_tests(self):
-        dir_key = "{:s}:{:s}".format(_ASSIGNMENTTESTS_DIR_KEY, repr(self))
+        dir_key = "{:s}:{:s}".format(self.obj_key, _ASSIGNMENTTESTS_DIR_KEY)
         return self.db.smembers(dir_key)
 
 class AssignmentTest(UUIDRedisObject):
@@ -242,8 +253,8 @@ class AssignmentTest(UUIDRedisObject):
         """Base Constructor"""
         super(AssignmentTest, self).__init__(uuid_obj)
         self.schema = _ASSIGNMENTTESTS_SCHEMA
-        self.dir_key = "{:s}:{:s}".format(_ASSIGNMENTTESTS_DIR_KEY, parent)
-        self.obj_key = "{:s}:{:s}".format(_ASSIGNMENTTESTS_OBJ_KEY, repr(self))
+        self.dir_key = "{:s}:{:s}".format(parent, _ASSIGNMENTTESTS_DIR_KEY)
+        self.obj_key = "{:s}:{:s}:{:s}".format(parent, _ASSIGNMENTTESTS_OBJ_KEY, repr(self))
 
     @classmethod
     def from_new(cls, d, parent):
@@ -258,3 +269,8 @@ class AssignmentTest(UUIDRedisObject):
 
         tst = super(AssignmentTest, cls).from_existing(uuid_hex, parent)
         return tst
+
+    def delete(self):
+        """Delete"""
+
+        super(AssignmentTest, self).delete()
