@@ -223,10 +223,10 @@ class Assignment(UUIDRedisObject):
         return asn
 
     def create_test(self, d):
-        return AssignmentTest.from_new(d, self)
+        return AssignmentTest.from_new(d, repr(self))
 
     def get_test(self, uuid_hex):
-        return AssignmentTest.from_existing(uuid_hex, self)
+        return AssignmentTest.from_existing(uuid_hex, repr(self))
 
     def list_tests(self):
         dir_key = "{:s}:{:s}".format(_ASSIGNMENTTESTS_DIR_KEY, repr(self))
@@ -242,7 +242,7 @@ class AssignmentTest(UUIDRedisObject):
         """Base Constructor"""
         super(AssignmentTest, self).__init__(uuid_obj)
         self.schema = _ASSIGNMENTTESTS_SCHEMA
-        self.dir_key = "{:s}:{:s}".format(_ASSIGNMENTTESTS_DIR_KEY, repr(parent))
+        self.dir_key = "{:s}:{:s}".format(_ASSIGNMENTTESTS_DIR_KEY, parent)
         self.obj_key = "{:s}:{:s}".format(_ASSIGNMENTTESTS_OBJ_KEY, repr(self))
 
     @classmethod
