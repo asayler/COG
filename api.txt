@@ -8,13 +8,13 @@ GET     /assignments/<ID>/                            Show Assignment
 PUT     /assignments/<ID>/                            Update Assignment
 DELETE  /assignments/<ID>/                            Remove Assignment
 
-### In Progress:
-
 GET     /assignments/<ID>/tests/                      List Grading Tests
 POST    /assignments/<ID>/tests/                      Add Grading Test
 GET     /assignments/<ID>/tests/<ID>/                 Show Grading Test
 PUT     /assignments/<ID>/tests/<ID>/                 Update Grading Test
 DELETE  /assignments/<ID>/tests/<ID>/                 Remove Grading Test
+
+### In Progress:
 
 GET     /assignments/<ID>/submissions/                List Submissions
 POST    /assignments/<ID>/submissions/                Add Submission

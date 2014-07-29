@@ -229,7 +229,7 @@ class Assignment(UUIDRedisObject):
         return AssignmentTest.from_existing(uuid_hex, self)
 
     def list_tests(self):
-        dir_key = "{:s}:{:s}".format(_ASSIGNMENTTESTS_DIR_KEY. repr(self))
+        dir_key = "{:s}:{:s}".format(_ASSIGNMENTTESTS_DIR_KEY, repr(self))
         return self.db.smembers(dir_key)
 
 class AssignmentTest(UUIDRedisObject):

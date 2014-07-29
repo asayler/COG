@@ -124,8 +124,11 @@ def delete_assignment(uuid_hex):
     # Delete Assignment
     a.delete()
 
-    # Return Null
-    out = {}
+    # Return Status
+    out = {
+        'status': 200,
+        'message': "Deleted {:s}".format(a)
+    }
     res = flask.jsonify(out)
     return res
 
@@ -137,7 +140,7 @@ def list_assignment_tests(asn_uuid):
     # Get Assignment
     try:
         asn = datatypes.Assignment.from_existing(asn_uuid)
-    except KeyError as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = {
             'status': 404,
             'message': str(e)
@@ -160,7 +163,7 @@ def create_assignment_test(asn_uuid):
     # Get Assignment
     try:
         asn = datatypes.Assignment.from_existing(asn_uuid)
-    except KeyError as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = {
             'status': 404,
             'message': str(e)
@@ -193,7 +196,7 @@ def get_assignment_test(asn_uuid, tst_uuid):
     # Get Assignment
     try:
         asn = datatypes.Assignment.from_existing(asn_uuid)
-    except KeyError as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = {
             'status': 404,
             'message': str(e)
@@ -205,7 +208,7 @@ def get_assignment_test(asn_uuid, tst_uuid):
     # Get Assignment Test
     try:
         tst = asn.get_test(tst_uuid)
-    except KeyError as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = {
             'status': 404,
             'message': str(e)
@@ -216,6 +219,89 @@ def get_assignment_test(asn_uuid, tst_uuid):
 
     # Return Assignment Test
     out = {repr(tst): tst.get_dict()}
+    res = flask.jsonify(out)
+    return res
+
+@app.route("/assignments/<asn_uuid>/tests/<tst_uuid>/", methods=['PUT'])
+def set_assignment_test(asn_uuid, tst_uuid):
+
+    # Get Assignment
+    try:
+        asn = datatypes.Assignment.from_existing(asn_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = {
+            'status': 404,
+            'message': str(e)
+        }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Get Assignment Test
+    try:
+        tst = asn.get_test(tst_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = {
+            'status': 404,
+            'message': str(e)
+        }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Update Assignment Test
+    d = flask.request.get_json(force=True)
+    try:
+        tst.set_dict(d)
+    except KeyError as e:
+        err = {
+            'status': 400,
+            'message': str(e)
+        }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Return Assignment Test
+    out = {repr(tst): tst.get_dict()}
+    res = flask.jsonify(out)
+    return res
+
+@app.route("/assignments/<asn_uuid>/tests/<tst_uuid>/", methods=['DELETE'])
+def delete_assignment_test(asn_uuid, tst_uuid):
+
+    # Get Assignment
+    try:
+        asn = datatypes.Assignment.from_existing(asn_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = {
+            'status': 404,
+            'message': str(e)
+        }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Get Assignment Test
+    try:
+        tst = asn.get_test(tst_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = {
+            'status': 404,
+            'message': str(e)
+        }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Delete Assignment Test
+    tst.delete()
+
+    # Return Status
+    out = {
+        'status': 200,
+        'message': "Deleted {:s}".format(tst)
+    }
     res = flask.jsonify(out)
     return res
 
