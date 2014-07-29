@@ -12,19 +12,13 @@ import uuid
 
 import redis
 
+import cogs.datatypes as datatypes
 import cogs_api
 
 _REDIS_TESTDB_OFFSET = 1
 
 _ASSIGNMENTS_KEY = "assignments"
 _ASSIGNMENTTESTS_KEY = "tests"
-
-_ASSIGNMENT_TESTDICT      = {'name': "Test_Assignment",
-                             'contact': "Andy Sayler"}
-_ASSIGNMENTTEST_TESTDICT  = {'name': "Test_Assignment",
-                             'contact': "Andy Sayler",
-                             'path': "/tmp/test.py",
-                             'maxscore': "10"}
 
 class CogsApiTestCase(unittest.TestCase):
 
@@ -93,7 +87,7 @@ class CogsApiAssignmentsTestCase(CogsApiTestCase):
     def test_create_assignment(self):
 
         # Create Assignment
-        ds = json.dumps(_ASSIGNMENT_TESTDICT)
+        ds = json.dumps(datatypes.ASSIGNMENT_TESTDICT)
         res = self.app.post('/assignments/', data=ds)
         self.assertEqual(res.status_code, 200)
 
@@ -101,12 +95,12 @@ class CogsApiAssignmentsTestCase(CogsApiTestCase):
         asn = json.loads(res.data)
         asn_uuid = uuid.UUID(asn.keys()[0])
         asn_d = asn[str(asn_uuid)]
-        self.assertEqual(_ASSIGNMENT_TESTDICT, asn_d)
+        self.assertEqual(datatypes.ASSIGNMENT_TESTDICT, asn_d)
 
     def test_get_assignment(self):
 
         # Create Assignment
-        ds = json.dumps(_ASSIGNMENT_TESTDICT)
+        ds = json.dumps(datatypes.ASSIGNMENT_TESTDICT)
         res = self.app.post('/assignments/', data=ds)
         self.assertEqual(res.status_code, 200)
         asn_in = json.loads(res.data)
@@ -123,7 +117,7 @@ class CogsApiAssignmentsTestCase(CogsApiTestCase):
     def test_set_assignment(self):
 
         # Create Assignment
-        d_a = copy.deepcopy(_ASSIGNMENT_TESTDICT)
+        d_a = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
         ds_a = json.dumps(d_a)
         res_a = self.app.post('/assignments/', data=ds_a)
         self.assertEqual(res_a.status_code, 200)
@@ -131,7 +125,7 @@ class CogsApiAssignmentsTestCase(CogsApiTestCase):
         a_uuid = uuid.UUID(a_dict.keys()[0])
 
         # Update Assignment
-        d_b = copy.deepcopy(_ASSIGNMENT_TESTDICT)
+        d_b = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
         for k in d_b:
             d_b[k] = d_b[k] + "_update"
         self.assertNotEqual(d_a, d_b)
@@ -154,7 +148,7 @@ class CogsApiAssignmentsTestCase(CogsApiTestCase):
     def test_delete_assignment(self):
 
         # Create Assignment
-        d_a = copy.deepcopy(_ASSIGNMENT_TESTDICT)
+        d_a = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
         ds_a = json.dumps(d_a)
         res_a = self.app.post('/assignments/', data=ds_a)
         self.assertEqual(res_a.status_code, 200)
@@ -191,7 +185,7 @@ class CogsApiAssignmentsTestCase(CogsApiTestCase):
 
         # Create Assignments
         for i in range(10):
-            d = copy.deepcopy(_ASSIGNMENT_TESTDICT)
+            d = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
             for k in d:
                 d[k] = d[k] + "_{:02d}".format(i)
             ds = json.dumps(d)
@@ -238,7 +232,7 @@ class CogsApiAssignmentTestsTestCase(CogsApiTestCase):
         super(CogsApiAssignmentTestsTestCase, self).setUp()
 
         # Create Assignment
-        ds = json.dumps(_ASSIGNMENT_TESTDICT)
+        ds = json.dumps(datatypes.ASSIGNMENT_TESTDICT)
         res = self.app.post('/assignments/', data=ds)
         self.assertEqual(res.status_code, 200)
         self.asn = json.loads(res.data)
@@ -256,7 +250,7 @@ class CogsApiAssignmentTestsTestCase(CogsApiTestCase):
     def test_create_assignment_test(self):
 
         # Create Assignment Test
-        ds = json.dumps(_ASSIGNMENTTEST_TESTDICT)
+        ds = json.dumps(datatypes.TEST_TESTDICT)
         res = self.app.post('/assignments/{:s}/tests/'.format(self.asn_uuid), data=ds)
         self.assertEqual(res.status_code, 200)
 
@@ -264,12 +258,12 @@ class CogsApiAssignmentTestsTestCase(CogsApiTestCase):
         tst = json.loads(res.data)
         tst_uuid = uuid.UUID(tst.keys()[0])
         tst_d = tst[str(tst_uuid)]
-        self.assertEqual(_ASSIGNMENTTEST_TESTDICT, tst_d)
+        self.assertEqual(datatypes.TEST_TESTDICT, tst_d)
 
     def test_get_assignment_test(self):
 
         # Create Assignment Test
-        ds = json.dumps(_ASSIGNMENTTEST_TESTDICT)
+        ds = json.dumps(datatypes.TEST_TESTDICT)
         res = self.app.post('/assignments/{:s}/tests/'.format(self.asn_uuid), data=ds)
         self.assertEqual(res.status_code, 200)
         tst_in = json.loads(res.data)
@@ -286,20 +280,20 @@ class CogsApiAssignmentTestsTestCase(CogsApiTestCase):
     def test_set_assignment_test(self):
 
         # Create Assignment Test
-        d = copy.deepcopy(_ASSIGNMENTTEST_TESTDICT)
+        d = copy.deepcopy(datatypes.TEST_TESTDICT)
         ds = json.dumps(d)
         res = self.app.post('/assignments/{:s}/tests/'.format(self.asn_uuid), data=ds)
         self.assertEqual(res.status_code, 200)
         tst_in = json.loads(res.data)
         tst_in_uuid = uuid.UUID(tst_in.keys()[0])
         tst_in_d = tst_in[str(tst_in_uuid)]
-        self.assertEqual(_ASSIGNMENTTEST_TESTDICT, tst_in_d)
+        self.assertEqual(datatypes.TEST_TESTDICT, tst_in_d)
 
         # Update Assignment
-        d = copy.deepcopy(_ASSIGNMENTTEST_TESTDICT)
+        d = copy.deepcopy(datatypes.TEST_TESTDICT)
         for k in d:
             d[k] = d[k] + "_updated"
-        self.assertNotEqual(_ASSIGNMENTTEST_TESTDICT, d)
+        self.assertNotEqual(datatypes.TEST_TESTDICT, d)
         ds = json.dumps(d)
         res = self.app.put('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_in_uuid), data=ds)
         self.assertEqual(res.status_code, 200)
@@ -320,7 +314,7 @@ class CogsApiAssignmentTestsTestCase(CogsApiTestCase):
     def test_delete_assignment_test(self):
 
         # Create Assignment Test
-        d = copy.deepcopy(_ASSIGNMENTTEST_TESTDICT)
+        d = copy.deepcopy(datatypes.TEST_TESTDICT)
         ds = json.dumps(d)
         res = self.app.post('/assignments/{:s}/tests/'.format(self.asn_uuid), data=ds)
         self.assertEqual(res.status_code, 200)
@@ -352,7 +346,7 @@ class CogsApiAssignmentTestsTestCase(CogsApiTestCase):
 
         # Create Tests
         for i in range(10):
-            d = copy.deepcopy(_ASSIGNMENTTEST_TESTDICT)
+            d = copy.deepcopy(datatypes.TEST_TESTDICT)
             for k in d:
                 d[k] = d[k] + "_{:02d}".format(i)
             ds = json.dumps(d)

@@ -14,16 +14,10 @@ import datatypes
 
 _REDIS_TESTDB_OFFSET = 1
 
-_UUIDREDISOBJECT_TESTDICT = {'key1': "val1",
-                             'key2': "val2",
-                             'key3': "val3"}
-_ASSIGNMENT_TESTDICT      = {'name': "Test_Assignment",
-                             'contact': "Andy Sayler"}
-_ASSIGNMENTTEST_TESTDICT  = {'name': "Test_Assignment",
-                             'contact': "Andy Sayler",
-                             'path': "/tmp/test.py",
-                             'maxscore': "10"}
-
+_DUMMY_SCHEMA  = ['key1', 'key2', 'key3']
+DUMMY_TESTDICT = {'key1': "val1",
+                  'key2': "val2",
+                  'key3': "val3"}
 
 class DatatypesTestError(Exception):
     """Base class for Redis Object Exceptions"""
@@ -59,6 +53,8 @@ class UUIDRedisObjectTestCase(DatatypesTestCase):
 
     def setUp(self):
         super(UUIDRedisObjectTestCase, self).setUp()
+        self.ObjFactory = datatypes.UUIDRedisObject.get_factory(None)
+        self.ObjFactory.schema = _DUMMY_SCHEMA
 
     def tearDown(self):
         super(UUIDRedisObjectTestCase, self).tearDown()
@@ -67,25 +63,25 @@ class UUIDRedisObjectTestCase(DatatypesTestCase):
 
         # Test Empty Dict
         d = {}
-        self.assertRaises(KeyError, datatypes.UUIDRedisObject.from_new, d)
+        self.assertRaises(KeyError, self.ObjFactory.from_new, d)
 
         # Test Bad Dict
         d = {'test': "test"}
-        self.assertRaises(KeyError, datatypes.UUIDRedisObject.from_new, d)
+        self.assertRaises(KeyError, self.ObjFactory.from_new, d)
 
         # Test Sub Dict
-        d = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
+        d = copy.deepcopy(DUMMY_TESTDICT)
         d.pop(d.keys()[0])
-        self.assertRaises(KeyError, datatypes.UUIDRedisObject.from_new, d)
+        self.assertRaises(KeyError, self.ObjFactory.from_new, d)
 
         # Test Super Dict
-        d = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
+        d = copy.deepcopy(DUMMY_TESTDICT)
         d['test'] = "test"
-        self.assertRaises(KeyError, datatypes.UUIDRedisObject.from_new, d)
+        self.assertRaises(KeyError, self.ObjFactory.from_new, d)
 
         # Test Valid
-        d = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
-        a = datatypes.UUIDRedisObject.from_new(d)
+        d = copy.deepcopy(DUMMY_TESTDICT)
+        a = self.ObjFactory.from_new(d)
 
     def test_from_existing(self):
 
@@ -95,30 +91,30 @@ class UUIDRedisObjectTestCase(DatatypesTestCase):
                           'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
 
         # Test Valid UUID
-        d = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
-        obj1 = datatypes.UUIDRedisObject.from_new(d)
+        d = copy.deepcopy(DUMMY_TESTDICT)
+        obj1 = self.ObjFactory.from_new(d)
         obj1_uuid = repr(obj1)
-        obj2 = datatypes.UUIDRedisObject.from_existing(obj1_uuid)
+        obj2 = self.ObjFactory.from_existing(obj1_uuid)
         self.assertEqual(obj1, obj2)
 
     def test_get_dict(self):
 
         # Create and Get Object
-        d_in = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
-        obj = datatypes.UUIDRedisObject.from_new(d_in)
+        d_in = copy.deepcopy(DUMMY_TESTDICT)
+        obj = self.ObjFactory.from_new(d_in)
         d_out = obj.get_dict()
         self.assertEqual(d_in, d_out)
 
     def test_set_dict(self):
 
         # Create and Get Object
-        d1_in = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
-        obj = datatypes.UUIDRedisObject.from_new(d1_in)
+        d1_in = copy.deepcopy(DUMMY_TESTDICT)
+        obj = self.ObjFactory.from_new(d1_in)
         d1_out = obj.get_dict()
         self.assertEqual(d1_in, d1_out)
 
         # Update and Get Object
-        d2_in = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
+        d2_in = copy.deepcopy(DUMMY_TESTDICT)
         for k in d2_in:
             d2_in[k] = "set_dict_test_val_{:s}".format(k)
         self.assertNotEqual(d1_in, d2_in)
@@ -133,8 +129,8 @@ class UUIDRedisObjectTestCase(DatatypesTestCase):
             return d[k]
 
         # Test Good Keys
-        d = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
-        obj = datatypes.UUIDRedisObject.from_new(d)
+        d = copy.deepcopy(DUMMY_TESTDICT)
+        obj = self.ObjFactory.from_new(d)
         for k in d:
             self.assertEqual(d[k], obj[k])
 
@@ -148,8 +144,8 @@ class UUIDRedisObjectTestCase(DatatypesTestCase):
             d[k] = v
 
         # Test Good Keys
-        d = copy.deepcopy(_UUIDREDISOBJECT_TESTDICT)
-        obj = datatypes.UUIDRedisObject.from_new(d)
+        d = copy.deepcopy(DUMMY_TESTDICT)
+        obj = self.ObjFactory.from_new(d)
         for k in d:
             val = d[k] + "_updated"
             obj[k] = val
@@ -175,24 +171,25 @@ class ServerTestCase(DatatypesTestCase):
 
         # List Assignments (Empty DB)
         assignments_out = self.s.list_assignments()
-        self.assertEqual(assignments_in, assignments_out, "Assignment Sets Differ")
+        self.assertEqual(assignments_in, assignments_out)
 
         # Generate 10 Assingments
         for i in range(10):
-            d = copy.deepcopy(_ASSIGNMENT_TESTDICT)
+            d = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
             for k in d:
                 d[k] = d[k] + "_test_{:02d}".format(i)
             assignments_in.add(repr(datatypes.Assignment.from_new(d)))
 
         # List Assignments
         assignments_out = self.s.list_assignments()
-        self.assertEqual(assignments_in, assignments_out, "Assignment Sets Differ")
+        self.assertEqual(assignments_in, assignments_out)
 
 
 class AssignmentTestCase(DatatypesTestCase):
 
     def setUp(self):
         super(AssignmentTestCase, self).setUp()
+        self.srv = datatypes.Server()
 
     def tearDown(self):
         super(AssignmentTestCase, self).tearDown()
@@ -201,46 +198,47 @@ class AssignmentTestCase(DatatypesTestCase):
 
         # Test Empty Dict
         d = {}
-        self.assertRaises(KeyError, datatypes.Assignment.from_new, d)
+        self.assertRaises(KeyError, self.srv.create_assignment, d)
 
         # Test Bad Dict
         d = {'test': "test"}
-        self.assertRaises(KeyError, datatypes.Assignment.from_new, d)
+        self.assertRaises(KeyError, self.srv.create_assignment, d)
 
         # Test Sub Dict
-        d = copy.deepcopy(_ASSIGNMENT_TESTDICT)
+        d = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
         d.pop(d.keys()[0])
-        self.assertRaises(KeyError, datatypes.Assignment.from_new, d)
+        self.assertRaises(KeyError, self.srv.create_assignment, d)
 
         # Test Super Dict
-        d = copy.deepcopy(_ASSIGNMENT_TESTDICT)
+        d = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
         d['test'] = "test"
-        self.assertRaises(KeyError, datatypes.Assignment.from_new, d)
+        self.assertRaises(KeyError, self.srv.create_assignment, d)
 
         # Test Valid
-        d = copy.deepcopy(_ASSIGNMENT_TESTDICT)
-        asn = datatypes.Assignment.from_new(d)
+        d = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
+        asn = self.srv.create_assignment(d)
         self.assertEqual(d, asn.get_dict())
 
     def test_from_existing(self):
 
         # Test Invalid UUID
         self.assertRaises(datatypes.UUIDRedisObjectDNE,
-                          datatypes.Assignment.from_existing,
+                          self.srv.get_assignment,
                           'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
 
         # Test Valid UUID
-        d = copy.deepcopy(_ASSIGNMENT_TESTDICT)
-        asn1 = datatypes.Assignment.from_new(d)
+        d = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
+        asn1 = self.srv.create_assignment(d)
         asn1_uuid = repr(asn1)
-        asn2 = datatypes.Assignment.from_existing(asn1_uuid)
+        asn2 = self.srv.get_assignment(asn1_uuid)
         self.assertEqual(asn1, asn2)
 
 class AssignmentTestTestCase(DatatypesTestCase):
 
     def setUp(self):
         super(AssignmentTestTestCase, self).setUp()
-        self.asn = datatypes.Assignment.from_new(_ASSIGNMENT_TESTDICT)
+        self.srv = datatypes.Server()
+        self.asn = self.srv.create_assignment(datatypes.ASSIGNMENT_TESTDICT)
 
     def tearDown(self):
         super(AssignmentTestTestCase, self).tearDown()
@@ -256,17 +254,17 @@ class AssignmentTestTestCase(DatatypesTestCase):
         self.assertRaises(KeyError, self.asn.create_test, d)
 
         # Test Sub Dict
-        d = copy.deepcopy(_ASSIGNMENTTEST_TESTDICT)
+        d = copy.deepcopy(datatypes.TEST_TESTDICT)
         d.pop(d.keys()[0])
         self.assertRaises(KeyError, self.asn.create_test, d)
 
         # Test Super Dict
-        d = copy.deepcopy(_ASSIGNMENTTEST_TESTDICT)
+        d = copy.deepcopy(datatypes.TEST_TESTDICT)
         d['test'] = "test"
         self.assertRaises(KeyError, self.asn.create_test, d)
 
         # Test Valid
-        d = copy.deepcopy(_ASSIGNMENTTEST_TESTDICT)
+        d = copy.deepcopy(datatypes.TEST_TESTDICT)
         tst = self.asn.create_test(d)
         self.assertEqual(d, tst.get_dict())
 
@@ -278,7 +276,7 @@ class AssignmentTestTestCase(DatatypesTestCase):
                           'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
 
         # Test Valid UUID
-        d = copy.deepcopy(_ASSIGNMENTTEST_TESTDICT)
+        d = copy.deepcopy(datatypes.TEST_TESTDICT)
         tst1 = self.asn.create_test(d)
         tst1_uuid = repr(tst1)
         tst2 = self.asn.get_test(tst1_uuid)

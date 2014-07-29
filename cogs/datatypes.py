@@ -14,17 +14,20 @@ _REDIS_HOST = "localhost"
 _REDIS_PORT = 6379
 _REDIS_DB   = 3
 
-_DUMMY_SCHEMA = ['key1', 'key2', 'key3']
-_DUMMY_DIR_KEY = "dummys_list"
-_DUMMY_OBJ_KEY = "dummy"
+_ASSIGNMENTS_SCHEMA  = ['name', 'contact']
+ASSIGNMENT_TESTDICT  = {'name': "Test_Assignment",
+                        'contact': "Andy Sayler"}
 
-_ASSIGNMENTS_SCHEMA = ['name', 'contact']
-_ASSIGNMENTS_DIR_KEY = "assignments_list"
-_ASSIGNMENTS_OBJ_KEY = "assignment"
+_TESTS_SCHEMA = ['name', 'contact', 'type', 'maxscore']
+TEST_TESTDICT = {'name': "Test_Assignment",
+                 'contact': "Andy Sayler",
+                 'type': "script",
+                 'maxscore': "10"}
 
-_ASSIGNMENTTESTS_SCHEMA = ['name', 'contact', 'path', 'maxscore']
-_ASSIGNMENTTESTS_DIR_KEY = "tests_list"
-_ASSIGNMENTTESTS_OBJ_KEY = "test"
+_FILES_SCHEMA = ['name', 'contact', 'type']
+_FILES_PATH = "./files/"
+
+_UUID_GLOB = '????????-????-????-????-????????????'
 
 ### Exceptions
 
@@ -69,55 +72,67 @@ class RedisObject(object):
         self.db = redis.StrictRedis(host=_REDIS_HOST, port=_REDIS_PORT, db=_REDIS_DB)
 
 
-class UUIDRedisObject(RedisObject):
+class UUIDRedisObject(object):
     """
     UUID Redis Object Base Class
 
     """
 
-    def __init__(self, uuid_obj, parent=None):
+    schema = []
+
+    def __init__(self, uuid_obj):
         """Base Constructor"""
         super(UUIDRedisObject, self).__init__()
         self.uuid = uuid_obj
-        self.schema = _DUMMY_SCHEMA
-        self.dir_key = "{:s}".format(_DUMMY_DIR_KEY)
-        self.obj_key = "{:s}:{:s}".format(_DUMMY_OBJ_KEY, repr(self))
+        self.obj_key = "{:s}:{:s}".format(self.base_key, repr(self)).lower()
 
     @classmethod
-    def from_new(cls, d, parent=None):
+    def get_factory(cls, parent_str):
+        cls.db = redis.StrictRedis(host=_REDIS_HOST, port=_REDIS_PORT, db=_REDIS_DB)
+        if parent_str == None:
+            cls.base_key = "{:s}".format(cls.__name__).lower()
+        else:
+            cls.base_key = "{:s}:{:s}".format(parent_str, cls.__name__).lower()
+        return cls
+
+    @classmethod
+    def list_objs(cls):
+        """List Class Objects"""
+        objs_in = cls.db.keys("{:s}:{:s}".format(cls.base_key, _UUID_GLOB))
+        objs_out = []
+        for obj in objs_in:
+            objs_out.append(obj.split(':')[-1])
+        return set(objs_out)
+
+    @classmethod
+    def from_new(cls, d):
         """New Constructor"""
 
         # Create New Object
         uuid_obj = uuid.uuid4()
-        obj = cls(uuid_obj, parent)
+        obj = cls(uuid_obj)
 
         # Check dict
         if (set(d.keys()) != set(obj.schema)):
             raise KeyError("Keys {:s} do not match schema {:s}".format(d, obj.schema))
 
-        # Create Atomic Pipeline
-        p = obj.db.pipeline(transaction=True)
-        # Add Object ID to Set
-        p.sadd(obj.dir_key, repr(obj))
         # Add Object Data to DB
-        p.hmset(obj.obj_key, d)
-        # Execute Pipeline
-        if not all(p.execute()):
+        if not obj.db.hmset(obj.obj_key, d):
             raise UUIDRedisObjectError("Create Failed")
 
         # Return Object
         return obj
 
     @classmethod
-    def from_existing(cls, uuid_hex, parent=None):
+    def from_existing(cls, uuid_hex):
         """Existing Constructor"""
 
         # Create Existing Object
         uuid_obj = uuid.UUID(uuid_hex)
-        obj = cls(uuid_obj, parent)
+        obj = cls(uuid_obj)
 
         # Verify Object ID in Set
-        if not obj.db.sismember(obj.dir_key, repr(obj)):
+        if not obj.db.exists(obj.obj_key):
             raise UUIDRedisObjectDNE(obj)
 
         # Return Object
@@ -156,14 +171,8 @@ class UUIDRedisObject(RedisObject):
     def delete(self):
         """Delete"""
 
-        # Create Atomic Pipeline
-        p = self.db.pipeline(transaction=True)
         # Delete Object Data from DB
-        p.delete(self.obj_key)
-        # Remove Object ID from Set
-        p.srem(self.dir_key, repr(self))
-        # Execute Pipeline
-        if not all(p.execute()):
+        if not self.db.delete(self.obj_key):
             raise UUIDRedisObjectError("Delete Failed")
 
     def get_dict(self):
@@ -173,9 +182,11 @@ class UUIDRedisObject(RedisObject):
 
     def set_dict(self, d):
         """Set Dict"""
+
         # Check dict
         if (set(d.keys()) != set(self.schema)):
             raise KeyError("Keys {:s} do not match schema {:s}".format(d, self.schema))
+
         # Set dict
         self.db.hmset(self.obj_key, d)
 
@@ -186,12 +197,19 @@ class Server(RedisObject):
 
     """
 
+    # Override Constructor
     def __init__(self):
         """Base Constructor"""
         super(Server, self).__init__()
+        self.AssignmentFactory = Assignment.get_factory(None)
 
+    # Assignment Methods
+    def create_assignment(self, d):
+        return self.AssignmentFactory.from_new(d)
+    def get_assignment(self, uuid_hex):
+        return self.AssignmentFactory.from_existing(uuid_hex)
     def list_assignments(self):
-        return self.db.smembers(_ASSIGNMENTS_DIR_KEY)
+        return self.AssignmentFactory.list_objs()
 
 
 class Assignment(UUIDRedisObject):
@@ -200,28 +218,15 @@ class Assignment(UUIDRedisObject):
 
     """
 
-    def __init__(self, uuid_obj, parent=None):
+    schema = _ASSIGNMENTS_SCHEMA
+
+    # Override Constructor
+    def __init__(self, uuid_obj):
         """Base Constructor"""
-
         super(Assignment, self).__init__(uuid_obj)
-        self.schema = _ASSIGNMENTS_SCHEMA
-        self.dir_key = "{:s}".format(_ASSIGNMENTS_DIR_KEY)
-        self.obj_key = "{:s}:{:s}".format(_ASSIGNMENTS_OBJ_KEY, repr(self))
+        self.TestFactory = Test.get_factory(self.obj_key)
 
-    @classmethod
-    def from_new(cls, d):
-        """New Constructor"""
-
-        asn = super(Assignment, cls).from_new(d)
-        return asn
-
-    @classmethod
-    def from_existing(cls, uuid_hex):
-        """Existing Constructor"""
-
-        asn = super(Assignment, cls).from_existing(uuid_hex)
-        return asn
-
+    # Override Delete
     def delete(self):
         """Delete"""
 
@@ -233,44 +238,29 @@ class Assignment(UUIDRedisObject):
         # Delete Self
         super(Assignment, self).delete()
 
+    # Test Methods
     def create_test(self, d):
-        return AssignmentTest.from_new(d, self.obj_key)
-
+        return self.TestFactory.from_new(d)
     def get_test(self, uuid_hex):
-        return AssignmentTest.from_existing(uuid_hex, self.obj_key)
-
+        return self.TestFactory.from_existing(uuid_hex)
     def list_tests(self):
-        dir_key = "{:s}:{:s}".format(self.obj_key, _ASSIGNMENTTESTS_DIR_KEY)
-        return self.db.smembers(dir_key)
+        return self.TestFactory.list_objs()
 
-class AssignmentTest(UUIDRedisObject):
+class Test(UUIDRedisObject):
     """
-    COGS Assignment Test Class
+    COGS Test Class
 
     """
 
-    def __init__(self, uuid_obj, parent):
+    schema = _TESTS_SCHEMA
+
+    # Override Constructor
+    def __init__(self, uuid_obj):
         """Base Constructor"""
-        super(AssignmentTest, self).__init__(uuid_obj)
-        self.schema = _ASSIGNMENTTESTS_SCHEMA
-        self.dir_key = "{:s}:{:s}".format(parent, _ASSIGNMENTTESTS_DIR_KEY)
-        self.obj_key = "{:s}:{:s}:{:s}".format(parent, _ASSIGNMENTTESTS_OBJ_KEY, repr(self))
+        super(Test, self).__init__(uuid_obj)
 
-    @classmethod
-    def from_new(cls, d, parent):
-        """New Constructor"""
-
-        tst = super(AssignmentTest, cls).from_new(d, parent)
-        return tst
-
-    @classmethod
-    def from_existing(cls, uuid_hex, parent):
-        """Existing Constructor"""
-
-        tst = super(AssignmentTest, cls).from_existing(uuid_hex, parent)
-        return tst
-
+    # Override Delete
     def delete(self):
         """Delete"""
 
-        super(AssignmentTest, self).delete()
+        super(Test, self).delete()
