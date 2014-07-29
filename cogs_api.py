@@ -329,7 +329,7 @@ def bad_request(error=False):
 def not_found(error=False):
     message = {
             'status': 404,
-            'message': "Not Found: {:s}".format(request.url)
+            'message': "Not Found: {:s}".format(flask.request.url)
     }
     res = flask.jsonify(message)
     res.status_code = 404
