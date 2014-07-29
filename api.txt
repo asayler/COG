@@ -1,25 +1,37 @@
 ### Implemented:
 
-GET     /                                             <UNDEFINED>
+GET     /                                               <UNDEFINED>
 
-GET     /assignments/                                 List Assignments
-POST    /assignments/                                 Add Assignment
-GET     /assignments/<ID>/                            Show Assignment
-PUT     /assignments/<ID>/                            Update Assignment
-DELETE  /assignments/<ID>/                            Remove Assignment
+GET     /assignments/                                   List Assignments
+POST    /assignments/                                   Add Assignment
+GET     /assignments/<ID>/                              Show Assignment
+PUT     /assignments/<ID>/                              Update Assignment
+DELETE  /assignments/<ID>/                              Remove Assignment
 
-GET     /assignments/<ID>/tests/                      List Grading Tests
-POST    /assignments/<ID>/tests/                      Add Grading Test
-GET     /assignments/<ID>/tests/<ID>/                 Show Grading Test
-PUT     /assignments/<ID>/tests/<ID>/                 Update Grading Test
-DELETE  /assignments/<ID>/tests/<ID>/                 Remove Grading Test
+GET     /assignments/<ID>/tests/                        List Grading Tests
+POST    /assignments/<ID>/tests/                        Add Grading Test
+GET     /assignments/<ID>/tests/<ID>/                   Show Grading Test
+PUT     /assignments/<ID>/tests/<ID>/                   Update Grading Test
+DELETE  /assignments/<ID>/tests/<ID>/                   Remove Grading Test
 
 ### In Progress:
 
-GET     /assignments/<ID>/submissions/                List Submissions
-POST    /assignments/<ID>/submissions/                Add Submission
-GET     /assignments/<ID>/submissions/<ID>/           Show Submission
+GET     /assignments/<ID>/tests/<ID>/files/             List Grading Test Files
+POST    /assignments/<ID>/tests/<ID>/files/             Add Grading Test File
+GET     /assignments/<ID>/tests/<ID>/files/<ID>/        Show Grading Test File
+PUT     /assignments/<ID>/tests/<ID>/files/<ID>/        Update Grading Test File
+DELETE  /assignments/<ID>/tests/<ID>/files/<ID>/        Remove Grading Test File
 
-GET     /assignments/<ID>/submissions/<ID>/runs/      List Test Runs
-POST    /assignments/<ID>/submissions/<ID>/runs/      Start New Test Run
-GET     /assignments/<ID>/submissions/<ID>/runs/<ID>/ Show Test Run Results
+GET     /assignments/<ID>/submissions/                  List Submissions
+POST    /assignments/<ID>/submissions/                  Add Submission
+GET     /assignments/<ID>/submissions/<ID>/             Show Submission
+
+GET     /assignments/<ID>/submissions/<ID>/files/       List Submission Files
+POST    /assignments/<ID>/submissions/<ID>/files/       Add Submission File
+GET     /assignments/<ID>/submissions/<ID>/files/<ID>/  Show Submission File
+PUT     /assignments/<ID>/submissions/<ID>/files/<ID>/  Update Submission File
+DELETE  /assignments/<ID>/submissions/<ID>/files/<ID>/  Remove Submission File
+
+GET     /assignments/<ID>/submissions/<ID>/runs/        List Test Runs
+POST    /assignments/<ID>/submissions/<ID>/runs/        Start New Test Run
+GET     /assignments/<ID>/submissions/<ID>/runs/<ID>/   Show Test Run Results
