@@ -22,7 +22,7 @@ _ASSIGNMENT_TESTDICT      = {'name': "Test_Assignment",
 _ASSIGNMENTTEST_TESTDICT  = {'name': "Test_Assignment",
                              'contact': "Andy Sayler",
                              'path': "/tmp/test.py",
-                             'maxscore': 10}
+                             'maxscore': "10"}
 
 
 class DatatypesTestError(Exception):
@@ -48,7 +48,7 @@ class DatatypesTestCase(unittest.TestCase):
                                     port=datatypes._REDIS_PORT,
                                     db=datatypes._REDIS_DB)
         if (self.db.dbsize() != 0):
-            raise DatatypesTestError("Test Database Not Empty: {}".format(db.dbsize()))
+            raise DatatypesTestError("Test Database Not Empty: {}".format(self.db.dbsize()))
 
     def tearDown(self):
         self.db.flushdb()
@@ -219,7 +219,8 @@ class AssignmentTestCase(DatatypesTestCase):
 
         # Test Valid
         d = copy.deepcopy(_ASSIGNMENT_TESTDICT)
-        a = datatypes.Assignment.from_new(d)
+        asn = datatypes.Assignment.from_new(d)
+        self.assertEqual(d, asn.get_dict())
 
     def test_from_existing(self):
 
@@ -230,10 +231,10 @@ class AssignmentTestCase(DatatypesTestCase):
 
         # Test Valid UUID
         d = copy.deepcopy(_ASSIGNMENT_TESTDICT)
-        obj1 = datatypes.Assignment.from_new(d)
-        obj1_uuid = repr(obj1)
-        obj2 = datatypes.Assignment.from_existing(obj1_uuid)
-        self.assertEqual(obj1, obj2)
+        asn1 = datatypes.Assignment.from_new(d)
+        asn1_uuid = repr(asn1)
+        asn2 = datatypes.Assignment.from_existing(asn1_uuid)
+        self.assertEqual(asn1, asn2)
 
 class AssignmentTestTestCase(DatatypesTestCase):
 
@@ -267,6 +268,7 @@ class AssignmentTestTestCase(DatatypesTestCase):
         # Test Valid
         d = copy.deepcopy(_ASSIGNMENTTEST_TESTDICT)
         tst = self.asn.create_test(d)
+        self.assertEqual(d, tst.get_dict())
 
     def test_from_existing(self):
 
@@ -277,10 +279,10 @@ class AssignmentTestTestCase(DatatypesTestCase):
 
         # Test Valid UUID
         d = copy.deepcopy(_ASSIGNMENTTEST_TESTDICT)
-        obj1 = self.asn.create_test(d)
-        obj1_uuid = repr(obj1)
-        obj2 = self.asn.get_test(obj1_uuid)
-        self.assertEqual(obj1, obj2)
+        tst1 = self.asn.create_test(d)
+        tst1_uuid = repr(tst1)
+        tst2 = self.asn.get_test(tst1_uuid)
+        self.assertEqual(tst1, tst2)
 
 
 # Main
