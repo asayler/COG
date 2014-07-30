@@ -8,6 +8,7 @@ import copy
 import os
 import uuid
 import time
+import mimetypes
 
 import redis
 
@@ -31,7 +32,7 @@ TEST_TESTDICT = {'name': "Test_Assignment",
 
 _SUBMISSION_SCHEMA = ['author']
 
-_FILES_SCHEMA = ['name', 'type']
+_FILES_SCHEMA = ['key', 'name', 'type', 'encoding']
 _FILES_PATH = "./files/"
 
 _UUID_GLOB = '????????-????-????-????-????????????'
@@ -337,7 +338,7 @@ class Submission(UUIDRedisObject):
             fle.delete(force=True)
 
         # Delete Self
-        super(Test, self).delete()
+        super(Submission, self).delete()
 
     # File Methods
     def create_file(self, d, file_obj):
@@ -365,8 +366,10 @@ class File(UUIDRedisObject):
         data = copy.deepcopy(d)
 
         # Setup Dict
-        data['name'] = file_obj.filename
-        data['type'] = None
+        data['name'] = str(file_obj.filename)
+        typ = mimetypes.guess_type(file_obj.filename)
+        data['type'] = str(typ[0])
+        data['encoding'] = str(typ[1])
 
         # Create File
         fle = super(File, cls).from_new(data)
