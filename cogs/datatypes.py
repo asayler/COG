@@ -34,8 +34,8 @@ _SUBMISSIONS_SCHEMA = ['author']
 
 _RUNS_SCHEMA = ['test', 'status', 'score', 'output']
 
-_FILES_SCHEMA = ['key', 'name', 'type', 'encoding']
-_FILES_PATH = "./files/"
+_FILES_SCHEMA = ['key', 'name', 'type', 'encoding', 'path']
+_FILES_DIR = "./files/"
 
 _UUID_GLOB = '????????-????-????-????-????????????'
 
@@ -409,32 +409,19 @@ class File(UUIDRedisObject):
         typ = mimetypes.guess_type(file_obj.filename)
         data['type'] = str(typ[0])
         data['encoding'] = str(typ[1])
+        data['path'] = ""
 
         # Create File
         fle = super(File, cls).from_new(data)
 
         # Save File
-        fle.path = _FILES_PATH + repr(fle)
+        fle['path'] = os.path.abspath("{:s}/{:s}".format(_FILES_DIR, repr(fle)))
         try:
-            file_obj.save(fle.path)
+            file_obj.save(fle['path'])
         except IOError:
             # Clean up on failure
             fle.delete(force=True)
             raise
-
-        # Return File
-        return fle
-
-    # Override from_existing
-    @classmethod
-    def from_existing(cls, uuid_hex):
-        """Existing Constructor"""
-
-        # Get File
-        fle = super(File, cls).from_existing(uuid_hex)
-
-        # Setup path
-        fle.path = _FILES_PATH + repr(fle)
 
         # Return File
         return fle
@@ -445,7 +432,7 @@ class File(UUIDRedisObject):
 
         # Delete File
         try:
-            os.remove(self.path)
+            os.remove(self['path'])
         except OSError:
             if force:
                 pass
