@@ -14,13 +14,14 @@ GET     /assignments/<ID>/tests/<ID>/                   Show Grading Test
 PUT     /assignments/<ID>/tests/<ID>/                   Update Grading Test
 DELETE  /assignments/<ID>/tests/<ID>/                   Remove Grading Test
 
-### In Progress:
-
 GET     /assignments/<ID>/tests/<ID>/files/             List Grading Test Files
 POST    /assignments/<ID>/tests/<ID>/files/             Add Grading Test File
 GET     /assignments/<ID>/tests/<ID>/files/<ID>/        Show Grading Test File
-PUT     /assignments/<ID>/tests/<ID>/files/<ID>/        Update Grading Test File
 DELETE  /assignments/<ID>/tests/<ID>/files/<ID>/        Remove Grading Test File
+
+### In Progress:
+
+PUT     /assignments/<ID>/tests/<ID>/files/<ID>/        Update Grading Test File
 
 GET     /assignments/<ID>/submissions/                  List Submissions
 POST    /assignments/<ID>/submissions/                  Add Submission
