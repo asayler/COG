@@ -25,6 +25,8 @@ TEST_TESTDICT = {'name': "Test_Assignment",
                  'type': "script",
                  'maxscore': "10"}
 
+_SUBMISSION_SCHEMA = ['author', 'date']
+
 _FILES_SCHEMA = ['name', 'contact', 'type']
 _FILES_PATH = "./files/"
 
@@ -226,6 +228,7 @@ class Assignment(UUIDRedisObject):
         """Base Constructor"""
         super(Assignment, self).__init__(uuid_obj)
         self.TestFactory = Test.get_factory(self.obj_key)
+        self.SubmissionFactory = Submission.get_factory(self.obj_key)
 
     # Override Delete
     def delete(self):
@@ -235,6 +238,11 @@ class Assignment(UUIDRedisObject):
         for t_uuid in self.list_tests():
             tst = self.get_test(t_uuid)
             tst.delete()
+
+        # Delete Submissions
+        for s_uuid in self.list_submissions():
+            sub = self.get_submission(s_uuid)
+            sub.delete()
 
         # Delete Self
         super(Assignment, self).delete()
@@ -247,6 +255,14 @@ class Assignment(UUIDRedisObject):
     def list_tests(self):
         return self.TestFactory.list_objs()
 
+    # Submission Methods
+    def create_submission(self, d):
+        return self.SubmissionFactory.from_new(d)
+    def get_submission(self, uuid_hex):
+        return self.SubmissionFactory.from_existing(uuid_hex)
+    def list_submissions(self):
+        return self.SubmissionFactory.list_objs()
+
 
 class Test(UUIDRedisObject):
     """
@@ -255,6 +271,40 @@ class Test(UUIDRedisObject):
     """
 
     schema = _TESTS_SCHEMA
+
+    # Override Constructor
+    def __init__(self, uuid_obj):
+        """Base Constructor"""
+        super(Test, self).__init__(uuid_obj)
+        self.FileFactory = File.get_factory(self.obj_key)
+
+    # Override Delete
+    def delete(self):
+        """Delete"""
+
+        # Delete Files
+        for f_uuid in self.list_files():
+            fle = self.get_file(f_uuid)
+            fle.delete(force=True)
+
+        # Delete Self
+        super(Test, self).delete()
+
+    # File Methods
+    def create_file(self, d, file_obj):
+        return self.FileFactory.from_new(d, file_obj)
+    def get_file(self, uuid_hex):
+        return self.FileFactory.from_existing(uuid_hex)
+    def list_files(self):
+        return self.FileFactory.list_objs()
+
+class Submission(UUIDRedisObject):
+    """
+    COGS Submission Class
+
+    """
+
+    schema = _SUBMISSION_SCHEMA
 
     # Override Constructor
     def __init__(self, uuid_obj):
