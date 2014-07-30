@@ -35,10 +35,13 @@ def list_assignments():
 @app.route("/assignments/", methods=['POST'])
 def create_assignment():
 
+    # Create Server
+    s = datatypes.Server()
+
     # Create Assignment
     d = flask.request.get_json(force=True)
     try:
-        a = datatypes.Assignment.from_new(d)
+        a = s.create_assignment(d)
     except KeyError as e:
         err = {
             'status': 400,
@@ -56,9 +59,12 @@ def create_assignment():
 @app.route("/assignments/<uuid_hex>/", methods=['GET'])
 def get_assignment(uuid_hex):
 
+    # Create Server
+    s = datatypes.Server()
+
     # Get Assignment
     try:
-        a = datatypes.Assignment.from_existing(uuid_hex)
+        a = s.get_assignment(uuid_hex)
     except datatypes.UUIDRedisObjectDNE as e:
         err = {
             'status': 404,
@@ -76,9 +82,12 @@ def get_assignment(uuid_hex):
 @app.route("/assignments/<uuid_hex>/", methods=['PUT'])
 def set_assignment(uuid_hex):
 
+    # Create Server
+    s = datatypes.Server()
+
     # Get Assignment
     try:
-        a = datatypes.Assignment.from_existing(uuid_hex)
+        a = s.get_assignment(uuid_hex)
     except datatypes.UUIDRedisObjectDNE as e:
         err = {
             'status': 404,
@@ -109,9 +118,12 @@ def set_assignment(uuid_hex):
 @app.route("/assignments/<uuid_hex>/", methods=['DELETE'])
 def delete_assignment(uuid_hex):
 
+    # Create Server
+    s = datatypes.Server()
+
     # Get Assignment
     try:
-        a = datatypes.Assignment.from_existing(uuid_hex)
+        a = s.get_assignment(uuid_hex)
     except datatypes.UUIDRedisObjectDNE as e:
         err = {
             'status': 404,
@@ -137,9 +149,12 @@ def delete_assignment(uuid_hex):
 @app.route("/assignments/<asn_uuid>/tests/", methods=['GET'])
 def list_assignment_tests(asn_uuid):
 
+    # Create Server
+    srv = datatypes.Server()
+
     # Get Assignment
     try:
-        asn = datatypes.Assignment.from_existing(asn_uuid)
+        asn = srv.get_assignment(asn_uuid)
     except datatypes.UUIDRedisObjectDNE as e:
         err = {
             'status': 404,
@@ -160,9 +175,12 @@ def list_assignment_tests(asn_uuid):
 @app.route("/assignments/<asn_uuid>/tests/", methods=['POST'])
 def create_assignment_test(asn_uuid):
 
+    # Create Server
+    srv = datatypes.Server()
+
     # Get Assignment
     try:
-        asn = datatypes.Assignment.from_existing(asn_uuid)
+        asn = srv.get_assignment(asn_uuid)
     except datatypes.UUIDRedisObjectDNE as e:
         err = {
             'status': 404,
@@ -193,9 +211,12 @@ def create_assignment_test(asn_uuid):
 @app.route("/assignments/<asn_uuid>/tests/<tst_uuid>/", methods=['GET'])
 def get_assignment_test(asn_uuid, tst_uuid):
 
+    # Create Server
+    srv = datatypes.Server()
+
     # Get Assignment
     try:
-        asn = datatypes.Assignment.from_existing(asn_uuid)
+        asn = srv.get_assignment(asn_uuid)
     except datatypes.UUIDRedisObjectDNE as e:
         err = {
             'status': 404,
@@ -225,9 +246,12 @@ def get_assignment_test(asn_uuid, tst_uuid):
 @app.route("/assignments/<asn_uuid>/tests/<tst_uuid>/", methods=['PUT'])
 def set_assignment_test(asn_uuid, tst_uuid):
 
+    # Create Server
+    srv = datatypes.Server()
+
     # Get Assignment
     try:
-        asn = datatypes.Assignment.from_existing(asn_uuid)
+        asn = srv.get_assignment(asn_uuid)
     except datatypes.UUIDRedisObjectDNE as e:
         err = {
             'status': 404,
@@ -270,9 +294,12 @@ def set_assignment_test(asn_uuid, tst_uuid):
 @app.route("/assignments/<asn_uuid>/tests/<tst_uuid>/", methods=['DELETE'])
 def delete_assignment_test(asn_uuid, tst_uuid):
 
+    # Create Server
+    srv = datatypes.Server()
+
     # Get Assignment
     try:
-        asn = datatypes.Assignment.from_existing(asn_uuid)
+        asn = srv.get_assignment(asn_uuid)
     except datatypes.UUIDRedisObjectDNE as e:
         err = {
             'status': 404,
