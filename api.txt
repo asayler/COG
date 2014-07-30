@@ -19,19 +19,22 @@ POST    /assignments/<ID>/tests/<ID>/files/             Add Grading Test File
 GET     /assignments/<ID>/tests/<ID>/files/<ID>/        Show Grading Test File
 DELETE  /assignments/<ID>/tests/<ID>/files/<ID>/        Remove Grading Test File
 
-### In Progress:
-
-PUT     /assignments/<ID>/tests/<ID>/files/<ID>/        Update Grading Test File
-
 GET     /assignments/<ID>/submissions/                  List Submissions
 POST    /assignments/<ID>/submissions/                  Add Submission
 GET     /assignments/<ID>/submissions/<ID>/             Show Submission
+PUT     /assignments/<ID>/submissions/<ID>/             Update Submission
+DELETE  /assignments/<ID>/submissions/<ID>/             Delete Submission
 
 GET     /assignments/<ID>/submissions/<ID>/files/       List Submission Files
 POST    /assignments/<ID>/submissions/<ID>/files/       Add Submission File
 GET     /assignments/<ID>/submissions/<ID>/files/<ID>/  Show Submission File
-PUT     /assignments/<ID>/submissions/<ID>/files/<ID>/  Update Submission File
 DELETE  /assignments/<ID>/submissions/<ID>/files/<ID>/  Remove Submission File
+
+### In Progress:
+
+PUT     /assignments/<ID>/tests/<ID>/files/<ID>/        Update Grading Test File
+
+PUT     /assignments/<ID>/submissions/<ID>/files/<ID>/  Update Submission File
 
 GET     /assignments/<ID>/submissions/<ID>/runs/        List Test Runs
 POST    /assignments/<ID>/submissions/<ID>/runs/        Start New Test Run
