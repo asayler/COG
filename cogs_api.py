@@ -18,6 +18,7 @@ _ASSIGNMENTS_KEY = "assignments"
 _TESTS_KEY = "tests"
 _SUBMISSIONS_KEY = "submissions"
 _FILES_KEY = "files"
+_RUNS_KEY = "runs"
 
 ### Endpoints
 
@@ -38,6 +39,7 @@ def process_assignments():
     # Create Server
     srv = datatypes.Server()
 
+    # Process
     if flask.request.method == 'GET':
         # Get Assignments
         out = {_ASSIGNMENTS_KEY: list(srv.list_assignments())}
@@ -78,6 +80,7 @@ def process_assignment(uuid_hex):
         err_res.status_code = err['status']
         return err_res
 
+    # Process
     if flask.request.method == 'GET':
         # Get Assignment
         out = {repr(a): a.get_dict()}
@@ -125,6 +128,7 @@ def process_tests(asn_uuid):
         err_res.status_code = err['status']
         return err_res
 
+    # Process
     if flask.request.method == 'GET':
         # Get Tests
         out = {_TESTS_KEY: list(asn.list_tests())}
@@ -175,6 +179,7 @@ def process_test(asn_uuid, tst_uuid):
         err_res.status_code = err['status']
         return err_res
 
+    # Process
     if flask.request.method == 'GET':
         # Get Assignment
         out = {repr(tst): tst.get_dict()}
@@ -231,6 +236,7 @@ def process_test_files(asn_uuid, tst_uuid):
         err_res.status_code = err['status']
         return err_res
 
+    # Process
     if flask.request.method == 'GET':
         # Get Test Files
         fle_lst = list(tst.list_files())
@@ -297,6 +303,7 @@ def process_test_file(asn_uuid, tst_uuid, fle_uuid):
         err_res.status_code = err['status']
         return err_res
 
+    # Process
     if flask.request.method == 'GET':
         # Get File
         out = {repr(fle): fle.get_dict()}
@@ -330,13 +337,13 @@ def process_submissions(asn_uuid):
         err_res.status_code = err['status']
         return err_res
 
+    # Process
     if flask.request.method == 'GET':
-        # Get Submission
+        # Get Submissions
         out = {_SUBMISSIONS_KEY: list(asn.list_submissions())}
     elif flask.request.method == 'POST':
         # Create Submission
         d = flask.request.get_json(force=True)
-
         try:
             sub = asn.create_submission(d)
         except KeyError as e:
@@ -381,6 +388,7 @@ def process_submission(asn_uuid, sub_uuid):
         err_res.status_code = err['status']
         return err_res
 
+    # Process
     if flask.request.method == 'GET':
         # Get Assignment
         out = {repr(sub): sub.get_dict()}
@@ -437,6 +445,7 @@ def process_submission_files(asn_uuid, sub_uuid):
         err_res.status_code = err['status']
         return err_res
 
+    # Process
     if flask.request.method == 'GET':
         # Get Submission Files
         fle_lst = list(sub.list_files())
@@ -503,6 +512,7 @@ def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
         err_res.status_code = err['status']
         return err_res
 
+    # Process
     if flask.request.method == 'GET':
         # Get File
         out = {repr(fle): fle.get_dict()}
@@ -510,6 +520,114 @@ def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
         # Delete File
         out = {repr(fle): fle.get_dict()}
         fle.delete()
+    else:
+        raise Exception("Unhandled Method")
+
+    # Return Test
+    res = flask.jsonify(out)
+    return res
+
+## Run Endpoints ##
+
+@app.route("/assignments/<asn_uuid>/submissions/<sub_uuid>/runs/",
+           methods=['GET', 'POST'])
+def process_runs(asn_uuid, sub_uuid):
+
+    # Create Server
+    srv = datatypes.Server()
+
+    # Get Assignment
+    try:
+        asn = srv.get_assignment(asn_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = { 'status': 404,
+                'message': str(e) }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Get Submission
+    try:
+        sub = asn.get_submission(sub_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = { 'status': 404,
+                'message': str(e) }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Process
+    if flask.request.method == 'GET':
+        # Get Runs
+        run_lst = list(sub.list_runs())
+    elif flask.request.method == 'POST':
+        # Execute Runs
+        run_lst = []
+        for tst_uuid in asn.list_tests():
+            tst = asn.get_test(tst_uuid)
+            try:
+                run = sub.execute_run(tst)
+            except KeyError as e:
+                err = { 'status': 400,
+                        'message': str(e) }
+                err_res = flask.jsonify(err)
+                err_res.status_code = err['status']
+                return err_res
+            else:
+                run_lst.append(repr(run))
+    else:
+        raise Exception("Unhandled Method")
+
+    # Return Run List
+    out = {_RUNS_KEY: run_lst}
+    res = flask.jsonify(out)
+    return res
+
+@app.route("/assignments/<asn_uuid>/submissions/<sub_uuid>/runs/<run_uuid>/",
+           methods=['GET', 'DELETE'])
+def process_run(asn_uuid, sub_uuid, run_uuid):
+
+    # Create Server
+    srv = datatypes.Server()
+
+    # Get Assignment
+    try:
+        asn = srv.get_assignment(asn_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = { 'status': 404,
+                'message': str(e) }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Get Submission
+    try:
+        sub = asn.get_submission(sub_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = { 'status': 404,
+                'message': str(e) }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Get Run
+    try:
+        run = sub.get_run(run_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = { 'status': 404,
+                'message': str(e) }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Process
+    if flask.request.method == 'GET':
+        # Get Run
+        out = {repr(run): run.get_dict()}
+    elif flask.request.method == 'DELETE':
+        # Delete Assignment
+        out = {repr(run): run.get_dict()}
+        run.delete()
     else:
         raise Exception("Unhandled Method")
 

@@ -30,7 +30,9 @@ TEST_TESTDICT = {'name': "Test_Assignment",
                  'type': "script",
                  'maxscore': "10"}
 
-_SUBMISSION_SCHEMA = ['author']
+_SUBMISSIONS_SCHEMA = ['author']
+
+_RUNS_SCHEMA = ['test', 'status', 'score', 'output']
 
 _FILES_SCHEMA = ['key', 'name', 'type', 'encoding']
 _FILES_PATH = "./files/"
@@ -320,13 +322,14 @@ class Submission(UUIDRedisObject):
 
     """
 
-    schema = _BASE_SCHEMA + _SUBMISSION_SCHEMA
+    schema = _BASE_SCHEMA + _SUBMISSIONS_SCHEMA
 
     # Override Constructor
     def __init__(self, uuid_obj):
         """Base Constructor"""
         super(Submission, self).__init__(uuid_obj)
         self.FileFactory = File.get_factory(self.obj_key)
+        self.RunFactory = Run.get_factory(self.obj_key)
 
     # Override Delete
     def delete(self):
@@ -347,6 +350,42 @@ class Submission(UUIDRedisObject):
         return self.FileFactory.from_existing(uuid_hex)
     def list_files(self):
         return self.FileFactory.list_objs()
+
+    # Run Methods
+    def execute_run(self, tst):
+        return self.RunFactory.from_new(tst)
+    def get_run(self, uuid_hex):
+        return self.RunFactory.from_existing(uuid_hex)
+    def list_runs(self):
+        return self.RunFactory.list_objs()
+
+class Run(UUIDRedisObject):
+    """
+    COGS Run Class
+
+    """
+
+    schema = _BASE_SCHEMA + _RUNS_SCHEMA
+
+    # Override from_new
+    @classmethod
+    def from_new(cls, tst):
+        """New Constructor"""
+
+        # Create New Object
+        data = {}
+
+        # Setup Dict
+        data['test'] = repr(tst)
+        data['status'] = "success"
+        data['score'] = str(0)
+        data['output'] = ""
+
+        # Create Run
+        fle = super(Run, cls).from_new(data)
+
+        # Return File
+        return fle
 
 
 class File(UUIDRedisObject):
