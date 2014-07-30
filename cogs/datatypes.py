@@ -4,6 +4,7 @@
 # Summer 2014
 # Univerity of Colorado
 
+import os
 import uuid
 
 import redis
@@ -246,6 +247,7 @@ class Assignment(UUIDRedisObject):
     def list_tests(self):
         return self.TestFactory.list_objs()
 
+
 class Test(UUIDRedisObject):
     """
     COGS Test Class
@@ -258,9 +260,87 @@ class Test(UUIDRedisObject):
     def __init__(self, uuid_obj):
         """Base Constructor"""
         super(Test, self).__init__(uuid_obj)
+        self.FileFactory = File.get_factory(self.obj_key)
 
     # Override Delete
     def delete(self):
         """Delete"""
 
+        # Delete Files
+        for f_uuid in self.list_files():
+            fle = self.get_file(f_uuid)
+            fle.delete(force=True)
+
+        # Delete Self
         super(Test, self).delete()
+
+    # File Methods
+    def create_file(self, d, file_obj):
+        return self.FileFactory.from_new(d, file_obj)
+    def get_file(self, uuid_hex):
+        return self.FileFactory.from_existing(uuid_hex)
+    def list_files(self):
+        return self.FileFactory.list_objs()
+
+
+class File(UUIDRedisObject):
+    """
+    COGS File Class
+
+    """
+
+    schema = _FILES_SCHEMA
+
+    # Override from_new
+    @classmethod
+    def from_new(cls, d, file_obj):
+        """New Constructor"""
+
+        # Setup Dict
+        d['name'] = file_obj.filename
+        d['type'] = None
+
+        # Create File
+        fle = super(File, cls).from_new(d)
+
+        # Save File
+        fle.path = _FILES_PATH + repr(fle)
+        try:
+            file_obj.save(fle.path)
+        except IOError:
+            # Clean up on failure
+            fle.delete(force=True)
+            raise
+
+        # Return File
+        return fle
+
+    # Override from_existing
+    @classmethod
+    def from_existing(cls, uuid_hex):
+        """Existing Constructor"""
+
+        # Get File
+        fle = super(File, cls).from_existing(uuid_hex)
+
+        # Setup path
+        fle.path = _FILES_PATH + repr(fle)
+
+        # Return File
+        return fle
+
+    # Override Delete
+    def delete(self, force=False):
+        """Delete"""
+
+        # Delete File
+        try:
+            os.remove(self.path)
+        except OSError:
+            if force:
+                pass
+            else:
+                raise
+
+        # Delete Self
+        super(File, self).delete()
