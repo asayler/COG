@@ -48,13 +48,16 @@ class DatatypesTestCase(unittest.TestCase):
         self.db.flushdb()
         datatypes._REDIS_DB -= _REDIS_TESTDB_OFFSET
 
+    def assertSubset(self, sub, sup):
+        for k in sub:
+            self.assertEqual(sub[k], sup[k])
 
 class UUIDRedisObjectTestCase(DatatypesTestCase):
 
     def setUp(self):
         super(UUIDRedisObjectTestCase, self).setUp()
         self.ObjFactory = datatypes.UUIDRedisObject.get_factory(None)
-        self.ObjFactory.schema = _DUMMY_SCHEMA
+        self.ObjFactory.schema = datatypes._BASE_SCHEMA + _DUMMY_SCHEMA
 
     def tearDown(self):
         super(UUIDRedisObjectTestCase, self).tearDown()
@@ -81,7 +84,8 @@ class UUIDRedisObjectTestCase(DatatypesTestCase):
 
         # Test Valid
         d = copy.deepcopy(DUMMY_TESTDICT)
-        a = self.ObjFactory.from_new(d)
+        obj = self.ObjFactory.from_new(d)
+        self.assertSubset(d, obj.get_dict())
 
     def test_from_existing(self):
 
@@ -103,7 +107,7 @@ class UUIDRedisObjectTestCase(DatatypesTestCase):
         d_in = copy.deepcopy(DUMMY_TESTDICT)
         obj = self.ObjFactory.from_new(d_in)
         d_out = obj.get_dict()
-        self.assertEqual(d_in, d_out)
+        self.assertSubset(d_in, d_out)
 
     def test_set_dict(self):
 
@@ -111,7 +115,7 @@ class UUIDRedisObjectTestCase(DatatypesTestCase):
         d1_in = copy.deepcopy(DUMMY_TESTDICT)
         obj = self.ObjFactory.from_new(d1_in)
         d1_out = obj.get_dict()
-        self.assertEqual(d1_in, d1_out)
+        self.assertSubset(d1_in, d1_out)
 
         # Update and Get Object
         d2_in = copy.deepcopy(DUMMY_TESTDICT)
@@ -120,7 +124,7 @@ class UUIDRedisObjectTestCase(DatatypesTestCase):
         self.assertNotEqual(d1_in, d2_in)
         obj.set_dict(d2_in)
         d2_out = obj.get_dict()
-        self.assertEqual(d2_in, d2_out)
+        self.assertSubset(d2_in, d2_out)
 
     def test_getitem(self):
 
@@ -177,7 +181,7 @@ class ServerTestCase(DatatypesTestCase):
         for i in range(10):
             d = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
             for k in d:
-                d[k] = d[k] + "_test_{:02d}".format(i)
+                d[k] = "{:s}_test_{:02d}".format(d[k], i)
             assignments_in.add(repr(datatypes.Assignment.from_new(d)))
 
         # List Assignments
@@ -194,7 +198,7 @@ class AssignmentTestCase(DatatypesTestCase):
     def tearDown(self):
         super(AssignmentTestCase, self).tearDown()
 
-    def test_from_new(self):
+    def test_create_assignment(self):
 
         # Test Empty Dict
         d = {}
@@ -217,9 +221,9 @@ class AssignmentTestCase(DatatypesTestCase):
         # Test Valid
         d = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
         asn = self.srv.create_assignment(d)
-        self.assertEqual(d, asn.get_dict())
+        self.assertSubset(d, asn.get_dict())
 
-    def test_from_existing(self):
+    def test_get_assignment(self):
 
         # Test Invalid UUID
         self.assertRaises(datatypes.UUIDRedisObjectDNE,
@@ -266,9 +270,9 @@ class AssignmentTestTestCase(DatatypesTestCase):
         # Test Valid
         d = copy.deepcopy(datatypes.TEST_TESTDICT)
         tst = self.asn.create_test(d)
-        self.assertEqual(d, tst.get_dict())
+        self.assertSubset(d, tst.get_dict())
 
-    def test_from_existing(self):
+    def test_get_test(self):
 
         # Test Invalid UUID
         self.assertRaises(datatypes.UUIDRedisObjectDNE,

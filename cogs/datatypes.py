@@ -4,8 +4,10 @@
 # Summer 2014
 # Univerity of Colorado
 
+import copy
 import os
 import uuid
+import time
 
 import redis
 
@@ -14,6 +16,8 @@ _ENCODING = 'utf-8'
 _REDIS_HOST = "localhost"
 _REDIS_PORT = 6379
 _REDIS_DB   = 3
+
+_BASE_SCHEMA = ['created_time', 'modified_time']
 
 _ASSIGNMENTS_SCHEMA  = ['name', 'contact']
 ASSIGNMENT_TESTDICT  = {'name': "Test_Assignment",
@@ -25,7 +29,7 @@ TEST_TESTDICT = {'name': "Test_Assignment",
                  'type': "script",
                  'maxscore': "10"}
 
-_SUBMISSION_SCHEMA = ['author', 'date']
+_SUBMISSION_SCHEMA = ['author']
 
 _FILES_SCHEMA = ['name', 'type']
 _FILES_PATH = "./files/"
@@ -81,7 +85,7 @@ class UUIDRedisObject(object):
 
     """
 
-    schema = []
+    schema = _BASE_SCHEMA
 
     def __init__(self, uuid_obj):
         """Base Constructor"""
@@ -112,15 +116,20 @@ class UUIDRedisObject(object):
         """New Constructor"""
 
         # Create New Object
+        data = copy.deepcopy(d)
         uuid_obj = uuid.uuid4()
         obj = cls(uuid_obj)
 
+        # Set Times
+        data['created_time'] = str(time.time())
+        data['modified_time'] = str(time.time())
+
         # Check dict
-        if (set(d.keys()) != set(obj.schema)):
-            raise KeyError("Keys {:s} do not match schema {:s}".format(d, obj.schema))
+        if (set(data.keys()) != set(obj.schema)):
+            raise KeyError("Keys {:s} do not match schema {:s}".format(data.keys(), obj.schema))
 
         # Add Object Data to DB
-        if not obj.db.hmset(obj.obj_key, d):
+        if not obj.db.hmset(obj.obj_key, data):
             raise UUIDRedisObjectError("Create Failed")
 
         # Return Object
@@ -180,18 +189,24 @@ class UUIDRedisObject(object):
 
     def get_dict(self):
         """Get Dict"""
-        d = self.db.hgetall(self.obj_key)
-        return d
+        data = self.db.hgetall(self.obj_key)
+        return data
 
     def set_dict(self, d):
         """Set Dict"""
 
+        # Create New Object
+        data = copy.deepcopy(d)
+
+        # Set Time
+        data['modified_time'] = str(time.time())
+
         # Check dict
-        if (set(d.keys()) != set(self.schema)):
-            raise KeyError("Keys {:s} do not match schema {:s}".format(d, self.schema))
+        if not set(data.keys()).issubset(set(self.schema)):
+            raise KeyError("Keys {:s} do not match schema {:s}".format(data.keys(), self.schema))
 
         # Set dict
-        self.db.hmset(self.obj_key, d)
+        self.db.hmset(self.obj_key, data)
 
 
 class Server(RedisObject):
@@ -221,7 +236,7 @@ class Assignment(UUIDRedisObject):
 
     """
 
-    schema = _ASSIGNMENTS_SCHEMA
+    schema = _BASE_SCHEMA + _ASSIGNMENTS_SCHEMA
 
     # Override Constructor
     def __init__(self, uuid_obj):
@@ -270,7 +285,7 @@ class Test(UUIDRedisObject):
 
     """
 
-    schema = _TESTS_SCHEMA
+    schema = _BASE_SCHEMA + _TESTS_SCHEMA
 
     # Override Constructor
     def __init__(self, uuid_obj):
@@ -304,12 +319,12 @@ class Submission(UUIDRedisObject):
 
     """
 
-    schema = _SUBMISSION_SCHEMA
+    schema = _BASE_SCHEMA + _SUBMISSION_SCHEMA
 
     # Override Constructor
     def __init__(self, uuid_obj):
         """Base Constructor"""
-        super(Test, self).__init__(uuid_obj)
+        super(Submission, self).__init__(uuid_obj)
         self.FileFactory = File.get_factory(self.obj_key)
 
     # Override Delete
@@ -339,19 +354,22 @@ class File(UUIDRedisObject):
 
     """
 
-    schema = _FILES_SCHEMA
+    schema = _BASE_SCHEMA + _FILES_SCHEMA
 
     # Override from_new
     @classmethod
     def from_new(cls, d, file_obj):
         """New Constructor"""
 
+        # Create New Object
+        data = copy.deepcopy(d)
+
         # Setup Dict
-        d['name'] = file_obj.filename
-        d['type'] = None
+        data['name'] = file_obj.filename
+        data['type'] = None
 
         # Create File
-        fle = super(File, cls).from_new(d)
+        fle = super(File, cls).from_new(data)
 
         # Save File
         fle.path = _FILES_PATH + repr(fle)

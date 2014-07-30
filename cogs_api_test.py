@@ -32,6 +32,10 @@ class CogsApiTestCase(unittest.TestCase):
         self.db.flushdb()
         cogs_api.datatypes._REDIS_DB -= _REDIS_TESTDB_OFFSET
 
+    def assertSubset(self, sub, sup):
+        for k in sub:
+            self.assertEqual(sub[k], sup[k])
+
 class CogsApiAssignmentHelpers(CogsApiTestCase):
 
     def setUp(self):
@@ -169,7 +173,7 @@ class CogsApiAssignmentTestCase(CogsApiAssignmentHelpers):
 
         # Get Assignment
         asn = self.get_assignment(asn_uuid)
-        self.assertEqual(datatypes.ASSIGNMENT_TESTDICT, asn[str(asn_uuid)])
+        self.assertSubset(datatypes.ASSIGNMENT_TESTDICT, asn[str(asn_uuid)])
 
     def test_set_assignment(self):
 
@@ -182,11 +186,11 @@ class CogsApiAssignmentTestCase(CogsApiAssignmentHelpers):
             d[k] = d[k] + "_update"
         self.assertNotEqual(datatypes.ASSIGNMENT_TESTDICT, d)
         asn = self.set_assignment(asn_uuid, d)
-        self.assertEqual(d, asn[str(asn_uuid)])
+        self.assertSubset(d, asn[str(asn_uuid)])
 
         # Get Assignment
         asn = self.get_assignment(asn_uuid)
-        self.assertEqual(d, asn[str(asn_uuid)])
+        self.assertSubset(d, asn[str(asn_uuid)])
 
     def test_delete_assignment(self):
 
@@ -266,7 +270,7 @@ class CogsApiTestTestCase(CogsApiTestHelpers):
 
         # Get Test
         tst = self.get_test(tst_uuid)
-        self.assertEqual(datatypes.TEST_TESTDICT, tst[str(tst_uuid)])
+        self.assertSubset(datatypes.TEST_TESTDICT, tst[str(tst_uuid)])
 
     def test_set_test(self):
 
@@ -279,11 +283,11 @@ class CogsApiTestTestCase(CogsApiTestHelpers):
             d[k] = d[k] + "_update"
         self.assertNotEqual(datatypes.TEST_TESTDICT, d)
         tst = self.set_test(tst_uuid, d)
-        self.assertEqual(d, tst[str(tst_uuid)])
+        self.assertSubset(d, tst[str(tst_uuid)])
 
         # Get Test
         tst = self.get_test(tst_uuid)
-        self.assertEqual(d, tst[str(tst_uuid)])
+        self.assertSubset(d, tst[str(tst_uuid)])
 
     def test_delete_test(self):
 
