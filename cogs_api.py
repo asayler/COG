@@ -6,6 +6,7 @@
 # Univerity of Colorado
 
 import flask
+import time
 
 import cogs.datatypes as datatypes
 
@@ -15,6 +16,7 @@ _MSG_ROOT = "Welcome to the CU CS Online Grading System API"
 
 _ASSIGNMENTS_KEY = "assignments"
 _TESTS_KEY = "tests"
+_SUBMISSIONS_KEY = "submissions"
 _FILES_KEY = "files"
 
 ### Endpoints
@@ -27,7 +29,7 @@ def get_root():
     res = _MSG_ROOT
     return res
 
-## Assignment Endpoints
+## Assignment Endpoints ##
 
 @app.route("/assignments/",
            methods=['GET', 'POST'])
@@ -104,7 +106,7 @@ def process_assignment(uuid_hex):
     return res
 
 
-## Assignment Test Endpoints
+## Test Endpoints ##
 
 @app.route("/assignments/<asn_uuid>/tests/",
            methods=['GET', 'POST'])
@@ -200,6 +202,8 @@ def process_test(asn_uuid, tst_uuid):
     res = flask.jsonify(out)
     return res
 
+## Test File Endpoints ##
+
 @app.route("/assignments/<asn_uuid>/tests/<tst_uuid>/files/",
            methods=['GET', 'POST'])
 def process_test_files(asn_uuid, tst_uuid):
@@ -237,6 +241,7 @@ def process_test_files(asn_uuid, tst_uuid):
         files = flask.request.files
         for f in files:
             f_data = files[f]
+            d['key'] = str(f)
             try:
                 fle = tst.create_file(d, f_data)
             except KeyError as e:
@@ -306,7 +311,104 @@ def process_test_file(asn_uuid, tst_uuid, fle_uuid):
     res = flask.jsonify(out)
     return res
 
-## Other Endpoints
+## Submission Endpoints ##
+
+@app.route("/assignments/<asn_uuid>/submissions/",
+           methods=['GET', 'POST'])
+def process_submissions(asn_uuid):
+
+    # Create Server
+    srv = datatypes.Server()
+
+    # Get Assignment
+    try:
+        asn = srv.get_assignment(asn_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = { 'status': 404,
+                'message': str(e) }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    if flask.request.method == 'GET':
+        # Get Submission
+        out = {_SUBMISSIONS_KEY: list(asn.list_submissions())}
+    elif flask.request.method == 'POST':
+        # Create Submission
+        d = flask.request.get_json(force=True)
+
+        try:
+            sub = asn.create_submission(d)
+        except KeyError as e:
+            err = { 'status': 400,
+                    'message': str(e) }
+            err_res = flask.jsonify(err)
+            err_res.status_code = err['status']
+            return err_res
+        else:
+            out = {_SUBMISSIONS_KEY: list([repr(sub)])}
+    else:
+        raise Exception("Unhandled Method")
+
+    # Return Submission List
+    res = flask.jsonify(out)
+    return res
+
+@app.route("/assignments/<asn_uuid>/submissions/<sub_uuid>/",
+           methods=['GET', 'PUT', 'DELETE'])
+def process_submission(asn_uuid, sub_uuid):
+
+    # Create Server
+    srv = datatypes.Server()
+
+    # Get Assignment
+    try:
+        asn = srv.get_assignment(asn_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = { 'status': 404,
+                'message': str(e) }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Get Submission
+    try:
+        sub = asn.get_submission(sub_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = { 'status': 404,
+                'message': str(e) }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    if flask.request.method == 'GET':
+        # Get Assignment
+        out = {repr(sub): sub.get_dict()}
+    elif flask.request.method == 'PUT':
+        # Update Assignment
+        d = flask.request.get_json(force=True)
+        try:
+            sub.set_dict(d)
+        except KeyError as e:
+            err = { 'status': 400,
+                    'message': str(e) }
+            err_res = flask.jsonify(err)
+            err_res.status_code = err['status']
+            return err_res
+        else:
+            out = {repr(sub): sub.get_dict()}
+    elif flask.request.method == 'DELETE':
+        # Delete Assignment
+        out = {repr(sub): sub.get_dict()}
+        sub.delete()
+    else:
+        raise Exception("Unhandled Method")
+
+    # Return Test
+    res = flask.jsonify(out)
+    return res
+
+## Other Endpoints ##
 
 @app.route("/test/", methods=['POST'])
 def test_upload():
@@ -326,7 +428,7 @@ def bad_request(error=False):
     err = { 'status': 400,
                 'message': "Malformed request" }
     res = flask.jsonify(err)
-    res.status_code = err[status]
+    res.status_code = err['status']
     return res
 
 @app.errorhandler(404)
@@ -334,7 +436,7 @@ def not_found(error=False):
     err = { 'status': 404,
             'message': "Not Found: {:s}".format(flask.request.url) }
     res = flask.jsonify(err)
-    res.status_code = err[status]
+    res.status_code = err['status']
     return res
 
 @app.errorhandler(405)
@@ -342,7 +444,7 @@ def bad_method(error=False):
     err = { 'status': 405,
             'message': "Bad Method: {:s} {:s}".format(flask.request.method, flask.request.url) }
     res = flask.jsonify(err)
-    res.status_code = err[status]
+    res.status_code = err['status']
     return res
 
 
