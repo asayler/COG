@@ -408,17 +408,114 @@ def process_submission(asn_uuid, sub_uuid):
     res = flask.jsonify(out)
     return res
 
-## Other Endpoints ##
+## Submission File Endpoints ##
 
-@app.route("/test/", methods=['POST'])
-def test_upload():
-    print("Testing upload...")
-    files = flask.request.files
-    print("files = {:s}".format(files))
-    for f in files:
-        print(f)
-        print(files[f])
-    return flask.jsonify({"status": "done"})
+@app.route("/assignments/<asn_uuid>/submissions/<sub_uuid>/files/",
+           methods=['GET', 'POST'])
+def process_submission_files(asn_uuid, sub_uuid):
+
+    # Create Server
+    srv = datatypes.Server()
+
+    # Get Assignment
+    try:
+        asn = srv.get_assignment(asn_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = { 'status': 404,
+                'message': str(e) }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Get Submission
+    try:
+        sub = asn.get_submission(sub_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = { 'status': 404,
+                'message': str(e) }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    if flask.request.method == 'GET':
+        # Get Submission Files
+        fle_lst = list(sub.list_files())
+    elif flask.request.method == 'POST':
+        # Create Test File
+        d = {}
+        fle_lst = []
+        files = flask.request.files
+        for f in files:
+            f_data = files[f]
+            d['key'] = str(f)
+            try:
+                fle = sub.create_file(d, f_data)
+            except KeyError as e:
+                err = { 'status': 400,
+                        'message': str(e) }
+                err_res = flask.jsonify(err)
+                err_res.status_code = err['status']
+                return err_res
+            else:
+             fle_lst.append(repr(fle))
+    else:
+        raise Exception("Unhandled Method")
+
+    # Return Test File List
+    out = {_FILES_KEY: fle_lst}
+    res = flask.jsonify(out)
+    return res
+
+@app.route("/assignments/<asn_uuid>/submissions/<sub_uuid>/files/<fle_uuid>/",
+           methods=['GET', 'DELETE'])
+def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
+
+    # Create Server
+    srv = datatypes.Server()
+
+    # Get Assignment
+    try:
+        asn = srv.get_assignment(asn_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = { 'status': 404,
+                'message': str(e) }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Get Submission
+    try:
+        sub = asn.get_submission(sub_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = { 'status': 404,
+                'message': str(e) }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Get File
+    try:
+        fle = sub.get_file(fle_uuid)
+    except datatypes.UUIDRedisObjectDNE as e:
+        err = { 'status': 404,
+                'message': str(e) }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    if flask.request.method == 'GET':
+        # Get File
+        out = {repr(fle): fle.get_dict()}
+    elif flask.request.method == 'DELETE':
+        # Delete File
+        out = {repr(fle): fle.get_dict()}
+        fle.delete()
+    else:
+        raise Exception("Unhandled Method")
+
+    # Return Test
+    res = flask.jsonify(out)
+    return res
 
 
 ### Exceptions
