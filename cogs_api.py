@@ -13,6 +13,9 @@ app = flask.Flask(__name__)
 
 _MSG_ROOT = "Welcome to the CU CS Online Grading System API"
 
+_ASSIGNMENTS_KEY = "assignments"
+_TESTS_KEY = "tests"
+
 ### Endpoints
 
 ## Root Endpoints
@@ -24,63 +27,39 @@ def get_root():
 
 ## Assignment Endpoints
 
-@app.route("/assignments/", methods=['GET'])
-def list_assignments():
-    s = datatypes.Server()
-    assignments = s.list_assignments()
-    out = {'assignments': list(assignments)}
-    res = flask.jsonify(out)
-    return res
-
-@app.route("/assignments/", methods=['POST'])
-def create_assignment():
+@app.route("/assignments/", methods=['GET', 'POST'])
+def process_assignments():
 
     # Create Server
-    s = datatypes.Server()
+    srv = datatypes.Server()
 
-    # Create Assignment
-    d = flask.request.get_json(force=True)
-    try:
-        a = s.create_assignment(d)
-    except KeyError as e:
-        err = {
-            'status': 400,
-            'message': str(e)
-        }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
+    if flask.request.method == 'GET':
+        # Get Assignments
+        out = {_ASSIGNMENTS_KEY: list(srv.list_assignments())}
+    elif flask.request.method == 'POST':
+        # Create Assignment
+        d = flask.request.get_json(force=True)
+        try:
+            asn = srv.create_assignment(d)
+        except KeyError as e:
+            err = {
+                'status': 400,
+                'message': str(e)
+            }
+            err_res = flask.jsonify(err)
+            err_res.status_code = err['status']
+            return err_res
+        else:
+            out = {_ASSIGNMENTS_KEY: list([repr(asn)])}
+    else:
+        raise Exception("Unhandled Method")
 
-    # Return Assignment
-    out = {repr(a): a.get_dict()}
+    # Return Assignment List
     res = flask.jsonify(out)
     return res
 
-@app.route("/assignments/<uuid_hex>/", methods=['GET'])
-def get_assignment(uuid_hex):
-
-    # Create Server
-    s = datatypes.Server()
-
-    # Get Assignment
-    try:
-        a = s.get_assignment(uuid_hex)
-    except datatypes.UUIDRedisObjectDNE as e:
-        err = {
-            'status': 404,
-            'message': str(e)
-        }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Return Assignment
-    out = {repr(a): a.get_dict()}
-    res = flask.jsonify(out)
-    return res
-
-@app.route("/assignments/<uuid_hex>/", methods=['PUT'])
-def set_assignment(uuid_hex):
+@app.route("/assignments/<uuid_hex>/", methods=['GET', 'PUT', 'DELETE'])
+def process_assignment(uuid_hex):
 
     # Create Server
     s = datatypes.Server()
@@ -97,57 +76,40 @@ def set_assignment(uuid_hex):
         err_res.status_code = err['status']
         return err_res
 
-    # Update Assignment
-    d = flask.request.get_json(force=True)
-    try:
-        a.set_dict(d)
-    except KeyError as e:
-        err = {
-            'status': 400,
-            'message': str(e)
-        }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
+    if flask.request.method == 'GET':
+        # Get Assignment
+        out = {repr(a): a.get_dict()}
+    elif flask.request.method == 'PUT':
+        # Update Assignment
+        d = flask.request.get_json(force=True)
+        try:
+            a.set_dict(d)
+        except KeyError as e:
+            err = {
+                'status': 400,
+                'message': str(e)
+            }
+            err_res = flask.jsonify(err)
+            err_res.status_code = err['status']
+            return err_res
+        else:
+            out = {repr(a): a.get_dict()}
+    elif flask.request.method == 'DELETE':
+        # Delete Assignment
+        out = {repr(a): a.get_dict()}
+        a.delete()
+    else:
+        raise Exception("Unhandled Method")
 
     # Return Assignment
-    out = {repr(a): a.get_dict()}
     res = flask.jsonify(out)
     return res
 
-@app.route("/assignments/<uuid_hex>/", methods=['DELETE'])
-def delete_assignment(uuid_hex):
-
-    # Create Server
-    s = datatypes.Server()
-
-    # Get Assignment
-    try:
-        a = s.get_assignment(uuid_hex)
-    except datatypes.UUIDRedisObjectDNE as e:
-        err = {
-            'status': 404,
-            'message': str(e)
-        }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Delete Assignment
-    a.delete()
-
-    # Return Status
-    out = {
-        'status': 200,
-        'message': "Deleted {:s}".format(a)
-    }
-    res = flask.jsonify(out)
-    return res
 
 ## Assignment Test Endpoints
 
-@app.route("/assignments/<asn_uuid>/tests/", methods=['GET'])
-def list_assignment_tests(asn_uuid):
+@app.route("/assignments/<asn_uuid>/tests/", methods=['GET', 'POST'])
+def process_tests(asn_uuid):
 
     # Create Server
     srv = datatypes.Server()
@@ -164,16 +126,33 @@ def list_assignment_tests(asn_uuid):
         err_res.status_code = err['status']
         return err_res
 
-    # List Assignment Tests
-    tests = asn.list_tests()
+    if flask.request.method == 'GET':
+        # Get Tests
+        out = {_TESTS_KEY: list(asn.list_tests())}
+    elif flask.request.method == 'POST':
+        # Create Test
+        d = flask.request.get_json(force=True)
+        try:
+            tst = asn.create_test(d)
+        except KeyError as e:
+            err = {
+                'status': 400,
+                'message': str(e)
+            }
+            err_res = flask.jsonify(err)
+            err_res.status_code = err['status']
+            return err_res
+        else:
+            out = {_TESTS_KEY: list([repr(tst)])}
+    else:
+        raise Exception("Unhandled Method")
 
-    # Return Assignment Test
-    out = {'tests': list(tests)}
+    # Return Test List
     res = flask.jsonify(out)
     return res
 
-@app.route("/assignments/<asn_uuid>/tests/", methods=['POST'])
-def create_assignment_test(asn_uuid):
+@app.route("/assignments/<asn_uuid>/tests/<tst_uuid>/", methods=['GET', 'PUT', 'DELETE'])
+def process_test(asn_uuid, tst_uuid):
 
     # Create Server
     srv = datatypes.Server()
@@ -190,43 +169,7 @@ def create_assignment_test(asn_uuid):
         err_res.status_code = err['status']
         return err_res
 
-    # Creat Assignment Test
-    d = flask.request.get_json(force=True)
-    try:
-        tst = asn.create_test(d)
-    except KeyError as e:
-        err = {
-            'status': 400,
-            'message': str(e)
-        }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Return Assignment Test
-    out = {repr(tst): tst.get_dict()}
-    res = flask.jsonify(out)
-    return res
-
-@app.route("/assignments/<asn_uuid>/tests/<tst_uuid>/", methods=['GET'])
-def get_assignment_test(asn_uuid, tst_uuid):
-
-    # Create Server
-    srv = datatypes.Server()
-
-    # Get Assignment
-    try:
-        asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisObjectDNE as e:
-        err = {
-            'status': 404,
-            'message': str(e)
-        }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Get Assignment Test
+    # Get Test
     try:
         tst = asn.get_test(tst_uuid)
     except datatypes.UUIDRedisObjectDNE as e:
@@ -238,99 +181,35 @@ def get_assignment_test(asn_uuid, tst_uuid):
         err_res.status_code = err['status']
         return err_res
 
-    # Return Assignment Test
-    out = {repr(tst): tst.get_dict()}
+    if flask.request.method == 'GET':
+        # Get Assignment
+        out = {repr(tst): tst.get_dict()}
+    elif flask.request.method == 'PUT':
+        # Update Assignment
+        d = flask.request.get_json(force=True)
+        try:
+            tst.set_dict(d)
+        except KeyError as e:
+            err = {
+                'status': 400,
+                'message': str(e)
+            }
+            err_res = flask.jsonify(err)
+            err_res.status_code = err['status']
+            return err_res
+        else:
+            out = {repr(tst): tst.get_dict()}
+    elif flask.request.method == 'DELETE':
+        # Delete Assignment
+        out = {repr(tst): tst.get_dict()}
+        tst.delete()
+    else:
+        raise Exception("Unhandled Method")
+
+    # Return Test
     res = flask.jsonify(out)
     return res
 
-@app.route("/assignments/<asn_uuid>/tests/<tst_uuid>/", methods=['PUT'])
-def set_assignment_test(asn_uuid, tst_uuid):
-
-    # Create Server
-    srv = datatypes.Server()
-
-    # Get Assignment
-    try:
-        asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisObjectDNE as e:
-        err = {
-            'status': 404,
-            'message': str(e)
-        }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Get Assignment Test
-    try:
-        tst = asn.get_test(tst_uuid)
-    except datatypes.UUIDRedisObjectDNE as e:
-        err = {
-            'status': 404,
-            'message': str(e)
-        }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Update Assignment Test
-    d = flask.request.get_json(force=True)
-    try:
-        tst.set_dict(d)
-    except KeyError as e:
-        err = {
-            'status': 400,
-            'message': str(e)
-        }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Return Assignment Test
-    out = {repr(tst): tst.get_dict()}
-    res = flask.jsonify(out)
-    return res
-
-@app.route("/assignments/<asn_uuid>/tests/<tst_uuid>/", methods=['DELETE'])
-def delete_assignment_test(asn_uuid, tst_uuid):
-
-    # Create Server
-    srv = datatypes.Server()
-
-    # Get Assignment
-    try:
-        asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisObjectDNE as e:
-        err = {
-            'status': 404,
-            'message': str(e)
-        }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Get Assignment Test
-    try:
-        tst = asn.get_test(tst_uuid)
-    except datatypes.UUIDRedisObjectDNE as e:
-        err = {
-            'status': 404,
-            'message': str(e)
-        }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Delete Assignment Test
-    tst.delete()
-
-    # Return Status
-    out = {
-        'status': 200,
-        'message': "Deleted {:s}".format(tst)
-    }
-    res = flask.jsonify(out)
-    return res
 
 ## Other Endpoints
 
@@ -339,6 +218,7 @@ def test_upload():
     print("Testing upload...")
     print("files = {:s}".format(flask.request.files))
     return flask.jsonify({"status": "done"})
+
 
 ### Exceptions
 

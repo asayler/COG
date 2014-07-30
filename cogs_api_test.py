@@ -17,18 +17,7 @@ import cogs_api
 
 _REDIS_TESTDB_OFFSET = 1
 
-_ASSIGNMENTS_KEY = "assignments"
-_ASSIGNMENTTESTS_KEY = "tests"
-
 class CogsApiTestCase(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        pass
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
 
     def setUp(self):
         cogs_api.datatypes._REDIS_DB += _REDIS_TESTDB_OFFSET
@@ -43,17 +32,108 @@ class CogsApiTestCase(unittest.TestCase):
         self.db.flushdb()
         cogs_api.datatypes._REDIS_DB -= _REDIS_TESTDB_OFFSET
 
+class CogsApiAssignmentHelpers(CogsApiTestCase):
+
+    def setUp(self):
+        super(CogsApiAssignmentHelpers, self).setUp()
+
+    def tearDown(self):
+        super(CogsApiAssignmentHelpers, self).tearDown()
+
+    def lst_assignments(self):
+        # List Assignments
+        res = self.app.get('/assignments/')
+        self.assertEqual(res.status_code, 200)
+        asn_lst = json.loads(res.data)[cogs_api._ASSIGNMENTS_KEY]
+        return set(asn_lst)
+
+    def create_assignment(self, d=datatypes.ASSIGNMENT_TESTDICT):
+        # Create Assignment
+        ds = json.dumps(d)
+        res = self.app.post('/assignments/', data=ds)
+        self.assertEqual(res.status_code, 200)
+        asn_lst = json.loads(res.data)[cogs_api._ASSIGNMENTS_KEY]
+        self.assertEqual(len(asn_lst), 1)
+        asn_uuid = uuid.UUID(asn_lst[0])
+        self.assertTrue(asn_uuid)
+        return asn_uuid
+
+    def get_assignment(self, asn_uuid):
+        # Get Assignment
+        res = self.app.get('/assignments/{:s}/'.format(asn_uuid))
+        self.assertEqual(res.status_code, 200)
+        asn_out = json.loads(res.data)
+        asn_out_uuid = uuid.UUID(asn_out.keys()[0])
+        self.assertEqual(asn_uuid, asn_out_uuid)
+        return asn_out
+
+    def set_assignment(self, asn_uuid, d=datatypes.ASSIGNMENT_TESTDICT):
+        # Set Assignment
+        ds = json.dumps(d)
+        res = self.app.put('/assignments/{:s}/'.format(asn_uuid), data=ds)
+        self.assertEqual(res.status_code, 200)
+        asn_out = json.loads(res.data)
+        asn_out_uuid = uuid.UUID(asn_out.keys()[0])
+        self.assertEqual(asn_uuid, asn_out_uuid)
+        return asn_out
+
+    def delete_assignment(self, asn_uuid):
+        res = self.app.delete('/assignments/{:s}/'.format(asn_uuid))
+        self.assertEqual(res.status_code, 200)
+
+
+class CogsApiTestHelpers(CogsApiAssignmentHelpers):
+
+    def setUp(self):
+        super(CogsApiTestHelpers, self).setUp()
+
+    def tearDown(self):
+        super(CogsApiTestHelpers, self).tearDown()
+
+    def lst_tests(self):
+        # List Tests
+        res = self.app.get('/assignments/{:s}/tests/'.format(self.asn_uuid))
+        self.assertEqual(res.status_code, 200)
+        tst_lst = json.loads(res.data)[cogs_api._TESTS_KEY]
+        return set(tst_lst)
+
+    def create_test(self, d=datatypes.TEST_TESTDICT):
+        # Create Test
+        ds = json.dumps(d)
+        res = self.app.post('/assignments/{:s}/tests/'.format(self.asn_uuid), data=ds)
+        self.assertEqual(res.status_code, 200)
+        tst_lst = json.loads(res.data)[cogs_api._TESTS_KEY]
+        self.assertEqual(len(tst_lst), 1)
+        tst_uuid = uuid.UUID(tst_lst[0])
+        self.assertTrue(tst_uuid)
+        return tst_uuid
+
+    def get_test(self, tst_uuid):
+        # Get Test
+        res = self.app.get('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid))
+        self.assertEqual(res.status_code, 200)
+        tst_out = json.loads(res.data)
+        tst_out_uuid = uuid.UUID(tst_out.keys()[0])
+        self.assertEqual(tst_uuid, tst_out_uuid)
+        return tst_out
+
+    def set_test(self, tst_uuid, d=datatypes.TEST_TESTDICT):
+        # Set Test
+        ds = json.dumps(d)
+        res = self.app.put('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid), data=ds)
+        self.assertEqual(res.status_code, 200)
+        tst_out = json.loads(res.data)
+        tst_out_uuid = uuid.UUID(tst_out.keys()[0])
+        self.assertEqual(tst_uuid, tst_out_uuid)
+        return tst_out
+
+    def delete_test(self, tst_uuid):
+        res = self.app.delete('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid))
+        self.assertEqual(res.status_code, 200)
+
 
 ## Root Tests
 class CogsApiRootTestCase(CogsApiTestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        pass
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
 
     def setUp(self):
         super(CogsApiRootTestCase, self).setUp()
@@ -68,119 +148,68 @@ class CogsApiRootTestCase(CogsApiTestCase):
 
 
 ## Assignment Tests
-class CogsApiAssignmentsTestCase(CogsApiTestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        pass
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
+class CogsApiAssignmentTestCase(CogsApiAssignmentHelpers):
 
     def setUp(self):
-        super(CogsApiAssignmentsTestCase, self).setUp()
+        super(CogsApiAssignmentTestCase, self).setUp()
 
     def tearDown(self):
-        super(CogsApiAssignmentsTestCase, self).tearDown()
+        super(CogsApiAssignmentTestCase, self).tearDown()
 
     def test_create_assignment(self):
 
         # Create Assignment
-        ds = json.dumps(datatypes.ASSIGNMENT_TESTDICT)
-        res = self.app.post('/assignments/', data=ds)
-        self.assertEqual(res.status_code, 200)
-
-        # Check Assignment
-        asn = json.loads(res.data)
-        asn_uuid = uuid.UUID(asn.keys()[0])
-        asn_d = asn[str(asn_uuid)]
-        self.assertEqual(datatypes.ASSIGNMENT_TESTDICT, asn_d)
+        asn_uuid = self.create_assignment()
+        self.assertTrue(asn_uuid)
 
     def test_get_assignment(self):
 
         # Create Assignment
-        ds = json.dumps(datatypes.ASSIGNMENT_TESTDICT)
-        res = self.app.post('/assignments/', data=ds)
-        self.assertEqual(res.status_code, 200)
-        asn_in = json.loads(res.data)
-        asn_in_uuid = uuid.UUID(asn_in.keys()[0])
+        asn_uuid = self.create_assignment(datatypes.ASSIGNMENT_TESTDICT)
 
         # Get Assignment
-        res = self.app.get('/assignments/{:s}/'.format(asn_in_uuid))
-        self.assertEqual(res.status_code, 200)
-        asn_out = json.loads(res.data)
-        asn_out_uuid = uuid.UUID(asn_out.keys()[0])
-        self.assertEqual(asn_in_uuid, asn_out_uuid)
-        self.assertEqual(asn_in[str(asn_in_uuid)], asn_out[str(asn_out_uuid)])
+        asn = self.get_assignment(asn_uuid)
+        self.assertEqual(datatypes.ASSIGNMENT_TESTDICT, asn[str(asn_uuid)])
 
     def test_set_assignment(self):
 
         # Create Assignment
-        d_a = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
-        ds_a = json.dumps(d_a)
-        res_a = self.app.post('/assignments/', data=ds_a)
-        self.assertEqual(res_a.status_code, 200)
-        a_dict = json.loads(res_a.data)
-        a_uuid = uuid.UUID(a_dict.keys()[0])
+        asn_uuid = self.create_assignment(datatypes.ASSIGNMENT_TESTDICT)
 
         # Update Assignment
-        d_b = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
-        for k in d_b:
-            d_b[k] = d_b[k] + "_update"
-        self.assertNotEqual(d_a, d_b)
-        ds_b = json.dumps(d_b)
-        res_b = self.app.put('/assignments/{:s}/'.format(a_uuid), data=ds_b)
-        self.assertEqual(res_b.status_code, 200)
-        b_dict = json.loads(res_b.data)
-        b_uuid = uuid.UUID(b_dict.keys()[0])
-        self.assertEqual(a_uuid, b_uuid)
-        self.assertEqual(d_b, b_dict[str(b_uuid)])
+        d = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
+        for k in d:
+            d[k] = d[k] + "_update"
+        self.assertNotEqual(datatypes.ASSIGNMENT_TESTDICT, d)
+        asn = self.set_assignment(asn_uuid, d)
+        self.assertEqual(d, asn[str(asn_uuid)])
 
         # Get Assignment
-        res_c = self.app.get('/assignments/{:s}/'.format(a_uuid))
-        self.assertEqual(res_c.status_code, 200)
-        c_dict = json.loads(res_c.data)
-        c_uuid = uuid.UUID(c_dict.keys()[0])
-        self.assertEqual(b_uuid, c_uuid)
-        self.assertEqual(b_dict[str(b_uuid)], c_dict[str(c_uuid)])
+        asn = self.get_assignment(asn_uuid)
+        self.assertEqual(d, asn[str(asn_uuid)])
 
     def test_delete_assignment(self):
 
         # Create Assignment
-        d_a = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
-        ds_a = json.dumps(d_a)
-        res_a = self.app.post('/assignments/', data=ds_a)
-        self.assertEqual(res_a.status_code, 200)
-        a_dict = json.loads(res_a.data)
-        a_uuid = uuid.UUID(a_dict.keys()[0])
-        self.assertEqual(d_a, a_dict[str(a_uuid)])
+        asn_uuid = self.create_assignment(datatypes.ASSIGNMENT_TESTDICT)
 
         # Get Assignment
-        res_b = self.app.get('/assignments/{:s}/'.format(a_uuid))
-        self.assertEqual(res_b.status_code, 200)
-        b_dict = json.loads(res_b.data)
-        b_uuid = uuid.UUID(b_dict.keys()[0])
-        self.assertEqual(a_uuid, b_uuid)
-        self.assertEqual(a_dict[str(a_uuid)], b_dict[str(b_uuid)])
+        res = self.app.get('/assignments/{:s}/'.format(asn_uuid))
+        self.assertEqual(res.status_code, 200)
 
         # Delete Assignment
-        res_c = self.app.delete('/assignments/{:s}/'.format(a_uuid))
-        self.assertEqual(res_c.status_code, 200)
+        self.delete_assignment(asn_uuid)
 
         # Get Assignment
-        res_b = self.app.get('/assignments/{:s}/'.format(a_uuid))
-        self.assertEqual(res_b.status_code, 404)
+        res = self.app.get('/assignments/{:s}/'.format(asn_uuid))
+        self.assertEqual(res.status_code, 404)
 
     def test_list_assignments(self):
 
         assignments_in = set([])
 
         # Get Assignments (Empty)
-        res_a = self.app.get('/assignments/')
-        self.assertEqual(res_a.status_code, 200)
-        a_dict = json.loads(res_a.data)
-        assignments_out = set(a_dict[_ASSIGNMENTS_KEY])
+        assignments_out = self.lst_assignments()
         self.assertEqual(assignments_in, assignments_out)
 
         # Create Assignments
@@ -188,160 +217,96 @@ class CogsApiAssignmentsTestCase(CogsApiTestCase):
             d = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
             for k in d:
                 d[k] = d[k] + "_{:02d}".format(i)
-            ds = json.dumps(d)
-            res = self.app.post('/assignments/', data=ds)
-            self.assertEqual(res.status_code, 200)
-            r_dict = json.loads(res.data)
-            r_uuid = uuid.UUID(r_dict.keys()[0])
-            assignments_in.add(str(r_uuid))
+            asn_uuid = self.create_assignment(d)
+            assignments_in.add(str(asn_uuid))
 
         # Get Assignments
-        res_b = self.app.get('/assignments/')
-        self.assertEqual(res_b.status_code, 200)
-        b_dict = json.loads(res_b.data)
-        assignments_out = set(b_dict[_ASSIGNMENTS_KEY])
+        assignments_out = self.lst_assignments()
         self.assertEqual(assignments_in, assignments_out)
 
         # Delete Assignments
         for i in range(5):
-            r_uuid = assignments_in.pop()
-            res_c = self.app.delete('/assignments/{:s}/'.format(r_uuid))
-            self.assertEqual(res_c.status_code, 200)
+            rmv_uuid = assignments_in.pop()
+            self.delete_assignment(rmv_uuid)
 
         # Get Assignments
-        res_d = self.app.get('/assignments/')
-        self.assertEqual(res_d.status_code, 200)
-        d_dict = json.loads(res_d.data)
-        assignments_out = set(d_dict[_ASSIGNMENTS_KEY])
+        assignments_out = self.lst_assignments()
         self.assertEqual(assignments_in, assignments_out)
 
+
 ## Assignment Test Tests
-class CogsApiAssignmentTestsTestCase(CogsApiTestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        pass
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
+class CogsApiTestTestCase(CogsApiTestHelpers):
 
     def setUp(self):
 
         # Call Parent setUp()
-        super(CogsApiAssignmentTestsTestCase, self).setUp()
+        super(CogsApiTestTestCase, self).setUp()
 
         # Create Assignment
-        ds = json.dumps(datatypes.ASSIGNMENT_TESTDICT)
-        res = self.app.post('/assignments/', data=ds)
-        self.assertEqual(res.status_code, 200)
-        self.asn = json.loads(res.data)
-        self.asn_uuid = uuid.UUID(self.asn.keys()[0])
+        self.asn_uuid = self.create_assignment()
 
     def tearDown(self):
 
         # Delete Assignment
-        res = self.app.delete('/assignments/{:s}/'.format(self.asn_uuid))
-        self.assertEqual(res.status_code, 200)
+        self.delete_assignment(self.asn_uuid)
 
         # Call Parent tearDown()
-        super(CogsApiAssignmentTestsTestCase, self).tearDown()
+        super(CogsApiTestTestCase, self).tearDown()
 
-    def test_create_assignment_test(self):
+    def test_create_test(self):
 
-        # Create Assignment Test
-        ds = json.dumps(datatypes.TEST_TESTDICT)
-        res = self.app.post('/assignments/{:s}/tests/'.format(self.asn_uuid), data=ds)
-        self.assertEqual(res.status_code, 200)
+        # Create Test
+        tst_uuid = self.create_test()
+        self.assertTrue(tst_uuid)
 
-        # Check test
-        tst = json.loads(res.data)
-        tst_uuid = uuid.UUID(tst.keys()[0])
-        tst_d = tst[str(tst_uuid)]
-        self.assertEqual(datatypes.TEST_TESTDICT, tst_d)
+    def test_get_test(self):
 
-    def test_get_assignment_test(self):
+        # Create Test
+        tst_uuid = self.create_test(datatypes.TEST_TESTDICT)
 
-        # Create Assignment Test
-        ds = json.dumps(datatypes.TEST_TESTDICT)
-        res = self.app.post('/assignments/{:s}/tests/'.format(self.asn_uuid), data=ds)
-        self.assertEqual(res.status_code, 200)
-        tst_in = json.loads(res.data)
-        tst_in_uuid = uuid.UUID(tst_in.keys()[0])
+        # Get Test
+        tst = self.get_test(tst_uuid)
+        self.assertEqual(datatypes.TEST_TESTDICT, tst[str(tst_uuid)])
 
-        # Get Assignment
-        res = self.app.get('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_in_uuid))
-        self.assertEqual(res.status_code, 200)
-        tst_out = json.loads(res.data)
-        tst_out_uuid = uuid.UUID(tst_out.keys()[0])
-        self.assertEqual(tst_in_uuid, tst_out_uuid)
-        self.assertEqual(tst_in[str(tst_in_uuid)], tst_out[str(tst_out_uuid)])
+    def test_set_test(self):
 
-    def test_set_assignment_test(self):
+        # Create Test
+        tst_uuid = self.create_test(datatypes.TEST_TESTDICT)
 
-        # Create Assignment Test
-        d = copy.deepcopy(datatypes.TEST_TESTDICT)
-        ds = json.dumps(d)
-        res = self.app.post('/assignments/{:s}/tests/'.format(self.asn_uuid), data=ds)
-        self.assertEqual(res.status_code, 200)
-        tst_in = json.loads(res.data)
-        tst_in_uuid = uuid.UUID(tst_in.keys()[0])
-        tst_in_d = tst_in[str(tst_in_uuid)]
-        self.assertEqual(datatypes.TEST_TESTDICT, tst_in_d)
-
-        # Update Assignment
+        # Update Test
         d = copy.deepcopy(datatypes.TEST_TESTDICT)
         for k in d:
-            d[k] = d[k] + "_updated"
+            d[k] = d[k] + "_update"
         self.assertNotEqual(datatypes.TEST_TESTDICT, d)
-        ds = json.dumps(d)
-        res = self.app.put('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_in_uuid), data=ds)
-        self.assertEqual(res.status_code, 200)
-        tst_out = json.loads(res.data)
-        tst_out_uuid = uuid.UUID(tst_out.keys()[0])
-        tst_out_d = tst_out[str(tst_out_uuid)]
-        self.assertEqual(tst_in_uuid, tst_out_uuid)
-        self.assertEqual(d, tst_out_d)
+        tst = self.set_test(tst_uuid, d)
+        self.assertEqual(d, tst[str(tst_uuid)])
 
-        # Get Assignment
-        res = self.app.get('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_in_uuid))
-        self.assertEqual(res.status_code, 200)
-        tst_out_2 = json.loads(res.data)
-        tst_out_2_uuid = uuid.UUID(tst_out_2.keys()[0])
-        self.assertEqual(tst_out_uuid, tst_out_2_uuid)
-        self.assertEqual(tst_out[str(tst_out_uuid)], tst_out_2[str(tst_out_2_uuid)])
+        # Get Test
+        tst = self.get_test(tst_uuid)
+        self.assertEqual(d, tst[str(tst_uuid)])
 
-    def test_delete_assignment_test(self):
+    def test_delete_test(self):
 
-        # Create Assignment Test
-        d = copy.deepcopy(datatypes.TEST_TESTDICT)
-        ds = json.dumps(d)
-        res = self.app.post('/assignments/{:s}/tests/'.format(self.asn_uuid), data=ds)
-        self.assertEqual(res.status_code, 200)
-        tst = json.loads(res.data)
-        tst_uuid = uuid.UUID(tst.keys()[0])
+        # Create Test
+        tst_uuid = self.create_test(datatypes.TEST_TESTDICT)
 
-        # Get Assignment
+        # Get Test
         res = self.app.get('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid))
         self.assertEqual(res.status_code, 200)
 
-        # Delete Assignment
-        res = self.app.delete('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid))
-        self.assertEqual(res.status_code, 200)
+        # Delete Test
+        self.delete_test(tst_uuid)
 
-        # Get Assignment
+        # Get Test
         res = self.app.get('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid))
         self.assertEqual(res.status_code, 404)
 
-    def test_list_assignment_tests(self):
+    def test_list_tests(self):
 
         tests_in = set([])
 
         # Get Tests (Empty)
-        res = self.app.get('/assignments/{:s}/tests/'.format(self.asn_uuid))
-        self.assertEqual(res.status_code, 200)
-        t = json.loads(res.data)
-        tests_out = set(t[_ASSIGNMENTTESTS_KEY])
+        tests_out = self.lst_tests()
         self.assertEqual(tests_in, tests_out)
 
         # Create Tests
@@ -349,33 +314,21 @@ class CogsApiAssignmentTestsTestCase(CogsApiTestCase):
             d = copy.deepcopy(datatypes.TEST_TESTDICT)
             for k in d:
                 d[k] = d[k] + "_{:02d}".format(i)
-            ds = json.dumps(d)
-            res = self.app.post('/assignments/{:s}/tests/'.format(self.asn_uuid), data=ds)
-            self.assertEqual(res.status_code, 200)
-            tst = json.loads(res.data)
-            tst_uuid = uuid.UUID(tst.keys()[0])
+            tst_uuid = self.create_test(d)
             tests_in.add(str(tst_uuid))
 
-        # Get Assignments
-        res = self.app.get('/assignments/{:s}/tests/'.format(self.asn_uuid))
-        self.assertEqual(res.status_code, 200)
-        t = json.loads(res.data)
-        tests_out = set(t[_ASSIGNMENTTESTS_KEY])
+        # Get Tests
+        tests_out = self.lst_tests()
         self.assertEqual(tests_in, tests_out)
 
-        # Delete Assignments
+        # Delete Tests
         for i in range(5):
-            r_uuid = tests_in.pop()
-            res = self.app.delete('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, r_uuid))
-            self.assertEqual(res.status_code, 200)
+            rmv_uuid = tests_in.pop()
+            self.delete_test(rmv_uuid)
 
-        # Get Assignments
-        res = self.app.get('/assignments/{:s}/tests/'.format(self.asn_uuid))
-        self.assertEqual(res.status_code, 200)
-        t = json.loads(res.data)
-        tests_out = set(t[_ASSIGNMENTTESTS_KEY])
+        # Get Tests
+        tests_out = self.lst_tests()
         self.assertEqual(tests_in, tests_out)
-
 
 ### Main
 if __name__ == '__main__':
