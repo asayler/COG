@@ -30,12 +30,13 @@ POST    /assignments/<ID>/submissions/<ID>/files/       Add Submission File
 GET     /assignments/<ID>/submissions/<ID>/files/<ID>/  Show Submission File
 DELETE  /assignments/<ID>/submissions/<ID>/files/<ID>/  Remove Submission File
 
+GET     /assignments/<ID>/submissions/<ID>/runs/        List Test Runs
+POST    /assignments/<ID>/submissions/<ID>/runs/        Start New Test Run
+GET     /assignments/<ID>/submissions/<ID>/runs/<ID>/   Show Test Run Results
+DELETE  /assignments/<ID>/submissions/<ID>/runs/<ID>/   Delete Test Run Results
+
 ### In Progress:
 
 PUT     /assignments/<ID>/tests/<ID>/files/<ID>/        Update Grading Test File
 
 PUT     /assignments/<ID>/submissions/<ID>/files/<ID>/  Update Submission File
-
-GET     /assignments/<ID>/submissions/<ID>/runs/        List Test Runs
-POST    /assignments/<ID>/submissions/<ID>/runs/        Start New Test Run
-GET     /assignments/<ID>/submissions/<ID>/runs/<ID>/   Show Test Run Results
