@@ -4,28 +4,19 @@
 
 ECHO = @echo
 
-PYTHON = python
-PIP = pip
-
-REQUIRMENTS = requirments.txt
-
-UNITTEST_PATTERN = '*_test.py'
-
-COGS = ./cogs
+SERVER = ./server
 
 .PHONY: all reqs test clean
 
 all:
-	$(ECHO) "This is a python project; nothing to build!"
+	$(ECHO) "Top Level Makefile; Nothing To Build"
 
-reqs: $(REQUIRMENTS)
-	$(PIP) install -r $(REQUIRMENTS) --use-mirrors
+reqs:
+	$(MAKE) -C $(SERVER) $@
 
 test:
-	$(PYTHON) -m unittest discover -v -p $(UNITTEST_PATTERN)
+	$(MAKE) -C $(SERVER) $@
 
 clean:
-	$(RM) *.pyc
-	$(RM) $(COGS)/*.pyc
 	$(RM) *~
-	$(RM) $(COGS)/*~
+	$(MAKE) -C $(SERVER) $@
