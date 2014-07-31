@@ -13,6 +13,7 @@ import mimetypes
 import redis
 
 import environment
+import tester_script
 
 _ENCODING = 'utf-8'
 
