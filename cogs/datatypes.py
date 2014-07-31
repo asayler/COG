@@ -407,8 +407,8 @@ class Run(UUIDRedisObject):
 
         # Setup Dict
         data['test'] = repr(tst)
-        data['status'] = "success"
-        data['score'] = str(0)
+        data['status'] = ""
+        data['score'] = ""
         data['output'] = ""
 
         # Create Run
@@ -418,6 +418,14 @@ class Run(UUIDRedisObject):
         sub_fls = sub.get_files()
 
         env = environment.Env(run, tst_fls, sub_fls)
+        tester = tester_script.Tester(env)
+        ret, score, output = tester.test()
+
+        run['status'] = str(ret)
+        run['score'] = str(score)
+        run['output'] = str(output)
+
+        # env.close()
 
         # Return Run
         return run
