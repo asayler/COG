@@ -31,12 +31,19 @@ class Env(object):
             self.tst_files.append(self.copy_to_wd(fle))
 
     def copy_to_wd(self, fle):
-        new_fle = copy.deepcopy(fle)
-        src = os.path.abspath("{:s}".format(fle['path']))
         dst = os.path.abspath("{:s}/{:s}".format(self.wd, fle['name']))
-        shutil.copy(src, dst)
-        new_fle['path'] = dst
+        new_fle = fle.copy(dst)
         return new_fle
 
     def close(self):
+
+        # Delete Submission Files
+        for fle in self.sub_files:
+            fle.delete(force=True)
+
+        # Delete Tester Files
+        for fle in self.tst_files:
+            fle.delete(force=True)
+
+        # Delete Directory
         shutil.rmtree(self.wd)

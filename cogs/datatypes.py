@@ -11,6 +11,7 @@ import time
 import mimetypes
 
 import redis
+import werkzeug
 
 import environment
 import tester_script
@@ -172,6 +173,12 @@ class UUIDRedisObject(object):
         # Return Object
         return obj
 
+    def __copy__(self):
+        return self.copy()
+
+    def __deepcopy__(self):
+        return self.copy()
+
     def __unicode__(self):
         u = u"{:s}_{:012x}".format(type(self).__name__, self.uuid.node)
         return u
@@ -202,8 +209,13 @@ class UUIDRedisObject(object):
         else:
             raise KeyError("Key {:s} not valid in {:s}".format(k, self))
 
+    def copy(self):
+        """ Copy Constructor """
+
+        return self.from_new(self.get_dict)
+
     def delete(self):
-        """Delete"""
+        """Delete Object"""
 
         # Delete Object Data from DB
         if not self.db.delete(self.obj_key):
@@ -415,18 +427,20 @@ class Run(UUIDRedisObject):
         # Create Run
         run = super(Run, cls).from_new(data)
 
+        # Get Files
         tst_fls = tst.get_files()
         sub_fls = sub.get_files()
 
+        # Grade Run
         env = environment.Env(run, tst_fls, sub_fls)
         tester = tester_script.Tester(env)
         ret, score, output = tester.test()
+        env.close()
 
+        # Set Results
         run['status'] = str(ret)
         run['score'] = str(score)
         run['output'] = str(output)
-
-        # env.close()
 
         # Return Run
         return run
@@ -442,26 +456,39 @@ class File(UUIDRedisObject):
 
     # Override from_new
     @classmethod
-    def from_new(cls, d, file_obj):
+    def from_new(cls, d, file_obj=None, dst=None):
         """New Constructor"""
 
         # Create New Object
         data = copy.deepcopy(d)
 
-        # Setup Dict
-        data['name'] = str(file_obj.filename)
+        # Setup file_obj
+        if file_obj is None:
+            src_path = os.path.abspath("{:s}".format(data['path']))
+            src_file = open(src_path, 'rb')
+            file_obj = werkzeug.datastructures.FileStorage(stream=src_file, filename=data['name'])
+        else:
+            data['name'] = str(file_obj.filename)
+            data['path'] = ""
+
+        # Get Type
         typ = mimetypes.guess_type(file_obj.filename)
         data['type'] = str(typ[0])
         data['encoding'] = str(typ[1])
-        data['path'] = ""
 
         # Create File
         fle = super(File, cls).from_new(data)
 
+        # Set Path
+        if dst is None:
+            fle['path'] = os.path.abspath("{:s}/{:s}".format(_FILES_DIR, repr(fle)))
+        else:
+            fle['path'] = os.path.abspath("{:s}".format(dst))
+
         # Save File
-        fle['path'] = os.path.abspath("{:s}/{:s}".format(_FILES_DIR, repr(fle)))
         try:
             file_obj.save(fle['path'])
+            file_obj.close()
         except IOError:
             # Clean up on failure
             fle.delete(force=True)
@@ -470,9 +497,14 @@ class File(UUIDRedisObject):
         # Return File
         return fle
 
+    # Override Copy
+    def copy(self, dst=None):
+        """Copy Constructor"""
+        return self.from_new(self.get_dict(), None, dst)
+
     # Override Delete
     def delete(self, force=False):
-        """Delete"""
+        """Delete Object"""
 
         # Delete File
         try:
