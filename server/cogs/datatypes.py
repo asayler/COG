@@ -379,6 +379,11 @@ class Submission(UUIDRedisObject):
             fle = self.get_file(f_uuid)
             fle.delete(force=True)
 
+        # Delete Runs
+        for r_uuid in self.list_runs():
+            run = self.get_run(r_uuid)
+            run.delete()
+
         # Delete Self
         super(Submission, self).delete()
 

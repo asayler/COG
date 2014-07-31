@@ -5,8 +5,9 @@
 # Summer 2014
 # Univerity of Colorado
 
-import flask
 import time
+
+import flask
 
 import cogs.datatypes as datatypes
 
