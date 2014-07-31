@@ -7,6 +7,8 @@ if len(sys.argv) != 3:
     exit(1)
 
 x = int(sys.argv[1])
+if (x % 2) != 0:
+    x += 1
 y = int(sys.argv[2])
 s = x + y
 

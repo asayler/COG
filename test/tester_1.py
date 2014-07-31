@@ -5,7 +5,7 @@ import random
 import subprocess
 
 PGM = "python"
-SUB = "./pgm_1.py"
+SUB = "./pgm.py"
 
 sys.stderr.write("Grading {:s}...\n".format(SUB))
 
