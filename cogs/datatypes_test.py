@@ -91,7 +91,7 @@ class UUIDRedisObjectTestCase(DatatypesTestCase):
 
         # Test Invalid UUID
         self.assertRaises(datatypes.UUIDRedisObjectDNE,
-                          datatypes.UUIDRedisObject.from_existing,
+                          self.ObjFactory.from_existing,
                           'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
 
         # Test Valid UUID
@@ -182,7 +182,7 @@ class ServerTestCase(DatatypesTestCase):
             d = copy.deepcopy(datatypes.ASSIGNMENT_TESTDICT)
             for k in d:
                 d[k] = "{:s}_test_{:02d}".format(d[k], i)
-            assignments_in.add(repr(datatypes.Assignment.from_new(d)))
+            assignments_in.add(repr(self.s.create_assignment(d)))
 
         # List Assignments
         assignments_out = self.s.list_assignments()

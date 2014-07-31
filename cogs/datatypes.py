@@ -12,6 +12,8 @@ import mimetypes
 
 import redis
 
+import environment
+
 _ENCODING = 'utf-8'
 
 _REDIS_HOST = "localhost"
@@ -98,21 +100,37 @@ class UUIDRedisObject(object):
 
     @classmethod
     def get_factory(cls, parent_str):
-        cls.db = redis.StrictRedis(host=_REDIS_HOST, port=_REDIS_PORT, db=_REDIS_DB)
-        if parent_str == None:
-            cls.base_key = "{:s}".format(cls.__name__).lower()
-        else:
-            cls.base_key = "{:s}:{:s}".format(parent_str, cls.__name__).lower()
-        return cls
+
+        class new_cls(cls):
+
+            db = redis.StrictRedis(host=_REDIS_HOST, port=_REDIS_PORT, db=_REDIS_DB)
+            if parent_str == None:
+                base_key = "{:s}".format(cls.__name__).lower()
+            else:
+                base_key = "{:s}:{:s}".format(parent_str, cls.__name__).lower()
+
+        return new_cls
 
     @classmethod
     def list_objs(cls):
         """List Class Objects"""
-        objs_in = cls.db.keys("{:s}:{:s}".format(cls.base_key, _UUID_GLOB))
-        objs_out = []
-        for obj in objs_in:
-            objs_out.append(obj.split(':')[-1])
-        return set(objs_out)
+        obj_lst = cls.db.keys("{:s}:{:s}".format(cls.base_key, _UUID_GLOB))
+        obj_uuids = []
+        for obj_key in obj_lst:
+            obj_uuid = obj_key.split(':')[-1]
+            obj_uuids.append(obj_uuid)
+        return set(obj_uuids)
+
+    @classmethod
+    def get_objs(cls):
+        """List Class Objects"""
+        obj_lst = cls.db.keys("{:s}:{:s}".format(cls.base_key, _UUID_GLOB))
+        objs = []
+        for obj_key in obj_lst:
+            obj_uuid = obj_key.split(':')[-1]
+            obj = cls.from_existing(obj_uuid)
+            objs.append(obj)
+        return objs
 
     @classmethod
     def from_new(cls, d):
@@ -229,6 +247,8 @@ class Server(RedisObject):
         return self.AssignmentFactory.from_new(d)
     def get_assignment(self, uuid_hex):
         return self.AssignmentFactory.from_existing(uuid_hex)
+    def get_assignments(self):
+        return self.AssignmentFactory.get_objs()
     def list_assignments(self):
         return self.AssignmentFactory.list_objs()
 
@@ -270,6 +290,8 @@ class Assignment(UUIDRedisObject):
         return self.TestFactory.from_new(d)
     def get_test(self, uuid_hex):
         return self.TestFactory.from_existing(uuid_hex)
+    def get_tests(self):
+        return self.TestFactory.get_objs()
     def list_tests(self):
         return self.TestFactory.list_objs()
 
@@ -278,6 +300,8 @@ class Assignment(UUIDRedisObject):
         return self.SubmissionFactory.from_new(d)
     def get_submission(self, uuid_hex):
         return self.SubmissionFactory.from_existing(uuid_hex)
+    def get_submissions(self):
+        return self.SubmissionFactory.get_objs()
     def list_submissions(self):
         return self.SubmissionFactory.list_objs()
 
@@ -313,6 +337,8 @@ class Test(UUIDRedisObject):
         return self.FileFactory.from_new(d, file_obj)
     def get_file(self, uuid_hex):
         return self.FileFactory.from_existing(uuid_hex)
+    def get_files(self):
+        return self.FileFactory.get_objs()
     def list_files(self):
         return self.FileFactory.list_objs()
 
@@ -348,14 +374,18 @@ class Submission(UUIDRedisObject):
         return self.FileFactory.from_new(d, file_obj)
     def get_file(self, uuid_hex):
         return self.FileFactory.from_existing(uuid_hex)
+    def get_files(self):
+        return self.FileFactory.get_objs()
     def list_files(self):
         return self.FileFactory.list_objs()
 
     # Run Methods
-    def execute_run(self, tst):
-        return self.RunFactory.from_new(tst)
+    def execute_run(self, tst, sub):
+        return self.RunFactory.from_new(tst, sub)
     def get_run(self, uuid_hex):
         return self.RunFactory.from_existing(uuid_hex)
+    def get_runs(self):
+        return self.RunFactory.get_objs()
     def list_runs(self):
         return self.RunFactory.list_objs()
 
@@ -369,7 +399,7 @@ class Run(UUIDRedisObject):
 
     # Override from_new
     @classmethod
-    def from_new(cls, tst):
+    def from_new(cls, tst, sub):
         """New Constructor"""
 
         # Create New Object
@@ -382,10 +412,15 @@ class Run(UUIDRedisObject):
         data['output'] = ""
 
         # Create Run
-        fle = super(Run, cls).from_new(data)
+        run = super(Run, cls).from_new(data)
 
-        # Return File
-        return fle
+        tst_fls = tst.get_files()
+        sub_fls = sub.get_files()
+
+        env = environment.Env(run, tst_fls, sub_fls)
+
+        # Return Run
+        return run
 
 
 class File(UUIDRedisObject):

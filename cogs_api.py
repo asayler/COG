@@ -566,7 +566,7 @@ def process_runs(asn_uuid, sub_uuid):
         for tst_uuid in asn.list_tests():
             tst = asn.get_test(tst_uuid)
             try:
-                run = sub.execute_run(tst)
+                run = sub.execute_run(tst, sub)
             except KeyError as e:
                 err = { 'status': 400,
                         'message': str(e) }
