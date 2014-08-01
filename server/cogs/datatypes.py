@@ -89,8 +89,55 @@ class UUIDRedisSetMissing(UUIDRedisSetError):
 
 ### Objects
 
+class UUIDObject(object):
 
-class UUIDRedisSetBase(object):
+    def __init__(self, uuid_obj):
+        """Base Constructor"""
+        super(UUIDObject, self).__init__()
+        self.uuid = uuid_obj
+
+    @classmethod
+    def from_new(cls):
+        """New Constructor"""
+
+        # Create New Object
+        uuid_obj = uuid.uuid4()
+        obj = cls(uuid_obj)
+
+        # Return Object
+        return obj
+
+    @classmethod
+    def from_existing(cls, uuid_hex):
+        """Existing Constructor"""
+
+        # Create Existing Object
+        uuid_obj = uuid.UUID(uuid_hex)
+        obj = cls(uuid_obj)
+
+        # Return Object
+        return obj
+
+    def __unicode__(self):
+        u = u"{:s}_{:012x}".format(type(self).__name__, self.uuid.node)
+        return u
+
+    def __str__(self):
+        s = unicode(self).encode(_ENCODING)
+        return s
+
+    def __repr__(self):
+        r = "{:s}".format(self.uuid)
+        return r
+
+    def __hash__(self):
+        return hash(repr(self))
+
+    def __eq__(self, other):
+        return (repr(self) == repr(other))
+
+
+class UUIDRedisSetBase(UUIDObject):
     """
     UUID Redis Object Base Class
 
@@ -100,20 +147,18 @@ class UUIDRedisSetBase(object):
 
     def __init__(self, uuid_obj):
         """Base Constructor"""
-        super(UUIDRedisSetBase, self).__init__()
-        self.uuid = uuid_obj
+        super(UUIDRedisSetBase, self).__init__(uuid_obj)
         self.obj_key = "{:s}:{:s}".format(self.base_key, repr(self)).lower()
 
     @classmethod
     def from_new(cls, d):
         """New Constructor"""
 
-        # Create New Object
-        data = copy.deepcopy(d)
-        uuid_obj = uuid.uuid4()
-        obj = cls(uuid_obj)
+        # Call Parent
+        obj = super(UUIDRedisSetBase, cls).from_new()
 
         # Set Times
+        data = copy.deepcopy(d)
         data['created_time'] = str(time.time())
         data['modified_time'] = str(time.time())
 
@@ -132,9 +177,8 @@ class UUIDRedisSetBase(object):
     def from_existing(cls, uuid_hex):
         """Existing Constructor"""
 
-        # Create Existing Object
-        uuid_obj = uuid.UUID(uuid_hex)
-        obj = cls(uuid_obj)
+        # Call Parent
+        obj = super(UUIDRedisSetBase, cls).from_existing(uuid_hex)
 
         # Verify Object ID in Set
         if not obj.db.exists(obj.obj_key):
@@ -169,24 +213,6 @@ class UUIDRedisSetBase(object):
 
     def __deepcopy__(self):
         return self.copy()
-
-    def __unicode__(self):
-        u = u"{:s}_{:012x}".format(type(self).__name__, self.uuid.node)
-        return u
-
-    def __str__(self):
-        s = unicode(self).encode(_ENCODING)
-        return s
-
-    def __repr__(self):
-        r = "{:s}".format(self.uuid)
-        return r
-
-    def __hash__(self):
-        return hash(repr(self))
-
-    def __eq__(self, other):
-        return (repr(self) == repr(other))
 
     def __getitem__(self, k):
         if k in self.schema:
