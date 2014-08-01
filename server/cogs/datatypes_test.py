@@ -56,8 +56,11 @@ class UUIDRedisObjectTestCase(DatatypesTestCase):
 
     def setUp(self):
         super(UUIDRedisObjectTestCase, self).setUp()
-        self.ObjFactory = datatypes.UUIDRedisObject.get_factory(None)
-        self.ObjFactory.schema = datatypes._BASE_SCHEMA + _DUMMY_SCHEMA
+
+        class DummyBase(datatypes.UUIDRedisObjectBase):
+            schema = datatypes._BASE_SCHEMA + _DUMMY_SCHEMA
+
+        self.ObjFactory = datatypes.UUIDRedisFactory(DummyBase)
 
     def tearDown(self):
         super(UUIDRedisObjectTestCase, self).tearDown()
