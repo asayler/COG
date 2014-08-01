@@ -82,18 +82,6 @@ class UUIDRedisObjectMissing(UUIDRedisObjectError):
 
 ### Objects
 
-class RedisObject(object):
-    """
-    Redis Object Base Class
-
-    """
-
-    def __init__(self):
-        """Base Constructor"""
-        super(RedisObject, self).__init__()
-        self.db = redis.StrictRedis(host=_REDIS_HOST, port=_REDIS_PORT, db=_REDIS_DB)
-
-
 class UUIDRedisObjectBase(object):
     """
     UUID Redis Object Base Class
