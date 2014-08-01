@@ -57,7 +57,7 @@ class UUIDRedisObjectTestCase(DatatypesTestCase):
     def setUp(self):
         super(UUIDRedisObjectTestCase, self).setUp()
 
-        class DummyBase(datatypes.UUIDRedisObjectBase):
+        class DummyBase(datatypes.UUIDRedisSetBase):
             schema = datatypes._BASE_SCHEMA + _DUMMY_SCHEMA
 
         self.ObjFactory = datatypes.UUIDRedisFactory(DummyBase)
@@ -93,7 +93,7 @@ class UUIDRedisObjectTestCase(DatatypesTestCase):
     def test_from_existing(self):
 
         # Test Invalid UUID
-        self.assertRaises(datatypes.UUIDRedisObjectDNE,
+        self.assertRaises(datatypes.UUIDRedisSetDNE,
                           self.ObjFactory.from_existing,
                           'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
 
@@ -229,7 +229,7 @@ class AssignmentTestCase(DatatypesTestCase):
     def test_get_assignment(self):
 
         # Test Invalid UUID
-        self.assertRaises(datatypes.UUIDRedisObjectDNE,
+        self.assertRaises(datatypes.UUIDRedisSetDNE,
                           self.srv.get_assignment,
                           'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
 
@@ -278,7 +278,7 @@ class AssignmentTestTestCase(DatatypesTestCase):
     def test_get_test(self):
 
         # Test Invalid UUID
-        self.assertRaises(datatypes.UUIDRedisObjectDNE,
+        self.assertRaises(datatypes.UUIDRedisSetDNE,
                           self.asn.get_test,
                           'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
 
