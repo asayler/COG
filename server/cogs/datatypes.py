@@ -66,25 +66,25 @@ class UUIDRedisFactoryError(DatatypesError):
     def __init__(self, *args, **kwargs):
         super(UUIDRedisFactoryError, self).__init__(*args, **kwargs)
 
-class UUIDRedisSetError(DatatypesError):
+class UUIDRedisHashError(DatatypesError):
     """Base class for UUID Redis Object Exceptions"""
 
     def __init__(self, *args, **kwargs):
-        super(UUIDRedisSetError, self).__init__(*args, **kwargs)
+        super(UUIDRedisHashError, self).__init__(*args, **kwargs)
 
-class UUIDRedisSetDNE(UUIDRedisSetError):
+class UUIDRedisHashDNE(UUIDRedisHashError):
     """UUID Redis Object Does Not Exist"""
 
     def __init__(self, obj):
         msg = "{:s} does not exist.".format(obj)
-        super(UUIDRedisSetDNE, self).__init__(msg)
+        super(UUIDRedisHashDNE, self).__init__(msg)
 
-class UUIDRedisSetMissing(UUIDRedisSetError):
+class UUIDRedisHashMissing(UUIDRedisHashError):
     """UUID Redis Object Is Missing"""
 
     def __init__(self, obj):
         msg = "{:s} exists, but is missing.".format(obj)
-        super(UUIDRedisSetMissing, self).__init__(msg)
+        super(UUIDRedisHashMissing, self).__init__(msg)
 
 
 ### Objects
@@ -137,7 +137,7 @@ class UUIDObject(object):
         return (repr(self) == repr(other))
 
 
-class UUIDRedisSetBase(UUIDObject):
+class UUIDRedisHashBase(UUIDObject):
     """
     UUID Redis Object Base Class
 
@@ -147,7 +147,7 @@ class UUIDRedisSetBase(UUIDObject):
 
     def __init__(self, uuid_obj):
         """Base Constructor"""
-        super(UUIDRedisSetBase, self).__init__(uuid_obj)
+        super(UUIDRedisHashBase, self).__init__(uuid_obj)
         self.obj_key = "{:s}:{:s}".format(self.base_key, repr(self)).lower()
 
     @classmethod
@@ -155,7 +155,7 @@ class UUIDRedisSetBase(UUIDObject):
         """New Constructor"""
 
         # Call Parent
-        obj = super(UUIDRedisSetBase, cls).from_new()
+        obj = super(UUIDRedisHashBase, cls).from_new()
 
         # Set Times
         data = copy.deepcopy(d)
@@ -168,7 +168,7 @@ class UUIDRedisSetBase(UUIDObject):
 
         # Add Object Data to DB
         if not obj.db.hmset(obj.obj_key, data):
-            raise UUIDRedisSetError("Create Failed")
+            raise UUIDRedisHashError("Create Failed")
 
         # Return Object
         return obj
@@ -178,11 +178,11 @@ class UUIDRedisSetBase(UUIDObject):
         """Existing Constructor"""
 
         # Call Parent
-        obj = super(UUIDRedisSetBase, cls).from_existing(uuid_hex)
+        obj = super(UUIDRedisHashBase, cls).from_existing(uuid_hex)
 
         # Verify Object ID in Set
         if not obj.db.exists(obj.obj_key):
-            raise UUIDRedisSetDNE(obj)
+            raise UUIDRedisHashDNE(obj)
 
         # Return Object
         return obj
@@ -236,7 +236,7 @@ class UUIDRedisSetBase(UUIDObject):
 
         # Delete Object Data from DB
         if not self.db.delete(self.obj_key):
-            raise UUIDRedisSetError("Delete Failed")
+            raise UUIDRedisHashError("Delete Failed")
 
     def get_dict(self):
         """Get Dict"""
@@ -268,8 +268,8 @@ class UUIDRedisFactory(object):
         super(UUIDRedisFactory, self).__init__()
 
         # Check Input
-        if not UUIDRedisSetBase in base_cls.__bases__:
-            raise UUIDRedisFactoryError("cls must be of type UUIDRedisSetBase")
+        if not UUIDRedisHashBase in base_cls.__bases__:
+            raise UUIDRedisFactoryError("cls must be of type UUIDRedisHashBase")
         base_name = base_cls.__name__
         if not base_name.endswith(_SUF_BASE):
             raise UUIDRedisFactoryError("cls name must end with '{:s}'".format(_SUF_BASE))
@@ -338,7 +338,7 @@ class Server(object):
     def list_users(self):
         return self.UserFactory.list_objs()
 
-class UserBase(UUIDRedisSetBase):
+class UserBase(UUIDRedisHashBase):
     """
     COGS User Class
 
@@ -347,7 +347,7 @@ class UserBase(UUIDRedisSetBase):
     schema = _BASE_SCHEMA + _USER_SCHEMA
 
 
-class AssignmentBase(UUIDRedisSetBase):
+class AssignmentBase(UUIDRedisHashBase):
     """
     COGS Assignment Class
 
@@ -400,7 +400,7 @@ class AssignmentBase(UUIDRedisSetBase):
         return self.SubmissionFactory.list_objs()
 
 
-class TestBase(UUIDRedisSetBase):
+class TestBase(UUIDRedisHashBase):
     """
     COGS Test Class
 
@@ -436,7 +436,7 @@ class TestBase(UUIDRedisSetBase):
     def list_files(self):
         return self.FileFactory.list_objs()
 
-class SubmissionBase(UUIDRedisSetBase):
+class SubmissionBase(UUIDRedisHashBase):
     """
     COGS Submission Class
 
@@ -488,7 +488,7 @@ class SubmissionBase(UUIDRedisSetBase):
     def list_runs(self):
         return self.RunFactory.list_objs()
 
-class RunBase(UUIDRedisSetBase):
+class RunBase(UUIDRedisHashBase):
     """
     COGS Run Class
 
@@ -532,7 +532,7 @@ class RunBase(UUIDRedisSetBase):
         return run
 
 
-class FileBase(UUIDRedisSetBase):
+class FileBase(UUIDRedisHashBase):
     """
     COGS File Class
 

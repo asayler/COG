@@ -74,7 +74,7 @@ def process_assignment(uuid_hex):
     # Get Assignment
     try:
         a = s.get_assignment(uuid_hex)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -122,7 +122,7 @@ def process_tests(asn_uuid):
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -163,7 +163,7 @@ def process_test(asn_uuid, tst_uuid):
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -173,7 +173,7 @@ def process_test(asn_uuid, tst_uuid):
     # Get Test
     try:
         tst = asn.get_test(tst_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -220,7 +220,7 @@ def process_test_files(asn_uuid, tst_uuid):
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -230,7 +230,7 @@ def process_test_files(asn_uuid, tst_uuid):
     # Get Test
     try:
         tst = asn.get_test(tst_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -277,7 +277,7 @@ def process_test_file(asn_uuid, tst_uuid, fle_uuid):
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -287,7 +287,7 @@ def process_test_file(asn_uuid, tst_uuid, fle_uuid):
     # Get Test
     try:
         tst = asn.get_test(tst_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -297,7 +297,7 @@ def process_test_file(asn_uuid, tst_uuid, fle_uuid):
     # Get File
     try:
         fle = tst.get_file(fle_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -331,7 +331,7 @@ def process_submissions(asn_uuid):
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -372,7 +372,7 @@ def process_submission(asn_uuid, sub_uuid):
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -382,7 +382,7 @@ def process_submission(asn_uuid, sub_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -429,7 +429,7 @@ def process_submission_files(asn_uuid, sub_uuid):
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -439,7 +439,7 @@ def process_submission_files(asn_uuid, sub_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -486,7 +486,7 @@ def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -496,7 +496,7 @@ def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -506,7 +506,7 @@ def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
     # Get File
     try:
         fle = sub.get_file(fle_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -540,7 +540,7 @@ def process_runs(asn_uuid, sub_uuid):
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -550,7 +550,7 @@ def process_runs(asn_uuid, sub_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -594,7 +594,7 @@ def process_run(asn_uuid, sub_uuid, run_uuid):
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -604,7 +604,7 @@ def process_run(asn_uuid, sub_uuid, run_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -614,7 +614,7 @@ def process_run(asn_uuid, sub_uuid, run_uuid):
     # Get Run
     try:
         run = sub.get_run(run_uuid)
-    except datatypes.UUIDRedisSetDNE as e:
+    except datatypes.UUIDRedisHashDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
