@@ -21,10 +21,13 @@ _ENCODING = 'utf-8'
 _SUF_BASE = 'Base'
 
 _BASE_SCHEMA           = ['created_time', 'modified_time']
+
 _USER_SCHEMA           = ['username', 'first', 'last', 'type']
 _GROUP_SCHEMA          = ['name', 'members']
+
 _COL_PERMISSION_SCHEMA = ['create', 'list']
 _OBJ_PERMISSION_SCHEMA = ['read', 'write', 'delete']
+
 _ASSIGNMENTS_SCHEMA    = ['name', 'contact', 'permissions']
 _TESTS_SCHEMA          = ['name', 'contact', 'type', 'maxscore']
 _SUBMISSIONS_SCHEMA    = ['author']
@@ -34,10 +37,6 @@ _FILES_SCHEMA          = ['key', 'name', 'type', 'encoding', 'path']
 _FILES_DIR = "./files/"
 
 _UUID_GLOB = '????????-????-????-????-????????????'
-
-_REDIS_CONF_DEFAULT = {'redis_host': "localhost",
-                       'redis_port': 6379,
-                       'redis_db': 3}
 
 ### Exceptions
 
@@ -122,7 +121,6 @@ class UUIDRedisObjectBase(UUIDObject):
     def __init__(self, uuid_obj):
         """Base Constructor"""
         super(UUIDRedisObjectBase, self).__init__(uuid_obj)
-
         self.obj_key = "{:s}:{:s}".format(self.base_key, repr(self)).lower()
 
     @classmethod
@@ -149,16 +147,11 @@ class UUIDRedisObjectBase(UUIDObject):
 
 class UUIDRedisHashBase(UUIDRedisObjectBase):
     """
-    UUID Redis Object Base Class
+    UUID Redis Hash Base Class
 
     """
 
     schema = _BASE_SCHEMA
-
-    def __init__(self, uuid_obj):
-        """Base Constructor"""
-        super(UUIDRedisHashBase, self).__init__(uuid_obj)
-        self.obj_key = "{:s}:{:s}".format(self.base_key, repr(self)).lower()
 
     @classmethod
     def from_new(cls, d):
@@ -183,12 +176,6 @@ class UUIDRedisHashBase(UUIDRedisObjectBase):
         # Return Object
         return obj
 
-    def __copy__(self):
-        return self.copy()
-
-    def __deepcopy__(self):
-        return self.copy()
-
     def __getitem__(self, k):
         if k in self.schema:
             return self.db.hget(self.obj_key, k)
@@ -205,6 +192,12 @@ class UUIDRedisHashBase(UUIDRedisObjectBase):
         """ Copy Constructor """
 
         return self.from_new(self.get_dict)
+
+    def __copy__(self):
+        return self.copy()
+
+    def __deepcopy__(self):
+        return self.copy()
 
     def get_dict(self):
         """Get Dict"""
@@ -226,6 +219,52 @@ class UUIDRedisHashBase(UUIDRedisObjectBase):
 
         # Set dict
         self.db.hmset(self.obj_key, data)
+
+
+class UUIDRedisSetBase(UUIDRedisObjectBase):
+    """
+    UUID Redis Set Base Class
+
+    """
+
+    @classmethod
+    def from_new(cls, *vals):
+        """New Constructor"""
+
+        # Call Parent
+        obj = super(UUIDRedisSetBase, cls).from_new()
+
+        # Add lst to DB
+        if not obj.db.sadd(obj.obj_key, *vals):
+            raise UUIDRedisObjectError("Create Failed")
+
+        # Return Object
+        return obj
+
+    def copy(self):
+        """ Copy Constructor """
+
+        return self.from_new(*list(self.get_vals))
+
+    def __copy__(self):
+        return self.copy()
+
+    def __deepcopy__(self):
+        return self.copy()
+
+    def get_vals(self):
+        """Get All Vals from Set"""
+        return self.db.smembers(self.obj_key)
+
+    def add_vals(self, *vals):
+        """Add Vals to Set"""
+        if not self.db.sadd(self.obj_key, *vals):
+            raise UUIDRedisObjectError("Add Failed")
+
+    def del_vals(self, *vals):
+        """Remove Vals from Set"""
+        if not self.db.srem(self.obj_key, *vals):
+            raise UUIDRedisObjectError("Remove Failed")
 
 
 class UUIDRedisFactory(object):
@@ -296,20 +335,14 @@ class Server(object):
     """
 
     # Override Constructor
-    def __init__(self, redis_db=None):
+    def __init__(self, redis_db):
         """Base Constructor"""
 
         # Call Parent Construtor
         super(Server, self).__init__()
 
         # Setup DB
-        if not redis_db:
-            redis_conf = _REDIS_CONF_DEFAULT
-            self.db = redis.StrictRedis(host=redis_conf['redis_host'],
-                                        port=redis_conf['redis_port'],
-                                        db=redis_conf['redis_db'])
-        else:
-            self.db = redis_db
+        self.db = redis_db
 
         # Setup Factories
         self.AssignmentFactory = UUIDRedisFactory(self.db, AssignmentBase, None)
