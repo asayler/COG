@@ -21,13 +21,10 @@ _ENCODING = 'utf-8'
 _SUF_BASE = 'Base'
 
 _BASE_SCHEMA           = ['created_time', 'modified_time']
-
 _USER_SCHEMA           = ['username', 'first', 'last', 'type']
 _GROUP_SCHEMA          = ['name', 'members']
-
 _COL_PERMISSION_SCHEMA = ['create', 'list']
 _OBJ_PERMISSION_SCHEMA = ['read', 'write', 'delete']
-
 _ASSIGNMENTS_SCHEMA    = ['name', 'contact', 'permissions']
 _TESTS_SCHEMA          = ['name', 'contact', 'type', 'maxscore']
 _SUBMISSIONS_SCHEMA    = ['author']
@@ -37,6 +34,10 @@ _FILES_SCHEMA          = ['key', 'name', 'type', 'encoding', 'path']
 _FILES_DIR = "./files/"
 
 _UUID_GLOB = '????????-????-????-????-????????????'
+
+_REDIS_CONF_DEFAULT = {'redis_host': "localhost",
+                       'redis_port': 6379,
+                       'redis_db': 3}
 
 ### Exceptions
 
@@ -335,14 +336,20 @@ class Server(object):
     """
 
     # Override Constructor
-    def __init__(self, redis_db):
+    def __init__(self, redis_db=None):
         """Base Constructor"""
 
         # Call Parent Construtor
         super(Server, self).__init__()
 
         # Setup DB
-        self.db = redis_db
+        if not redis_db:
+            redis_conf = _REDIS_CONF_DEFAULT
+            self.db = redis.StrictRedis(host=redis_conf['redis_host'],
+                                        port=redis_conf['redis_port'],
+                                        db=redis_conf['redis_db'])
+        else:
+            self.db = redis_db
 
         # Setup Factories
         self.AssignmentFactory = UUIDRedisFactory(self.db, AssignmentBase, None)
