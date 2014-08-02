@@ -12,7 +12,7 @@ import redis
 
 _REDIS_CONF_TEST = {'redis_host': "localhost",
                     'redis_port': 6379,
-                    'redis_db': 4}
+                    'redis_db': 5}
 
 DUMMY_SCHEMA         = ['key1', 'key2', 'key3']
 DUMMY_TESTDICT       = {'key1': "val1",
