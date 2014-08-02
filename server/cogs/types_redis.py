@@ -1,4 +1,14 @@
-_UUID_GLOB = '????????-????-????-????-????????????'
+# -*- coding: utf-8 -*-
+
+# Andy Sayler
+# Summer 2014
+# Univerity of Colorado
+
+import copy
+
+import redis
+
+_ENCODING = 'utf-8'
 
 _REDIS_CONF_DEFAULT = {'redis_host': "localhost",
                        'redis_port': 6379,
@@ -12,24 +22,24 @@ class DatatypesError(Exception):
     def __init__(self, *args, **kwargs):
         super(DatatypesError, self).__init__(*args, **kwargs)
 
-class UUIDRedisFactoryError(DatatypesError):
-    """Base class for UUID Redis Object Exceptions"""
+class RedisFactoryError(DatatypesError):
+    """Base class for Redis Factory Exceptions"""
 
     def __init__(self, *args, **kwargs):
-        super(UUIDRedisFactoryError, self).__init__(*args, **kwargs)
+        super(RedisFactoryError, self).__init__(*args, **kwargs)
 
-class UUIDRedisObjectError(DatatypesError):
-    """Base class for UUID Redis Object Exceptions"""
+class RedisObjectError(DatatypesError):
+    """Base class for Redis Object Exceptions"""
 
     def __init__(self, *args, **kwargs):
-        super(UUIDRedisObjectError, self).__init__(*args, **kwargs)
+        super(RedisObjectError, self).__init__(*args, **kwargs)
 
-class UUIDRedisObjectDNE(UUIDRedisObjectError):
-    """UUID Redis Object Does Not Exist"""
+class RedisObjectDNE(RedisObjectError):
+    """ Redis Object Does Not Exist"""
 
     def __init__(self, obj):
         msg = "{:s} does not exist.".format(obj)
-        super(UUIDRedisObjectDNE, self).__init__(msg)
+        super(RedisObjectDNE, self).__init__(msg)
 
 
 ### Objects
@@ -50,7 +60,7 @@ class RedisObjectBase(object):
 
         # Verify Object in DB
         if not obj.db.exists(obj.full_key):
-            raise UUIDRedisObjectDNE(obj)
+            raise RedisObjectDNE(obj)
 
         return obj
 
@@ -105,7 +115,7 @@ class RedisObjectBase(object):
         """Delete Object"""
 
         if not self.db.delete(self.full_key):
-            raise UUIDRedisObjectError("Delete Failed")
+            raise RedisObjectError("Delete Failed")
 
 
 class RedisHashBase(RedisObjectBase):
@@ -134,7 +144,7 @@ class RedisHashBase(RedisObjectBase):
 
         # Add Object Data to DB
         if not obj.db.hmset(obj.full_key, data):
-            raise UUIDRedisObjectError("Create Failed")
+            raise RedisObjectError("Create Failed")
 
         # Return Object
         return obj
@@ -182,11 +192,11 @@ class RedisSetBase(RedisObjectBase):
         """New Constructor"""
 
         # Call Parent
-        obj = super(UUIDRedisSetBase, cls).from_new(key)
+        obj = super(RedisSetBase, cls).from_new(key)
 
         # Add lst to DB
         if not obj.db.sadd(obj.full_key, *vals):
-            raise UUIDRedisObjectError("Create Failed")
+            raise RedisObjectError("Create Failed")
 
         # Return Object
         return obj
@@ -200,13 +210,13 @@ class RedisSetBase(RedisObjectBase):
         """Add Vals to Set"""
 
         if not self.db.sadd(self.full_key, *vals):
-            raise UUIDRedisObjectError("Add Failed")
+            raise RedisObjectError("Add Failed")
 
     def del_vals(self, *vals):
         """Remove Vals from Set"""
 
         if not self.db.srem(self.full_key, *vals):
-            raise UUIDRedisObjectError("Remove Failed")
+            raise RedisObjectError("Remove Failed")
 
 
 class RedisFactory(object):
@@ -218,10 +228,10 @@ class RedisFactory(object):
 
         # Check Input
         if not issubclass(base_cls, RedisObjectBase):
-            raise RedisFactoryError("cls must be subclass of UUIDRedisObjectBase")
+            raise RedisFactoryError("cls must be subclass of RedisObjectBase")
         base_name = base_cls.__name__
         if not base_name.endswith(_SUF_BASE):
-            raise UUIDRedisFactoryError("cls name must end with '{:s}'".format(_SUF_BASE))
+            raise RedisFactoryError("cls name must end with '{:s}'".format(_SUF_BASE))
 
         # Setup Class Name
         cls_name = base_name[0:base_name.rfind(_SUF_BASE)]
@@ -246,7 +256,7 @@ class RedisFactory(object):
 
     def list_objs(self):
         """List Factory Objects"""
-        obj_lst = self.db.keys("{:s}:{:s}".format(self.pre_key, _UUID_GLOB))
+        obj_lst = self.db.keys("{:s}:{:s}".format(self.pre_key, __GLOB))
         obj_uuids = []
         for full_key in obj_lst:
             obj_uuid = full_key.split(':')[-1]
@@ -255,7 +265,7 @@ class RedisFactory(object):
 
     def get_objs(self):
         """Get Factory Objects"""
-        obj_lst = self.db.keys("{:s}:{:s}".format(self.pre_key, _UUID_GLOB))
+        obj_lst = self.db.keys("{:s}:{:s}".format(self.pre_key, __GLOB))
         objs = []
         for full_key in obj_lst:
             obj_uuid = full_key.split(':')[-1]
