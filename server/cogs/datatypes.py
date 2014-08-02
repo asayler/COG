@@ -20,37 +20,24 @@ _ENCODING = 'utf-8'
 
 _SUF_BASE = 'Base'
 
-_REDIS_HOST = "localhost"
-_REDIS_PORT = 6379
-_REDIS_DB   = 3
-
-_BASE_SCHEMA = ['created_time', 'modified_time']
-
-_USER_SCHEMA = ['username', 'first', 'last', 'type']
-_GROUP_SCHEMA = ['name', 'members']
-
+_BASE_SCHEMA           = ['created_time', 'modified_time']
+_USER_SCHEMA           = ['username', 'first', 'last', 'type']
+_GROUP_SCHEMA          = ['name', 'members']
 _COL_PERMISSION_SCHEMA = ['create', 'list']
 _OBJ_PERMISSION_SCHEMA = ['read', 'write', 'delete']
+_ASSIGNMENTS_SCHEMA    = ['name', 'contact', 'permissions']
+_TESTS_SCHEMA          = ['name', 'contact', 'type', 'maxscore']
+_SUBMISSIONS_SCHEMA    = ['author']
+_RUNS_SCHEMA           = ['test', 'status', 'score', 'output']
+_FILES_SCHEMA          = ['key', 'name', 'type', 'encoding', 'path']
 
-_ASSIGNMENTS_SCHEMA  = ['name', 'contact', 'permissions']
-ASSIGNMENT_TESTDICT  = {'name': "Test_Assignment",
-                        'contact': "Andy Sayler",
-                        'permissions': '01c47915-4777-11d8-bc70-0090272ff725'}
-
-_TESTS_SCHEMA = ['name', 'contact', 'type', 'maxscore']
-TEST_TESTDICT = {'name': "Test_Assignment",
-                 'contact': "Andy Sayler",
-                 'type': "script",
-                 'maxscore': "10"}
-
-_SUBMISSIONS_SCHEMA = ['author']
-
-_RUNS_SCHEMA = ['test', 'status', 'score', 'output']
-
-_FILES_SCHEMA = ['key', 'name', 'type', 'encoding', 'path']
 _FILES_DIR = "./files/"
 
 _UUID_GLOB = '????????-????-????-????-????????????'
+
+_REDIS_CONF_DEFAULT = {'redis_host': "localhost",
+                       'redis_port': 6379,
+                       'redis_db': 3}
 
 ### Exceptions
 
@@ -66,25 +53,18 @@ class UUIDRedisFactoryError(DatatypesError):
     def __init__(self, *args, **kwargs):
         super(UUIDRedisFactoryError, self).__init__(*args, **kwargs)
 
-class UUIDRedisHashError(DatatypesError):
+class UUIDRedisObjectError(DatatypesError):
     """Base class for UUID Redis Object Exceptions"""
 
     def __init__(self, *args, **kwargs):
-        super(UUIDRedisHashError, self).__init__(*args, **kwargs)
+        super(UUIDRedisObjectError, self).__init__(*args, **kwargs)
 
-class UUIDRedisHashDNE(UUIDRedisHashError):
+class UUIDRedisObjectDNE(UUIDRedisObjectError):
     """UUID Redis Object Does Not Exist"""
 
     def __init__(self, obj):
         msg = "{:s} does not exist.".format(obj)
-        super(UUIDRedisHashDNE, self).__init__(msg)
-
-class UUIDRedisHashMissing(UUIDRedisHashError):
-    """UUID Redis Object Is Missing"""
-
-    def __init__(self, obj):
-        msg = "{:s} exists, but is missing.".format(obj)
-        super(UUIDRedisHashMissing, self).__init__(msg)
+        super(UUIDRedisObjectDNE, self).__init__(msg)
 
 
 ### Objects
@@ -137,7 +117,37 @@ class UUIDObject(object):
         return (repr(self) == repr(other))
 
 
-class UUIDRedisHashBase(UUIDObject):
+class UUIDRedisObjectBase(UUIDObject):
+
+    def __init__(self, uuid_obj):
+        """Base Constructor"""
+        super(UUIDRedisObjectBase, self).__init__(uuid_obj)
+
+        self.obj_key = "{:s}:{:s}".format(self.base_key, repr(self)).lower()
+
+    @classmethod
+    def from_existing(cls, uuid_hex):
+        """Existing Constructor"""
+
+        # Call Parent
+        obj = super(UUIDRedisObjectBase, cls).from_existing(uuid_hex)
+
+        # Verify Object ID in Set
+        if not obj.db.exists(obj.obj_key):
+            raise UUIDRedisObjectDNE(obj)
+
+        # Return Object
+        return obj
+
+    def delete(self):
+        """Delete Object"""
+
+        # Delete Object Data from DB
+        if not self.db.delete(self.obj_key):
+            raise UUIDRedisObjectError("Delete Failed")
+
+
+class UUIDRedisHashBase(UUIDRedisObjectBase):
     """
     UUID Redis Object Base Class
 
@@ -168,45 +178,10 @@ class UUIDRedisHashBase(UUIDObject):
 
         # Add Object Data to DB
         if not obj.db.hmset(obj.obj_key, data):
-            raise UUIDRedisHashError("Create Failed")
+            raise UUIDRedisObjectError("Create Failed")
 
         # Return Object
         return obj
-
-    @classmethod
-    def from_existing(cls, uuid_hex):
-        """Existing Constructor"""
-
-        # Call Parent
-        obj = super(UUIDRedisHashBase, cls).from_existing(uuid_hex)
-
-        # Verify Object ID in Set
-        if not obj.db.exists(obj.obj_key):
-            raise UUIDRedisHashDNE(obj)
-
-        # Return Object
-        return obj
-
-    @classmethod
-    def list_objs(cls):
-        """List Class Objects"""
-        obj_lst = cls.db.keys("{:s}:{:s}".format(cls.base_key, _UUID_GLOB))
-        obj_uuids = []
-        for obj_key in obj_lst:
-            obj_uuid = obj_key.split(':')[-1]
-            obj_uuids.append(obj_uuid)
-        return set(obj_uuids)
-
-    @classmethod
-    def get_objs(cls):
-        """List Class Objects"""
-        obj_lst = cls.db.keys("{:s}:{:s}".format(cls.base_key, _UUID_GLOB))
-        objs = []
-        for obj_key in obj_lst:
-            obj_uuid = obj_key.split(':')[-1]
-            obj = cls.from_existing(obj_uuid)
-            objs.append(obj)
-        return objs
 
     def __copy__(self):
         return self.copy()
@@ -230,13 +205,6 @@ class UUIDRedisHashBase(UUIDObject):
         """ Copy Constructor """
 
         return self.from_new(self.get_dict)
-
-    def delete(self):
-        """Delete Object"""
-
-        # Delete Object Data from DB
-        if not self.db.delete(self.obj_key):
-            raise UUIDRedisHashError("Delete Failed")
 
     def get_dict(self):
         """Get Dict"""
@@ -262,14 +230,14 @@ class UUIDRedisHashBase(UUIDObject):
 
 class UUIDRedisFactory(object):
 
-    def __init__(self, base_cls, prefix=None):
+    def __init__(self, redis_db, base_cls, prefix=None):
 
         # Call Super
         super(UUIDRedisFactory, self).__init__()
 
         # Check Input
-        if not UUIDRedisHashBase in base_cls.__bases__:
-            raise UUIDRedisFactoryError("cls must be of type UUIDRedisHashBase")
+        if not issubclass(base_cls, UUIDRedisObjectBase):
+            raise UUIDRedisFactoryError("cls must be subclass of UUIDRedisObjectBase")
         base_name = base_cls.__name__
         if not base_name.endswith(_SUF_BASE):
             raise UUIDRedisFactoryError("cls name must end with '{:s}'".format(_SUF_BASE))
@@ -277,32 +245,48 @@ class UUIDRedisFactory(object):
         # Setup Class Name
         cls_name = base_name[0:base_name.rfind(_SUF_BASE)]
 
+        # Setup DB
+        self.db = redis_db
+
         # Setup Base Key
         if prefix == None:
-            base = "{:s}".format(cls_name).lower()
+            self.base_key = "{:s}".format(cls_name).lower()
         else:
-            base = "{:s}:{:s}".format(prefix, cls_name).lower()
+            self.base_key = "{:s}:{:s}".format(prefix, cls_name).lower()
 
         # Setup Class
         class cls(base_cls):
 
-            base_key = base
-            db = redis.StrictRedis(host=_REDIS_HOST, port=_REDIS_PORT, db=_REDIS_DB)
+            base_key = self.base_key
+            db = self.db
 
         cls.__name__ = cls_name
         self.cls = cls
+
+    def list_objs(self):
+        """List Factory Objects"""
+        obj_lst = self.db.keys("{:s}:{:s}".format(self.base_key, _UUID_GLOB))
+        obj_uuids = []
+        for obj_key in obj_lst:
+            obj_uuid = obj_key.split(':')[-1]
+            obj_uuids.append(obj_uuid)
+        return set(obj_uuids)
+
+    def get_objs(self):
+        """Get Factory Objects"""
+        obj_lst = self.db.keys("{:s}:{:s}".format(self.base_key, _UUID_GLOB))
+        objs = []
+        for obj_key in obj_lst:
+            obj_uuid = obj_key.split(':')[-1]
+            obj = cls.from_existing(obj_uuid)
+            objs.append(obj)
+        return objs
 
     def from_new(self, *args, **kwargs):
         return self.cls.from_new(*args, **kwargs)
 
     def from_existing(self, *args, **kwargs):
         return self.cls.from_existing(*args, **kwargs)
-
-    def get_objs(self, *args, **kwargs):
-        return self.cls.get_objs(*args, **kwargs)
-
-    def list_objs(self, *args, **kwargs):
-        return self.cls.list_objs(*args, **kwargs)
 
 
 class Server(object):
@@ -312,11 +296,24 @@ class Server(object):
     """
 
     # Override Constructor
-    def __init__(self):
+    def __init__(self, redis_db=None):
         """Base Constructor"""
+
+        # Call Parent Construtor
         super(Server, self).__init__()
-        self.AssignmentFactory = UUIDRedisFactory(AssignmentBase, None)
-        self.UserFactory = UUIDRedisFactory(UserBase, None)
+
+        # Setup DB
+        if not redis_db:
+            redis_conf = _REDIS_CONF_DEFAULT
+            self.db = redis.StrictRedis(host=redis_conf['redis_host'],
+                                        port=redis_conf['redis_port'],
+                                        db=redis_conf['redis_db'])
+        else:
+            self.db = redis_db
+
+        # Setup Factories
+        self.AssignmentFactory = UUIDRedisFactory(self.db, AssignmentBase, None)
+        self.UserFactory = UUIDRedisFactory(self.db, UserBase, None)
 
     # Assignment Methods
     def create_assignment(self, d):
@@ -359,8 +356,8 @@ class AssignmentBase(UUIDRedisHashBase):
     def __init__(self, uuid_obj):
         """Base Constructor"""
         super(AssignmentBase, self).__init__(uuid_obj)
-        self.TestFactory = UUIDRedisFactory(TestBase, self.obj_key)
-        self.SubmissionFactory = UUIDRedisFactory(SubmissionBase, self.obj_key)
+        self.TestFactory = UUIDRedisFactory(self.db, TestBase, self.obj_key)
+        self.SubmissionFactory = UUIDRedisFactory(self.db, SubmissionBase, self.obj_key)
 
     # Override Delete
     def delete(self):
@@ -412,7 +409,7 @@ class TestBase(UUIDRedisHashBase):
     def __init__(self, uuid_obj):
         """Base Constructor"""
         super(TestBase, self).__init__(uuid_obj)
-        self.FileFactory = UUIDRedisFactory(FileBase, self.obj_key)
+        self.FileFactory = UUIDRedisFactory(self.db, FileBase, self.obj_key)
 
     # Override Delete
     def delete(self):
@@ -448,8 +445,8 @@ class SubmissionBase(UUIDRedisHashBase):
     def __init__(self, uuid_obj):
         """Base Constructor"""
         super(SubmissionBase, self).__init__(uuid_obj)
-        self.FileFactory = UUIDRedisFactory(FileBase, self.obj_key)
-        self.RunFactory = UUIDRedisFactory(RunBase, self.obj_key)
+        self.FileFactory = UUIDRedisFactory(self.db, FileBase, self.obj_key)
+        self.RunFactory = UUIDRedisFactory(self.db, RunBase, self.obj_key)
 
     # Override Delete
     def delete(self):

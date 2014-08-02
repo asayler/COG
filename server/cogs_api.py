@@ -8,10 +8,11 @@
 import time
 
 import flask
+import redis
 
 import cogs.datatypes as datatypes
 
-app = flask.Flask(__name__)
+### Constants ###
 
 _MSG_ROOT = "Welcome to the CU CS Online Grading System API"
 
@@ -21,9 +22,22 @@ _SUBMISSIONS_KEY = "submissions"
 _FILES_KEY = "files"
 _RUNS_KEY = "runs"
 
-### Endpoints
+_REDIS_CONF= {'redis_host': "localhost",
+              'redis_port': 6379,
+              'redis_db': 3}
 
-## Root Endpoints
+### Global Setup ###
+
+app = flask.Flask(__name__)
+redis_conf = _REDIS_CONF
+db = redis.StrictRedis(host=redis_conf['redis_host'],
+                       port=redis_conf['redis_port'],
+                       db=redis_conf['redis_db'])
+
+
+### Endpoints ###
+
+## Root Endpoints ##
 
 @app.route("/",
            methods=['GET'])
@@ -38,7 +52,7 @@ def get_root():
 def process_assignments():
 
     # Create Server
-    srv = datatypes.Server()
+    srv = datatypes.Server(db)
 
     # Process
     if flask.request.method == 'GET':
@@ -69,12 +83,12 @@ def process_assignments():
 def process_assignment(uuid_hex):
 
     # Create Server
-    s = datatypes.Server()
+    s = datatypes.Server(db)
 
     # Get Assignment
     try:
         a = s.get_assignment(uuid_hex)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -117,12 +131,12 @@ def process_assignment(uuid_hex):
 def process_tests(asn_uuid):
 
     # Create Server
-    srv = datatypes.Server()
+    srv = datatypes.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -158,12 +172,12 @@ def process_tests(asn_uuid):
 def process_test(asn_uuid, tst_uuid):
 
     # Create Server
-    srv = datatypes.Server()
+    srv = datatypes.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -173,7 +187,7 @@ def process_test(asn_uuid, tst_uuid):
     # Get Test
     try:
         tst = asn.get_test(tst_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -215,12 +229,12 @@ def process_test(asn_uuid, tst_uuid):
 def process_test_files(asn_uuid, tst_uuid):
 
     # Create Server
-    srv = datatypes.Server()
+    srv = datatypes.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -230,7 +244,7 @@ def process_test_files(asn_uuid, tst_uuid):
     # Get Test
     try:
         tst = asn.get_test(tst_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -272,12 +286,12 @@ def process_test_files(asn_uuid, tst_uuid):
 def process_test_file(asn_uuid, tst_uuid, fle_uuid):
 
     # Create Server
-    srv = datatypes.Server()
+    srv = datatypes.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -287,7 +301,7 @@ def process_test_file(asn_uuid, tst_uuid, fle_uuid):
     # Get Test
     try:
         tst = asn.get_test(tst_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -297,7 +311,7 @@ def process_test_file(asn_uuid, tst_uuid, fle_uuid):
     # Get File
     try:
         fle = tst.get_file(fle_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -326,12 +340,12 @@ def process_test_file(asn_uuid, tst_uuid, fle_uuid):
 def process_submissions(asn_uuid):
 
     # Create Server
-    srv = datatypes.Server()
+    srv = datatypes.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -367,12 +381,12 @@ def process_submissions(asn_uuid):
 def process_submission(asn_uuid, sub_uuid):
 
     # Create Server
-    srv = datatypes.Server()
+    srv = datatypes.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -382,7 +396,7 @@ def process_submission(asn_uuid, sub_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -424,12 +438,12 @@ def process_submission(asn_uuid, sub_uuid):
 def process_submission_files(asn_uuid, sub_uuid):
 
     # Create Server
-    srv = datatypes.Server()
+    srv = datatypes.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -439,7 +453,7 @@ def process_submission_files(asn_uuid, sub_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -481,12 +495,12 @@ def process_submission_files(asn_uuid, sub_uuid):
 def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
 
     # Create Server
-    srv = datatypes.Server()
+    srv = datatypes.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -496,7 +510,7 @@ def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -506,7 +520,7 @@ def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
     # Get File
     try:
         fle = sub.get_file(fle_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -535,12 +549,12 @@ def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
 def process_runs(asn_uuid, sub_uuid):
 
     # Create Server
-    srv = datatypes.Server()
+    srv = datatypes.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -550,7 +564,7 @@ def process_runs(asn_uuid, sub_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -589,12 +603,12 @@ def process_runs(asn_uuid, sub_uuid):
 def process_run(asn_uuid, sub_uuid, run_uuid):
 
     # Create Server
-    srv = datatypes.Server()
+    srv = datatypes.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -604,7 +618,7 @@ def process_run(asn_uuid, sub_uuid, run_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -614,7 +628,7 @@ def process_run(asn_uuid, sub_uuid, run_uuid):
     # Get Run
     try:
         run = sub.get_run(run_uuid)
-    except datatypes.UUIDRedisHashDNE as e:
+    except datatypes.UUIDRedisObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -663,6 +677,6 @@ def bad_method(error=False):
     res.status_code = err['status']
     return res
 
-
 if __name__ == "__main__":
+
     app.run(debug=True)
