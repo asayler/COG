@@ -4,7 +4,8 @@
 # Summer 2014
 # Univerity of Colorado
 
-import copy
+# pylint: disable=no-member
+
 import uuid
 
 import redis
