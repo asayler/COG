@@ -100,7 +100,6 @@ class RedisObjectTestCase(DatatypesTestCase):
         o1 = self.ObjFactory.from_new('eq1')
         o2 = self.ObjFactory.from_new('eq1')
         self.assertTrue(o1 == o2)
-
     def test_delete(self):
 
         # Test Delete
@@ -143,7 +142,7 @@ class RedisFactoryTestCase(DatatypesTestCase):
         o = of.from_new(k)
         self.assertTrue(o)
 
-    def test_list_family(self):
+    def test_list(self):
 
         val = 'val'
         pre = 'test'
@@ -241,7 +240,6 @@ class RedisFactoryTestCase(DatatypesTestCase):
         self.assertEqual(set([]), chd)
 
 
-
 class RedisHashTestCase(DatatypesTestCase):
 
     def setUp(self):
@@ -285,8 +283,10 @@ class RedisHashTestCase(DatatypesTestCase):
         # Test Existing Object
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
         h1 = self.HashFactory.from_new(d, k)
+        self.assertSubset(d, h1.get_dict())
         h2 = self.HashFactory.from_existing(k)
         self.assertEqual(h1, h2)
+        self.assertEqual(h1.get_dict(), h2.get_dict())
 
     def test_get_dict(self):
 
@@ -357,6 +357,55 @@ class RedisHashTestCase(DatatypesTestCase):
             val = d[key] + "_updated"
             obj[key] = val
             self.assertEqual(val, obj[key])
+
+
+class RedisSetTestCase(DatatypesTestCase):
+
+    def setUp(self):
+        super(RedisSetTestCase, self).setUp()
+
+        self.SetFactory = types_redis.RedisFactory(types_redis.RedisSetBase, redis_db=self.db)
+
+    def tearDown(self):
+        super(RedisSetTestCase, self).tearDown()
+
+    def test_from_new(self):
+
+        # Create Key
+        k = "testkey_{:03d}".format(random.randint(0, 999))
+
+        # Test Empty Set w/o Key
+        v = set([])
+        self.assertRaises(types_redis.RedisObjectError, self.SetFactory.from_new, v)
+
+        # Test Empty Dict w/ Key
+        v = set([])
+        self.assertRaises(types_redis.RedisObjectError, self.SetFactory.from_new, v, k)
+
+        # Test Non-Empty Dict w/o Key
+        v = set(['a', 'b', 'c'])
+        self.assertRaises(types_redis.RedisObjectError, self.SetFactory.from_new, v)
+
+        # Test Non-Empty Dict w/ Key
+        v = set(['a', 'b', 'c'])
+        s = self.SetFactory.from_new(v, k)
+        self.assertSubset(v, s.get_set())
+
+    def test_from_existing(self):
+
+        # Create Key
+        k = "testkey_{:03d}".format(random.randint(0, 999))
+
+        # Test Non-Existant Object
+        self.assertRaises(types_redis.RedisObjectDNE, self.SetFactory.from_existing, k)
+
+        # Test Existing Object
+        v = set(['a', 'b', 'c'])
+        s1 = self.SetFactory.from_new(v, k)
+        self.assertSubset(v, s1.get_set())
+        s2 = self.SetFactory.from_existing(k)
+        self.assertEqual(s1, s2)
+        self.assertEqual(s1.get_set(), s2.get_set())
 
 
 ### Main ###

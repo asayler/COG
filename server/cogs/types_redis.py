@@ -294,32 +294,36 @@ class RedisSetBase(RedisObjectBase):
     """
 
     @classmethod
-    def from_new(cls, vals, key=None):
+    def from_new(cls, v, key=None):
         """New Constructor"""
+
+        # Check Input
+        if not v:
+            raise RedisObjectError("Input set must not be None or empty")
 
         # Call Parent
         obj = super(RedisSetBase, cls).from_new(key)
 
         # Add lst to DB
-        if not obj.db.sadd(obj.full_key, *vals):
+        if not obj.db.sadd(obj.full_key, *v):
             raise RedisObjectError("Create Failed")
 
         # Return Object
         return obj
 
-    def get_vals(self):
+    def get_set(self):
         """Get All Vals from Set"""
 
         return self.db.smembers(self.full_key)
 
-    def add_vals(self, *vals):
+    def add_vals(self, v):
         """Add Vals to Set"""
 
-        if not self.db.sadd(self.full_key, *vals):
+        if not self.db.sadd(self.full_key, *v):
             raise RedisObjectError("Add Failed")
 
-    def del_vals(self, *vals):
+    def del_vals(self, v):
         """Remove Vals from Set"""
 
-        if not self.db.srem(self.full_key, *vals):
+        if not self.db.srem(self.full_key, *v):
             raise RedisObjectError("Remove Failed")
