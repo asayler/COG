@@ -10,6 +10,8 @@ import redis
 
 _ENCODING = 'utf-8'
 
+_SUF_BASE = 'Base'
+
 _REDIS_CONF_DEFAULT = {'redis_host': "localhost",
                        'redis_port': 6379,
                        'redis_db': 4}
@@ -51,17 +53,15 @@ class RedisObjectBase(object):
         """New Constructor"""
 
         obj = cls(key)
+        return obj
 
     @classmethod
     def from_existing(cls, key):
         """Existing Constructor"""
 
         obj = cls(key)
-
-        # Verify Object in DB
         if not obj.db.exists(obj.full_key):
             raise RedisObjectDNE(obj)
-
         return obj
 
     def __init__(self, key=None):
@@ -124,26 +124,27 @@ class RedisHashBase(RedisObjectBase):
 
     """
 
-    schema = _BASE_SCHEMA
+    schema = None
 
     @classmethod
     def from_new(cls, d, key=None):
         """New Constructor"""
 
+        # Check Input
+        if not d:
+            raise RedisObjectError("Input dict must not be None or empty")
+
         # Call Parent
         obj = super(RedisHashBase, cls).from_new(key)
 
-        # Set Times
-        data = copy.deepcopy(d)
-        data['created_time'] = str(time.time())
-        data['modified_time'] = str(time.time())
-
         # Check dict
-        if (set(data.keys()) != set(obj.schema)):
-            raise KeyError("Keys {:s} do not match schema {:s}".format(data.keys(), obj.schema))
+        if obj.schema:
+            s = set(d.keys())
+            if (s != obj.schema):
+                raise KeyError("Keys {:s} do not match schema {:s}".format(s, obj.schema))
 
         # Add Object Data to DB
-        if not obj.db.hmset(obj.full_key, data):
+        if not obj.db.hmset(obj.full_key, d):
             raise RedisObjectError("Create Failed")
 
         # Return Object
@@ -152,18 +153,20 @@ class RedisHashBase(RedisObjectBase):
     def __getitem__(self, k):
         """Get Dict Item"""
 
-        if k in self.schema:
-            return self.db.hget(self.full_key, k)
-        else:
-            raise KeyError("Key {:s} not valid in {:s}".format(k, self))
+        if self.schema is not None:
+            if k in self.schema:
+                return self.db.hget(self.full_key, k)
+            else:
+                raise KeyError("Key {:s} not valid in {:s}".format(k, self))
 
     def __setitem__(self, k, v):
         """Set Dict Item"""
 
-        if k in self.schema:
-            return self.db.hset(self.full_key, k, v)
-        else:
-            raise KeyError("Key {:s} not valid in {:s}".format(k, self))
+        if self.schema is not None:
+            if k in self.schema:
+                return self.db.hset(self.full_key, k, v)
+            else:
+                raise KeyError("Key {:s} not valid in {:s}".format(k, self))
 
     def get_dict(self):
         """Get Full Dict"""
@@ -174,11 +177,11 @@ class RedisHashBase(RedisObjectBase):
     def set_dict(self, d):
         """Set Full Dict"""
 
-        data = copy.deepcopy(d)
-        data['modified_time'] = str(time.time())
-        if not set(data.keys()).issubset(set(self.schema)):
-            raise KeyError("Keys {:s} do not match schema {:s}".format(data.keys(), self.schema))
-        self.db.hmset(self.full_key, data)
+        if self.schema is not None:
+            s = set(d.keys())
+            if not s.issubset(self.schema):
+                raise KeyError("Keys {:s} do not match schema {:s}".format(s, self.schema))
+        self.db.hmset(self.full_key, d)
 
 
 class RedisSetBase(RedisObjectBase):
@@ -221,7 +224,7 @@ class RedisSetBase(RedisObjectBase):
 
 class RedisFactory(object):
 
-    def __init__(self, redis_db, base_cls, prefix=None):
+    def __init__(self, base_cls, prefix=None, redis_db=None):
 
         # Call Super
         super(RedisFactory, self).__init__()
@@ -237,7 +240,12 @@ class RedisFactory(object):
         cls_name = base_name[0:base_name.rfind(_SUF_BASE)]
 
         # Setup DB
-        self.db = redis_db
+        if redis_db is None:
+            self.db = redis.StrictRedis(host=_REDIS_CONF_DEFAULT['redis_host'],
+                                        port=_REDIS_CONF_DEFAULT['redis_port'],
+                                        db=_REDIS_CONF_DEFAULT['redis_db'])
+        else:
+            self.db = redis_db
 
         # Setup Base Key
         if prefix == None:
