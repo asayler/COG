@@ -389,7 +389,7 @@ class RedisSetTestCase(DatatypesTestCase):
         # Test Non-Empty Dict w/ Key
         v = set(['a', 'b', 'c'])
         s = self.SetFactory.from_new(v, k)
-        self.assertSubset(v, s.get_set())
+        self.assertEqual(v, s.get_set())
 
     def test_from_existing(self):
 
@@ -402,10 +402,60 @@ class RedisSetTestCase(DatatypesTestCase):
         # Test Existing Object
         v = set(['a', 'b', 'c'])
         s1 = self.SetFactory.from_new(v, k)
-        self.assertSubset(v, s1.get_set())
+        self.assertEqual(v, s1.get_set())
         s2 = self.SetFactory.from_existing(k)
         self.assertEqual(s1, s2)
         self.assertEqual(s1.get_set(), s2.get_set())
+
+    def test_get_set(self):
+
+        # Create Key
+        k = "testkey_{:03d}".format(random.randint(0, 999))
+
+        # Create and get set
+        v = set(['a', 'b', 'c'])
+        s = self.SetFactory.from_new(v, k)
+        self.assertEqual(v, s.get_set())
+
+    def test_add_vals(self):
+
+        # Create Key
+        k = "testkey_{:03d}".format(random.randint(0, 999))
+
+        # Create and get set
+        v1 = set(['a', 'b', 'c'])
+        s = self.SetFactory.from_new(v1, k)
+        self.assertEqual(v1, s.get_set())
+
+        # Add New Vals
+        v2 = set(['d', 'e'])
+        s.add_vals(v2)
+        self.assertEqual((v1 | v2), s.get_set())
+
+        # Add Existing Vals
+        v3 = set(['d', 'e'])
+        s.add_vals(v3)
+        self.assertEqual((v1 | v2 | v3), s.get_set())
+
+    def test_del_vals(self):
+
+        # Create Key
+        k = "testkey_{:03d}".format(random.randint(0, 999))
+
+        # Create and get set
+        v1 = set(['a', 'b', 'c', 'd', 'e'])
+        s = self.SetFactory.from_new(v1, k)
+        self.assertEqual(v1, s.get_set())
+
+        # Remove Existing Vals
+        v2 = set(['d', 'e'])
+        self.assertEqual(s.del_vals(v2), len(v2))
+        self.assertEqual((v1 - v2), s.get_set())
+
+        # Remove Existing Vals
+        v3 = set(['d', 'e'])
+        self.assertEqual(s.del_vals(v3), 0)
+        self.assertEqual((v1 - v2 - v3), s.get_set())
 
 
 ### Main ###

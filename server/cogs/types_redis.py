@@ -284,8 +284,6 @@ class RedisHashBase(RedisObjectBase):
         if not ret:
             raise RedisObjectError("Set Failed")
 
-        return ret
-
 
 class RedisSetBase(RedisObjectBase):
     """
@@ -319,11 +317,9 @@ class RedisSetBase(RedisObjectBase):
     def add_vals(self, v):
         """Add Vals to Set"""
 
-        if not self.db.sadd(self.full_key, *v):
-            raise RedisObjectError("Add Failed")
+        return self.db.sadd(self.full_key, *v)
 
     def del_vals(self, v):
         """Remove Vals from Set"""
 
-        if not self.db.srem(self.full_key, *v):
-            raise RedisObjectError("Remove Failed")
+        return self.db.srem(self.full_key, *v)
