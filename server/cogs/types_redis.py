@@ -9,9 +9,10 @@ import copy
 import redis
 
 _ENCODING = 'utf-8'
-
 _SUF_BASE = 'Base'
-
+_FIELD_SEP = ':'
+_TYPE_SEP = '+'
+assert(_FIELD_SEP != _TYPE_SEP)
 _REDIS_CONF_DEFAULT = {'redis_host': "localhost",
                        'redis_port': 6379,
                        'redis_db': 4}
@@ -71,24 +72,30 @@ class RedisObjectBase(object):
 
         super(RedisObjectBase, self).__init__()
 
+        if key:
+            if _FIELD_SEP in key:
+                raise RedisObjectError("Key may not contain '{:s}'".format(_FIELD_SEP))
+            if _TYPE_SEP in key:
+                raise RedisObjectError("Key may not contain '{:s}'".format(_TYPE_SEP))
+
         self.obj_key = key
-        self.full_key = ""
+        self.obj_rid = str(self)
 
-        if self.pre_key is not None:
+        if self.pre_key and self.obj_key:
+            self.full_key = "{:s}{:s}{:s}".format(self.pre_key, _FIELD_SEP, self.obj_rid).lower()
+        elif self.pre_key:
             self.full_key = "{:s}".format(self.pre_key).lower()
-
-        if self.obj_key is not None:
-            self.full_key += "{:s}".format(self.obj_key).lower()
-
-        if (len(self.full_key) == 0):
+        elif self.obj_key:
+            self.full_key = "{:s}".format(self.obj_rid).lower()
+        else:
             raise RedisObjectError("Either pre_key or full_key required")
 
     def __unicode__(self):
         """Return Unicode Representation"""
 
         u = u"{:s}".format(type(self).__name__)
-        if self.obj_key is not None:
-            u += u"_{:s}".format(self.obj_key)
+        if self.obj_key:
+            u += u"{:s}{:s}".format(_TYPE_SEP, self.obj_key)
         return u
 
     def __str__(self):
@@ -118,6 +125,86 @@ class RedisObjectBase(object):
 
         if not self.db.delete(self.full_key):
             raise RedisObjectError("Delete Failed")
+
+
+class RedisFactory(object):
+
+    def __init__(self, base_cls, prefix=None, redis_db=None):
+
+        # Call Super
+        super(RedisFactory, self).__init__()
+
+        # Check Input
+        if not issubclass(base_cls, RedisObjectBase):
+            raise RedisFactoryError("cls must be subclass of RedisObjectBase")
+        base_name = base_cls.__name__
+        if not base_name.endswith(_SUF_BASE):
+            raise RedisFactoryError("cls name must end with '{:s}'".format(_SUF_BASE))
+
+        # Setup Class Name
+        cls_name = base_name[0:base_name.rfind(_SUF_BASE)]
+
+        # Setup DB
+        if redis_db is None:
+            self.db = redis.StrictRedis(host=_REDIS_CONF_DEFAULT['redis_host'],
+                                        port=_REDIS_CONF_DEFAULT['redis_port'],
+                                        db=_REDIS_CONF_DEFAULT['redis_db'])
+        else:
+            self.db = redis_db
+
+        # Setup Base Key
+        if prefix == None:
+            self.pre_key = None
+        else:
+            self.pre_key = prefix
+
+        # Setup Class
+        class cls(base_cls):
+
+            pre_key = self.pre_key
+            db = self.db
+
+        cls.__name__ = cls_name
+        self.cls = cls
+
+    def list_family(self):
+        """List Factory Objects"""
+        if self.pre_key:
+            p = "{:s}{:s}".format(self.pre_key, _FIELD_SEP)
+        else:
+            p = ""
+        q = "{:s}*".format(p)
+        fam_lst = self.db.keys(q)
+        fam_keys = set([])
+        for full_key in fam_lst:
+            fam_id = full_key[len(p): ]
+            fam_key = fam_id[(fam_id.find(_TYPE_SEP) + 1): ]
+            fam_keys.add(fam_key)
+        return fam_keys
+
+    def list_siblings(self):
+        """List Factory Objects"""
+        fam_keys = self.list_family()
+        sib_keys = set([])
+        for fam_key in fam_keys:
+            if _FIELD_SEP not in fam_key:
+                sib_keys.add(fam_key)
+        return sib_keys
+
+    def list_children(self):
+        """List Factory Objects"""
+        fam_keys = self.list_family()
+        chd_keys = set([])
+        for fam_key in fam_keys:
+            if _FIELD_SEP in fam_key:
+                chd_keys.add(fam_key)
+        return chd_keys
+
+    def from_new(self, *args, **kwargs):
+        return self.cls.from_new(*args, **kwargs)
+
+    def from_existing(self, *args, **kwargs):
+        return self.cls.from_existing(*args, **kwargs)
 
 
 class RedisHashBase(RedisObjectBase):
@@ -236,69 +323,3 @@ class RedisSetBase(RedisObjectBase):
 
         if not self.db.srem(self.full_key, *vals):
             raise RedisObjectError("Remove Failed")
-
-
-class RedisFactory(object):
-
-    def __init__(self, base_cls, prefix=None, redis_db=None):
-
-        # Call Super
-        super(RedisFactory, self).__init__()
-
-        # Check Input
-        if not issubclass(base_cls, RedisObjectBase):
-            raise RedisFactoryError("cls must be subclass of RedisObjectBase")
-        base_name = base_cls.__name__
-        if not base_name.endswith(_SUF_BASE):
-            raise RedisFactoryError("cls name must end with '{:s}'".format(_SUF_BASE))
-
-        # Setup Class Name
-        cls_name = base_name[0:base_name.rfind(_SUF_BASE)]
-
-        # Setup DB
-        if redis_db is None:
-            self.db = redis.StrictRedis(host=_REDIS_CONF_DEFAULT['redis_host'],
-                                        port=_REDIS_CONF_DEFAULT['redis_port'],
-                                        db=_REDIS_CONF_DEFAULT['redis_db'])
-        else:
-            self.db = redis_db
-
-        # Setup Base Key
-        if prefix == None:
-            self.pre_key = None
-        else:
-            self.pre_key = prefix
-
-        # Setup Class
-        class cls(base_cls):
-
-            pre_key = self.pre_key
-            db = self.db
-
-        cls.__name__ = cls_name
-        self.cls = cls
-
-    def list_objs(self):
-        """List Factory Objects"""
-        obj_lst = self.db.keys("{:s}:{:s}".format(self.pre_key, __GLOB))
-        obj_uuids = []
-        for full_key in obj_lst:
-            obj_uuid = full_key.split(':')[-1]
-            obj_uuids.append(obj_uuid)
-        return set(obj_uuids)
-
-    def get_objs(self):
-        """Get Factory Objects"""
-        obj_lst = self.db.keys("{:s}:{:s}".format(self.pre_key, __GLOB))
-        objs = []
-        for full_key in obj_lst:
-            obj_uuid = full_key.split(':')[-1]
-            obj = cls.from_existing(obj_uuid)
-            objs.append(obj)
-        return objs
-
-    def from_new(self, *args, **kwargs):
-        return self.cls.from_new(*args, **kwargs)
-
-    def from_existing(self, *args, **kwargs):
-        return self.cls.from_existing(*args, **kwargs)

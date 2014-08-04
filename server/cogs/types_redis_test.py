@@ -30,9 +30,10 @@ class RedisObjectTestCase(DatatypesTestCase):
         super(RedisObjectTestCase, self).setUp()
 
         self.key = 'key'
+        self.rid = "redisobject+{:s}".format(self.key)
         self.val = 'val'
 
-        self.db.set(self.key, self.val)
+        self.db.set(self.rid, self.val)
 
         self.ObjFactory = types_redis.RedisFactory(types_redis.RedisObjectBase, redis_db=self.db)
 
@@ -45,15 +46,21 @@ class RedisObjectTestCase(DatatypesTestCase):
         self.assertRaises(types_redis.RedisObjectError, self.ObjFactory.from_new)
 
         # Test w/ Key
-        self.assertTrue(self.ObjFactory.from_new('new_key'))
+        self.assertTrue(self.ObjFactory.from_new('newkey'))
 
         # Test w/ Duplicate Key
         self.assertRaises(types_redis.RedisObjectError, self.ObjFactory.from_new, self.key)
 
+        # Test w/ Illegal Key ':'
+        self.assertRaises(types_redis.RedisObjectError, self.ObjFactory.from_new, 'test:1')
+
+        # Test w/ Illegal Key '_'
+        self.assertRaises(types_redis.RedisObjectError, self.ObjFactory.from_new, 'test+1')
+
     def test_from_existing(self):
 
         # Test Non-Existant Object
-        self.assertRaises(types_redis.RedisObjectDNE, self.ObjFactory.from_existing, 'bad_key')
+        self.assertRaises(types_redis.RedisObjectDNE, self.ObjFactory.from_existing, 'badkey')
 
         # Test Existing Object
         self.assertTrue(self.ObjFactory.from_existing(self.key))
@@ -61,46 +68,46 @@ class RedisObjectTestCase(DatatypesTestCase):
     def test_str(self):
 
         # Test Not Equal
-        s1 = str(self.ObjFactory.from_new('key_eq1'))
-        s2 = str(self.ObjFactory.from_new('key_eq2'))
+        s1 = str(self.ObjFactory.from_new('str1'))
+        s2 = str(self.ObjFactory.from_new('str2'))
         self.assertFalse(s1 == s2)
 
         # Test Equal
-        s1 = str(self.ObjFactory.from_new('key_eq1'))
-        s2 = str(self.ObjFactory.from_new('key_eq1'))
+        s1 = str(self.ObjFactory.from_new('str1'))
+        s2 = str(self.ObjFactory.from_new('str1'))
         self.assertTrue(s1 == s2)
 
     def test_hash(self):
 
         # Test Not Equal
-        h1 = hash(self.ObjFactory.from_new('key_eq1'))
-        h2 = hash(self.ObjFactory.from_new('key_eq2'))
+        h1 = hash(self.ObjFactory.from_new('hash1'))
+        h2 = hash(self.ObjFactory.from_new('hash2'))
         self.assertFalse(h1 == h2)
 
         # Test Equal
-        h1 = hash(self.ObjFactory.from_new('key_eq1'))
-        h2 = hash(self.ObjFactory.from_new('key_eq1'))
+        h1 = hash(self.ObjFactory.from_new('hash1'))
+        h2 = hash(self.ObjFactory.from_new('hash1'))
         self.assertTrue(h1 == h2)
 
     def test_eq(self):
 
         # Test Not Equal
-        o1 = self.ObjFactory.from_new('key_eq1')
-        o2 = self.ObjFactory.from_new('key_eq2')
+        o1 = self.ObjFactory.from_new('eq1')
+        o2 = self.ObjFactory.from_new('eq2')
         self.assertFalse(o1 == o2)
 
         # Test Equal
-        o1 = self.ObjFactory.from_new('key_eq1')
-        o2 = self.ObjFactory.from_new('key_eq1')
+        o1 = self.ObjFactory.from_new('eq1')
+        o2 = self.ObjFactory.from_new('eq1')
         self.assertTrue(o1 == o2)
 
     def test_delete(self):
 
         # Test Delete
         o = self.ObjFactory.from_existing(self.key)
-        self.assertTrue(self.db.exists(self.key))
+        self.assertTrue(self.db.exists(self.rid))
         o.delete()
-        self.assertFalse(self.db.exists(self.key))
+        self.assertFalse(self.db.exists(self.rid))
 
 
 class RedisFactoryTestCase(DatatypesTestCase):
@@ -114,27 +121,44 @@ class RedisFactoryTestCase(DatatypesTestCase):
     def test_init(self):
 
         # Test w/o Prefix or Key
-        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, redis_db=self.db)
-        self.assertRaises(types_redis.RedisObjectError, hf.from_new)
+        of = types_redis.RedisFactory(types_redis.RedisObjectBase, redis_db=self.db)
+        self.assertRaises(types_redis.RedisObjectError, of.from_new)
 
         # Test w/ Prefix but w/o Key
-        p = "test_prefix_{:03d}".format(random.randint(0, 999))
-        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=p, redis_db=self.db)
-        h = hf.from_new()
-        self.assertTrue(h)
+        p = "testprefix_{:03d}".format(random.randint(0, 999))
+        of = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=p, redis_db=self.db)
+        o = of.from_new()
+        self.assertTrue(o)
 
         # Test w/ Key but w/o Prefix
-        k = "test_key_{:03d}".format(random.randint(0, 999))
-        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, redis_db=self.db)
-        h = hf.from_new(k)
-        self.assertTrue(h)
+        k = "testkey_{:03d}".format(random.randint(0, 999))
+        of = types_redis.RedisFactory(types_redis.RedisObjectBase, redis_db=self.db)
+        o = of.from_new(k)
+        self.assertTrue(o)
 
         # Test w/ Prefix and Key
-        p = "test_prefix_{:03d}".format(random.randint(0, 999))
-        k = "test_key_{:03d}".format(random.randint(0, 999))
-        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=p, redis_db=self.db)
-        h = hf.from_new(k)
-        self.assertTrue(h)
+        p = "testprefix_{:03d}".format(random.randint(0, 999))
+        k = "testkey_{:03d}".format(random.randint(0, 999))
+        of = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=p, redis_db=self.db)
+        o = of.from_new(k)
+        self.assertTrue(o)
+
+    def test_list_family(self):
+
+        # Setup DB
+        val = 'val'
+        parents = ['p01', 'p02', 'p03']
+        for p in parents:
+            self.db.set("redisobject+{:s}".format(p), val)
+
+        # Test w/ Key but w/o Prefix
+        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, redis_db=self.db)
+        fam = hf.list_family()
+        self.assertEqual(set(parents), fam)
+        sib = hf.list_siblings()
+        self.assertEqual(set(parents), sib)
+        chd = hf.list_children()
+        self.assertFalse(chd)
 
 
 class RedisHashTestCase(DatatypesTestCase):
@@ -150,7 +174,7 @@ class RedisHashTestCase(DatatypesTestCase):
     def test_from_new(self):
 
         # Create Key
-        k = "test_key_{:03d}".format(random.randint(0, 999))
+        k = "testkey_{:03d}".format(random.randint(0, 999))
 
         # Test Empty Dict w/o Key
         d = {}
@@ -172,7 +196,7 @@ class RedisHashTestCase(DatatypesTestCase):
     def test_from_existing(self):
 
         # Create Key
-        k = "test_key_{:03d}".format(random.randint(0, 999))
+        k = "testkey_{:03d}".format(random.randint(0, 999))
 
         # Test Non-Existant Object
         self.assertRaises(types_redis.RedisObjectDNE, self.HashFactory.from_existing, k)
@@ -186,7 +210,7 @@ class RedisHashTestCase(DatatypesTestCase):
     def test_get_dict(self):
 
         # Create Key
-        k = "test_key_{:03d}".format(random.randint(0, 999))
+        k = "testkey_{:03d}".format(random.randint(0, 999))
 
         # Create and Get Object
         d_in = copy.deepcopy(test_common.DUMMY_TESTDICT)
@@ -197,7 +221,7 @@ class RedisHashTestCase(DatatypesTestCase):
     def test_set_dict(self):
 
         # Create Key
-        k = "test_key_{:03d}".format(random.randint(0, 999))
+        k = "testkey_{:03d}".format(random.randint(0, 999))
 
         # Create and Get Object
         d1_in = copy.deepcopy(test_common.DUMMY_TESTDICT)
@@ -221,7 +245,7 @@ class RedisHashTestCase(DatatypesTestCase):
             return d[key]
 
         # Create Object Key
-        k = "test_key_{:03d}".format(random.randint(0, 999))
+        k = "testkey_{:03d}".format(random.randint(0, 999))
 
         # Create Object
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
@@ -241,7 +265,7 @@ class RedisHashTestCase(DatatypesTestCase):
             d[key] = val
 
         # Create Object Key
-        k = "test_key_{:03d}".format(random.randint(0, 999))
+        k = "testkey_{:03d}".format(random.randint(0, 999))
 
         # Create Object
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
