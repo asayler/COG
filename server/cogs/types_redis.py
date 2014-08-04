@@ -214,6 +214,13 @@ class RedisFactory(object):
         return self.cls.from_existing(*args, **kwargs)
 
 
+class RedisUUIDFactory(RedisFactory):
+
+    def from_new(self, *args, **kwargs):
+        k = uuid.uuid4()
+        return super(RedisUUIDFactory, self).from_new(*args, key=k, **kwargs)
+
+
 class RedisHashBase(RedisObjectBase):
     """
     Redis Hash Base Class
@@ -290,25 +297,6 @@ class RedisHashBase(RedisObjectBase):
         ret = self.db.hmset(self.full_key, d)
         if not ret:
             raise RedisObjectError("Set Failed")
-
-
-class RedisUUIDHashBase(RedisHashBase):
-    """
-    Redis UUID Hash Base Class
-
-    """
-
-    @classmethod
-    def from_new(cls, d):
-        """New Constructor"""
-
-        key = uuid.uuid4()
-
-        # Call Parent
-        obj = super(RedisUUIDHashBase, cls).from_new(d, key)
-
-        # Return Object
-        return obj
 
 
 class RedisSetBase(RedisObjectBase):

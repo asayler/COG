@@ -241,6 +241,28 @@ class RedisFactoryTestCase(DatatypesTestCase):
         self.assertEqual(set([]), chd)
 
 
+class RedisUUIDFactoryTestCase(DatatypesTestCase):
+
+    def setUp(self):
+        super(RedisUUIDFactoryTestCase, self).setUp()
+
+    def tearDown(self):
+        super(RedisUUIDFactoryTestCase, self).tearDown()
+
+    def test_init(self):
+
+        # Test w/o Prefix
+        of = types_redis.RedisUUIDFactory(types_redis.RedisObjectBase, redis_db=self.db)
+        o = of.from_new()
+        self.assertTrue(o)
+
+        # Test w/ Prefix
+        p = "testprefix_{:03d}".format(random.randint(0, 999))
+        of = types_redis.RedisUUIDFactory(types_redis.RedisObjectBase, prefix=p, redis_db=self.db)
+        o = of.from_new()
+        self.assertTrue(o)
+
+
 class RedisHashTestCase(DatatypesTestCase):
 
     def setUp(self):
@@ -365,7 +387,7 @@ class RedisUUIDHashTestCase(DatatypesTestCase):
     def setUp(self):
         super(RedisUUIDHashTestCase, self).setUp()
 
-        self.UUIDHashFactory = types_redis.RedisFactory(types_redis.RedisUUIDHashBase, redis_db=self.db)
+        self.UUIDHashFactory = types_redis.RedisUUIDFactory(types_redis.RedisHashBase, redis_db=self.db)
 
     def tearDown(self):
         super(RedisUUIDHashTestCase, self).tearDown()
@@ -494,6 +516,43 @@ class RedisSetTestCase(DatatypesTestCase):
         v3 = set(['d', 'e'])
         self.assertEqual(s.del_vals(v3), 0)
         self.assertEqual((v1 - v2 - v3), s.get_set())
+
+
+class RedisUUIDSetTestCase(DatatypesTestCase):
+
+    def setUp(self):
+        super(RedisUUIDSetTestCase, self).setUp()
+
+        self.UUIDSetFactory = types_redis.RedisUUIDFactory(types_redis.RedisSetBase, redis_db=self.db)
+
+    def tearDown(self):
+        super(RedisUUIDSetTestCase, self).tearDown()
+
+    def test_from_new(self):
+
+        # Test Empty Set
+        v = set([])
+        self.assertRaises(types_redis.RedisObjectError, self.UUIDSetFactory.from_new, v)
+
+        # Test Non-Empty Dict w/o Key
+        v = set(['a', 'b', 'c'])
+        s = self.UUIDSetFactory.from_new(v)
+        self.assertSubset(v, s.get_set())
+
+    def test_from_existing(self):
+
+        k = uuid.UUID("01c47915-4777-11d8-bc70-0090272ff725")
+
+        # Test Non-Existant Object
+        self.assertRaises(types_redis.RedisObjectDNE, self.UUIDSetFactory.from_existing, k)
+
+        # Test Existing Object
+        v = set(['a', 'b', 'c'])
+        s1 = self.UUIDSetFactory.from_new(v)
+        self.assertSubset(v, s1.get_set())
+        s2 = self.UUIDSetFactory.from_existing(s1.key())
+        self.assertEqual(s1, s2)
+        self.assertEqual(s1.get_set(), s2.get_set())
 
 
 ### Main ###
