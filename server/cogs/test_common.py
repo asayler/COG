@@ -30,7 +30,7 @@ TEST_TESTDICT        = {'name': "Test_Assignment",
 
 
 class CogsTestError(Exception):
-    """Base class for COgs Test Exceptions"""
+    """Base class for Cogs Test Exceptions"""
 
     def __init__(self, *args, **kwargs):
         super(CogsTestError, self).__init__(*args, **kwargs)
@@ -49,5 +49,16 @@ class CogsTestCase(unittest.TestCase):
         self.db.flushdb()
 
     def assertSubset(self, sub, sup):
-        for k in sub:
-            self.assertEqual(sub[k], sup[k])
+
+        if type(sub) != type(sup):
+            raise CogsTestError("sub, sup must be of same type")
+
+        if type(sub) == dict:
+            for k in sub:
+                self.assertEqual(sub[k], sup[k])
+        elif type(sub) == set:
+            self.assertTrue(sub.issubset(sup))
+        elif type(sub) == list:
+            self.assertTrue(set(sub).issubset(set(sup)))
+        else:
+            raise CogsTestError("Unhandled type: {:s}".format(type(sub)))
