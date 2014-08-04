@@ -137,7 +137,7 @@ class RedisObjectBase(object):
 
 class RedisFactory(object):
 
-    def __init__(self, base_cls, prefix=None, redis_db=None):
+    def __init__(self, base_cls, prefix=None, db=None):
 
         # Call Super
         super(RedisFactory, self).__init__()
@@ -153,12 +153,12 @@ class RedisFactory(object):
         cls_name = base_name[0:base_name.rfind(_SUF_BASE)]
 
         # Setup DB
-        if not redis_db:
+        if not db:
             self.db = redis.StrictRedis(host=_REDIS_CONF_DEFAULT['redis_host'],
                                         port=_REDIS_CONF_DEFAULT['redis_port'],
                                         db=_REDIS_CONF_DEFAULT['redis_db'])
         else:
-            self.db = redis_db
+            self.db = db
 
         # Setup Base Key
         if prefix:
@@ -207,6 +207,14 @@ class RedisFactory(object):
             if _FIELD_SEP in fam_key:
                 chd_keys.add(fam_key)
         return chd_keys
+
+    def get_siblings(self):
+        """Get Sibling Objects"""
+        siblings = self.list_siblings()
+        objs = []
+        for sib in siblings:
+            objs.append(self.from_existing(sib))
+        return objs
 
     def from_new(self, *args, **kwargs):
         return self.cls.from_new(*args, **kwargs)

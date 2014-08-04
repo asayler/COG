@@ -36,7 +36,7 @@ class RedisObjectTestCase(DatatypesTestCase):
 
         self.db.set(self.rid, self.val)
 
-        self.ObjFactory = types_redis.RedisFactory(types_redis.RedisObjectBase, redis_db=self.db)
+        self.ObjFactory = types_redis.RedisFactory(types_redis.RedisObjectBase, db=self.db)
 
     def tearDown(self):
         super(RedisObjectTestCase, self).tearDown()
@@ -121,25 +121,25 @@ class RedisFactoryTestCase(DatatypesTestCase):
     def test_init(self):
 
         # Test w/o Prefix or Key
-        of = types_redis.RedisFactory(types_redis.RedisObjectBase, redis_db=self.db)
+        of = types_redis.RedisFactory(types_redis.RedisObjectBase, db=self.db)
         self.assertRaises(types_redis.RedisObjectError, of.from_new)
 
         # Test w/ Prefix but w/o Key
         p = "testprefix_{:03d}".format(random.randint(0, 999))
-        of = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=p, redis_db=self.db)
+        of = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=p, db=self.db)
         o = of.from_new()
         self.assertTrue(o)
 
         # Test w/ Key but w/o Prefix
         k = "testkey_{:03d}".format(random.randint(0, 999))
-        of = types_redis.RedisFactory(types_redis.RedisObjectBase, redis_db=self.db)
+        of = types_redis.RedisFactory(types_redis.RedisObjectBase, db=self.db)
         o = of.from_new(k)
         self.assertTrue(o)
 
         # Test w/ Prefix and Key
         p = "testprefix_{:03d}".format(random.randint(0, 999))
         k = "testkey_{:03d}".format(random.randint(0, 999))
-        of = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=p, redis_db=self.db)
+        of = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=p, db=self.db)
         o = of.from_new(k)
         self.assertTrue(o)
 
@@ -155,7 +155,7 @@ class RedisFactoryTestCase(DatatypesTestCase):
             self.db.set("redisobject+{:s}".format(p), val)
 
         # Test Parents w/o Prefix
-        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, redis_db=self.db)
+        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(parents), fam)
         sib = hf.list_siblings()
@@ -170,7 +170,7 @@ class RedisFactoryTestCase(DatatypesTestCase):
             self.db.set("{:s}:redisobject+{:s}".format(pre, p), val)
 
         # Test Parents w/ Prefix
-        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=pre, redis_db=self.db)
+        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=pre, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(parents), fam)
         sib = hf.list_siblings()
@@ -191,7 +191,7 @@ class RedisFactoryTestCase(DatatypesTestCase):
             full_children.append(child)
 
         # Test Parents + Children w/o Prefix
-        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, redis_db=self.db)
+        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(parents + full_children), fam)
         sib = hf.list_siblings()
@@ -201,7 +201,7 @@ class RedisFactoryTestCase(DatatypesTestCase):
 
         # Test Children w/o Prefix
         chd_pre = "redisobject+{:s}".format(parents[0])
-        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=chd_pre, redis_db=self.db)
+        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=chd_pre, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(p1_children), fam)
         sib = hf.list_siblings()
@@ -222,7 +222,7 @@ class RedisFactoryTestCase(DatatypesTestCase):
             full_children.append(child)
 
         # Test Parents + Children w/ Prefix
-        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=pre, redis_db=self.db)
+        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=pre, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(parents + full_children), fam)
         sib = hf.list_siblings()
@@ -232,13 +232,16 @@ class RedisFactoryTestCase(DatatypesTestCase):
 
         # Test Children w/ Prefix
         chd_pre = "{:s}:redisobject+{:s}".format(pre, parents[0])
-        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=chd_pre, redis_db=self.db)
+        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=chd_pre, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(p1_children), fam)
         sib = hf.list_siblings()
         self.assertEqual(set(p1_children), sib)
         chd = hf.list_children()
         self.assertEqual(set([]), chd)
+
+    def test_get(self):
+        pass
 
 
 class RedisUUIDFactoryTestCase(DatatypesTestCase):
@@ -252,13 +255,13 @@ class RedisUUIDFactoryTestCase(DatatypesTestCase):
     def test_init(self):
 
         # Test w/o Prefix
-        of = types_redis.RedisUUIDFactory(types_redis.RedisObjectBase, redis_db=self.db)
+        of = types_redis.RedisUUIDFactory(types_redis.RedisObjectBase, db=self.db)
         o = of.from_new()
         self.assertTrue(o)
 
         # Test w/ Prefix
         p = "testprefix_{:03d}".format(random.randint(0, 999))
-        of = types_redis.RedisUUIDFactory(types_redis.RedisObjectBase, prefix=p, redis_db=self.db)
+        of = types_redis.RedisUUIDFactory(types_redis.RedisObjectBase, prefix=p, db=self.db)
         o = of.from_new()
         self.assertTrue(o)
 
@@ -268,7 +271,7 @@ class RedisHashTestCase(DatatypesTestCase):
     def setUp(self):
         super(RedisHashTestCase, self).setUp()
 
-        self.HashFactory = types_redis.RedisFactory(types_redis.RedisHashBase, redis_db=self.db)
+        self.HashFactory = types_redis.RedisFactory(types_redis.RedisHashBase, db=self.db)
 
     def tearDown(self):
         super(RedisHashTestCase, self).tearDown()
@@ -387,7 +390,7 @@ class RedisUUIDHashTestCase(DatatypesTestCase):
     def setUp(self):
         super(RedisUUIDHashTestCase, self).setUp()
 
-        self.UUIDHashFactory = types_redis.RedisUUIDFactory(types_redis.RedisHashBase, redis_db=self.db)
+        self.UUIDHashFactory = types_redis.RedisUUIDFactory(types_redis.RedisHashBase, db=self.db)
 
     def tearDown(self):
         super(RedisUUIDHashTestCase, self).tearDown()
@@ -424,7 +427,7 @@ class RedisSetTestCase(DatatypesTestCase):
     def setUp(self):
         super(RedisSetTestCase, self).setUp()
 
-        self.SetFactory = types_redis.RedisFactory(types_redis.RedisSetBase, redis_db=self.db)
+        self.SetFactory = types_redis.RedisFactory(types_redis.RedisSetBase, db=self.db)
 
     def tearDown(self):
         super(RedisSetTestCase, self).tearDown()
@@ -523,7 +526,7 @@ class RedisUUIDSetTestCase(DatatypesTestCase):
     def setUp(self):
         super(RedisUUIDSetTestCase, self).setUp()
 
-        self.UUIDSetFactory = types_redis.RedisUUIDFactory(types_redis.RedisSetBase, redis_db=self.db)
+        self.UUIDSetFactory = types_redis.RedisUUIDFactory(types_redis.RedisSetBase, db=self.db)
 
     def tearDown(self):
         super(RedisUUIDSetTestCase, self).tearDown()
