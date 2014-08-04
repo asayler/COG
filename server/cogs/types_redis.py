@@ -5,6 +5,7 @@
 # Univerity of Colorado
 
 import copy
+import uuid
 
 import redis
 
@@ -73,9 +74,9 @@ class RedisObjectBase(object):
         super(RedisObjectBase, self).__init__()
 
         if key:
-            if _FIELD_SEP in key:
+            if _FIELD_SEP in str(key):
                 raise RedisObjectError("Key may not contain '{:s}'".format(_FIELD_SEP))
-            if _TYPE_SEP in key:
+            if _TYPE_SEP in str(key):
                 raise RedisObjectError("Key may not contain '{:s}'".format(_TYPE_SEP))
 
         self.obj_key = key
@@ -119,6 +120,9 @@ class RedisObjectBase(object):
         """Test Equality"""
 
         return (repr(self) == repr(other))
+
+    def key(self):
+        return self.obj_key
 
     def delete(self):
         """Delete Object"""
@@ -283,6 +287,25 @@ class RedisHashBase(RedisObjectBase):
         ret = self.db.hmset(self.full_key, d)
         if not ret:
             raise RedisObjectError("Set Failed")
+
+
+class RedisUUIDHashBase(RedisHashBase):
+    """
+    Redis UUID Hash Base Class
+
+    """
+
+    @classmethod
+    def from_new(cls, d):
+        """New Constructor"""
+
+        key = uuid.uuid4()
+
+        # Call Parent
+        obj = super(RedisUUIDHashBase, cls).from_new(d, key)
+
+        # Return Object
+        return obj
 
 
 class RedisSetBase(RedisObjectBase):

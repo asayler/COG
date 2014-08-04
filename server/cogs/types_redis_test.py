@@ -8,6 +8,7 @@
 import copy
 import random
 import unittest
+import uuid
 
 import redis
 
@@ -357,6 +358,43 @@ class RedisHashTestCase(DatatypesTestCase):
             val = d[key] + "_updated"
             obj[key] = val
             self.assertEqual(val, obj[key])
+
+
+class RedisUUIDHashTestCase(DatatypesTestCase):
+
+    def setUp(self):
+        super(RedisUUIDHashTestCase, self).setUp()
+
+        self.UUIDHashFactory = types_redis.RedisFactory(types_redis.RedisUUIDHashBase, redis_db=self.db)
+
+    def tearDown(self):
+        super(RedisUUIDHashTestCase, self).tearDown()
+
+    def test_from_new(self):
+
+        # Test Empty Dict
+        d = {}
+        self.assertRaises(types_redis.RedisObjectError, self.UUIDHashFactory.from_new, d)
+
+        # Test Non-Empty Dict w/o Key
+        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        h = self.UUIDHashFactory.from_new(d)
+        self.assertSubset(d, h.get_dict())
+
+    def test_from_existing(self):
+
+        k = uuid.UUID("01c47915-4777-11d8-bc70-0090272ff725")
+
+        # Test Non-Existant Object
+        self.assertRaises(types_redis.RedisObjectDNE, self.UUIDHashFactory.from_existing, k)
+
+        # Test Existing Object
+        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        h1 = self.UUIDHashFactory.from_new(d)
+        self.assertSubset(d, h1.get_dict())
+        h2 = self.UUIDHashFactory.from_existing(h1.key())
+        self.assertEqual(h1, h2)
+        self.assertEqual(h1.get_dict(), h2.get_dict())
 
 
 class RedisSetTestCase(DatatypesTestCase):
