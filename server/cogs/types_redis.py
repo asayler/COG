@@ -53,6 +53,8 @@ class RedisObjectBase(object):
         """New Constructor"""
 
         obj = cls(key)
+        if obj.db.exists(obj.full_key):
+            raise RedisObjectError("Key already exists in DB")
         return obj
 
     @classmethod
@@ -154,25 +156,34 @@ class RedisHashBase(RedisObjectBase):
         """Get Dict Item"""
 
         if self.schema is not None:
-            if k in self.schema:
-                return self.db.hget(self.full_key, k)
-            else:
+            if k not in self.schema:
                 raise KeyError("Key {:s} not valid in {:s}".format(k, self))
+
+        ret = self.db.hget(self.full_key, k)
+        if not ret:
+            raise KeyError("Key {:s} not found in {:s}".format(k, self))
+
+        return ret
 
     def __setitem__(self, k, v):
         """Set Dict Item"""
 
         if self.schema is not None:
-            if k in self.schema:
-                return self.db.hset(self.full_key, k, v)
-            else:
+            if k not in self.schema:
                 raise KeyError("Key {:s} not valid in {:s}".format(k, self))
+
+        ret = self.db.hset(self.full_key, k, v)
+
+        return ret
 
     def get_dict(self):
         """Get Full Dict"""
 
-        data = self.db.hgetall(self.full_key)
-        return data
+        ret = self.db.hgetall(self.full_key)
+        if not ret:
+            raise RedisObjectError("Get Failed")
+
+        return ret
 
     def set_dict(self, d):
         """Set Full Dict"""
@@ -181,7 +192,12 @@ class RedisHashBase(RedisObjectBase):
             s = set(d.keys())
             if not s.issubset(self.schema):
                 raise KeyError("Keys {:s} do not match schema {:s}".format(s, self.schema))
-        self.db.hmset(self.full_key, d)
+
+        ret = self.db.hmset(self.full_key, d)
+        if not ret:
+            raise RedisObjectError("Set Failed")
+
+        return ret
 
 
 class RedisSetBase(RedisObjectBase):

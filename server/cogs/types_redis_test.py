@@ -108,62 +108,75 @@ class RedisHashTestCase(DatatypesTestCase):
         h2 = self.HashFactory.from_existing(k)
         self.assertEqual(h1, h2)
 
-    # def test_get_dict(self):
+    def test_get_dict(self):
 
-    #     # Create and Get Object
-    #     d_in = copy.deepcopy(test_common.DUMMY_TESTDICT)
-    #     obj = self.HashFactory.from_new(d_in)
-    #     d_out = obj.get_dict()
-    #     self.assertSubset(d_in, d_out)
+        # Create Key
+        k = "test_key_{:03d}".format(random.randint(0, 999))
 
-    # def test_set_dict(self):
+        # Create and Get Object
+        d_in = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        obj = self.HashFactory.from_new(d_in, k)
+        d_out = obj.get_dict()
+        self.assertSubset(d_in, d_out)
 
-    #     # Create and Get Object
-    #     d1_in = copy.deepcopy(test_common.DUMMY_TESTDICT)
-    #     obj = self.HashFactory.from_new(d1_in)
-    #     d1_out = obj.get_dict()
-    #     self.assertSubset(d1_in, d1_out)
+    def test_set_dict(self):
 
-    #     # Update and Get Object
-    #     d2_in = copy.deepcopy(test_common.DUMMY_TESTDICT)
-    #     for k in d2_in:
-    #         d2_in[k] = "set_dict_test_val_{:s}".format(k)
-    #     self.assertNotEqual(d1_in, d2_in)
-    #     obj.set_dict(d2_in)
-    #     d2_out = obj.get_dict()
-    #     self.assertSubset(d2_in, d2_out)
+        # Create Key
+        k = "test_key_{:03d}".format(random.randint(0, 999))
 
-    # def test_getitem(self):
+        # Create and Get Object
+        d1_in = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        obj = self.HashFactory.from_new(d1_in, k)
+        d1_out = obj.get_dict()
+        self.assertSubset(d1_in, d1_out)
 
-    #     # Temp Get Funcation
-    #     def get_item(d, k):
-    #         return d[k]
+        # Update and Get Object
+        d2_in = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        for k in d2_in:
+            d2_in[k] = "set_dict_test_val_{:s}".format(k)
+        self.assertNotEqual(d1_in, d2_in)
+        obj.set_dict(d2_in)
+        d2_out = obj.get_dict()
+        self.assertSubset(d2_in, d2_out)
 
-    #     # Test Good Keys
-    #     d = copy.deepcopy(test_common.DUMMY_TESTDICT)
-    #     obj = self.HashFactory.from_new(d)
-    #     for k in d:
-    #         self.assertEqual(d[k], obj[k])
+    def test_getitem(self):
 
-    #     # Test Bad Key
-    #     self.assertRaises(KeyError, get_item, obj, 'test')
+        # Temp Get Funcation
+        def get_item(d, key):
+            return d[key]
 
-    # def test_setitem(self):
+        # Create Object Key
+        k = "test_key_{:03d}".format(random.randint(0, 999))
 
-    #     # Temp Set Function
-    #     def set_item(d, k, v):
-    #         d[k] = v
+        # Create Object
+        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        obj = self.HashFactory.from_new(d, k)
 
-    #     # Test Good Keys
-    #     d = copy.deepcopy(test_common.DUMMY_TESTDICT)
-    #     obj = self.HashFactory.from_new(d)
-    #     for k in d:
-    #         val = d[k] + "_updated"
-    #         obj[k] = val
-    #         self.assertEqual(val, obj[k])
+        # Test Bad Key
+        self.assertRaises(KeyError, get_item, obj, 'test')
 
-    #     # Test Bad Key
-    #     self.assertRaises(KeyError, set_item, obj, 'test', "test")
+        # Test Good Keys
+        for key in d:
+            self.assertEqual(d[key], obj[key])
+
+    def test_setitem(self):
+
+        # Temp Set Function
+        def set_item(d, key, val):
+            d[key] = val
+
+        # Create Object Key
+        k = "test_key_{:03d}".format(random.randint(0, 999))
+
+        # Create Object
+        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        obj = self.HashFactory.from_new(d, k)
+
+        # Test Keys
+        for key in d:
+            val = d[key] + "_updated"
+            obj[key] = val
+            self.assertEqual(val, obj[key])
 
 
 ### Main ###
