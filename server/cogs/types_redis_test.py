@@ -145,13 +145,16 @@ class RedisFactoryTestCase(DatatypesTestCase):
 
     def test_list_family(self):
 
-        # Setup DB
         val = 'val'
+        pre = 'test'
+
+        # Add Parents w/o Prefix
+        self.db.flushdb()
         parents = ['p01', 'p02', 'p03']
         for p in parents:
             self.db.set("redisobject+{:s}".format(p), val)
 
-        # Test w/ Key but w/o Prefix
+        # Test Parents w/o Prefix
         hf = types_redis.RedisFactory(types_redis.RedisObjectBase, redis_db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(parents), fam)
@@ -159,6 +162,84 @@ class RedisFactoryTestCase(DatatypesTestCase):
         self.assertEqual(set(parents), sib)
         chd = hf.list_children()
         self.assertFalse(chd)
+
+        # Add Parents w/ Prefix
+        self.db.flushdb()
+        parents = ['p01', 'p02', 'p03']
+        for p in parents:
+            self.db.set("{:s}:redisobject+{:s}".format(pre, p), val)
+
+        # Test Parents w/ Prefix
+        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=pre, redis_db=self.db)
+        fam = hf.list_family()
+        self.assertEqual(set(parents), fam)
+        sib = hf.list_siblings()
+        self.assertEqual(set(parents), sib)
+        chd = hf.list_children()
+        self.assertEqual(set([]), chd)
+
+        # Add Parents + Children w/o Prefix
+        self.db.flushdb()
+        parents = ['p01', 'p02', 'p03']
+        for p in parents:
+            self.db.set("redisobject+{:s}".format(p), val)
+        p1_children = ['c01', 'c02', 'c03']
+        full_children = []
+        for c in p1_children:
+            child = "{:s}:redisobject+{:s}".format(parents[0], c)
+            self.db.set("redisobject+{:s}".format(child), val)
+            full_children.append(child)
+
+        # Test Parents + Children w/o Prefix
+        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, redis_db=self.db)
+        fam = hf.list_family()
+        self.assertEqual(set(parents + full_children), fam)
+        sib = hf.list_siblings()
+        self.assertEqual(set(parents), sib)
+        chd = hf.list_children()
+        self.assertEqual(set(full_children), chd)
+
+        # Test Children w/o Prefix
+        chd_pre = "redisobject+{:s}".format(parents[0])
+        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=chd_pre, redis_db=self.db)
+        fam = hf.list_family()
+        self.assertEqual(set(p1_children), fam)
+        sib = hf.list_siblings()
+        self.assertEqual(set(p1_children), sib)
+        chd = hf.list_children()
+        self.assertEqual(set([]), chd)
+
+        # Add Parents + Children w/ Prefix
+        self.db.flushdb()
+        parents = ['p01', 'p02', 'p03']
+        for p in parents:
+            self.db.set("{:s}:redisobject+{:s}".format(pre, p), val)
+        p1_children = ['c01', 'c02', 'c03']
+        full_children = []
+        for c in p1_children:
+            child = "{:s}:redisobject+{:s}".format(parents[0], c)
+            self.db.set("{:s}:redisobject+{:s}".format(pre, child), val)
+            full_children.append(child)
+
+        # Test Parents + Children w/ Prefix
+        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=pre, redis_db=self.db)
+        fam = hf.list_family()
+        self.assertEqual(set(parents + full_children), fam)
+        sib = hf.list_siblings()
+        self.assertEqual(set(parents), sib)
+        chd = hf.list_children()
+        self.assertEqual(set(full_children), chd)
+
+        # Test Children w/ Prefix
+        chd_pre = "{:s}:redisobject+{:s}".format(pre, parents[0])
+        hf = types_redis.RedisFactory(types_redis.RedisObjectBase, prefix=chd_pre, redis_db=self.db)
+        fam = hf.list_family()
+        self.assertEqual(set(p1_children), fam)
+        sib = hf.list_siblings()
+        self.assertEqual(set(p1_children), sib)
+        chd = hf.list_children()
+        self.assertEqual(set([]), chd)
+
 
 
 class RedisHashTestCase(DatatypesTestCase):
