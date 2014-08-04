@@ -79,7 +79,10 @@ class RedisObjectBase(object):
             if _TYPE_SEP in str(key):
                 raise RedisObjectError("Key may not contain '{:s}'".format(_TYPE_SEP))
 
-        self.obj_key = key
+        if key:
+            self.obj_key = str(key)
+        else:
+            self.obj_key = ""
         self.obj_rid = str(self)
 
         if self.pre_key and self.obj_key:
@@ -149,7 +152,7 @@ class RedisFactory(object):
         cls_name = base_name[0:base_name.rfind(_SUF_BASE)]
 
         # Setup DB
-        if redis_db is None:
+        if not redis_db:
             self.db = redis.StrictRedis(host=_REDIS_CONF_DEFAULT['redis_host'],
                                         port=_REDIS_CONF_DEFAULT['redis_port'],
                                         db=_REDIS_CONF_DEFAULT['redis_db'])
@@ -157,10 +160,10 @@ class RedisFactory(object):
             self.db = redis_db
 
         # Setup Base Key
-        if prefix == None:
-            self.pre_key = None
+        if prefix:
+            self.pre_key = str(prefix)
         else:
-            self.pre_key = prefix
+            self.pre_key = ""
 
         # Setup Class
         class cls(base_cls):
