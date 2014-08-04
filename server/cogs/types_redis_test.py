@@ -24,6 +24,44 @@ class DatatypesTestCase(test_common.CogsTestCase):
         super(DatatypesTestCase, self).tearDown()
 
 
+class RedisFactoryTestCase(DatatypesTestCase):
+
+    def setUp(self):
+        super(RedisFactoryTestCase, self).setUp()
+
+    def tearDown(self):
+        super(RedisFactoryTestCase, self).tearDown()
+
+    def test_init(self):
+
+        # Test w/o Prefix or Key
+        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        hf = types_redis.RedisFactory(types_redis.RedisHashBase, redis_db=self.db)
+        self.assertRaises(types_redis.RedisObjectError, hf.from_new, d)
+
+        # Test w/ Prefix but w/o Key
+        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        p = "test_prefix_{:03d}".format(random.randint(0, 999))
+        hf = types_redis.RedisFactory(types_redis.RedisHashBase, prefix=p, redis_db=self.db)
+        h = hf.from_new(d)
+        self.assertSubset(d, h.get_dict())
+
+        # Test w/ Key but w/o Prefix
+        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        k = "test_key_{:03d}".format(random.randint(0, 999))
+        hf = types_redis.RedisFactory(types_redis.RedisHashBase, redis_db=self.db)
+        h = hf.from_new(d, k)
+        self.assertSubset(d, h.get_dict())
+
+        # Test w/ Prefix and Key
+        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        p = "test_prefix_{:03d}".format(random.randint(0, 999))
+        k = "test_key_{:03d}".format(random.randint(0, 999))
+        hf = types_redis.RedisFactory(types_redis.RedisHashBase, prefix=p, redis_db=self.db)
+        h = hf.from_new(d, k)
+        self.assertSubset(d, h.get_dict())
+
+
 class RedisHashTestCase(DatatypesTestCase):
 
     def setUp(self):
