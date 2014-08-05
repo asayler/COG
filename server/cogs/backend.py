@@ -258,6 +258,27 @@ class HashBase(ObjectBase):
         pass
 
 
+class TSHashBase(HashBase):
+    """
+    Time-stamped Hash Base Class
+    """
+
+    @abstractclassmethod
+    def from_new(cls, d, key=None):
+        """New Constructor"""
+        pass
+
+    @abc.abstractmethod
+    def __setitem__(self, k, v):
+        """Set Item"""
+        pass
+
+    @abc.abstractmethod
+    def set_dict(self, d):
+        """Set Dict"""
+        pass
+
+
 class SetBase(ObjectBase):
     """
     Set Base Class

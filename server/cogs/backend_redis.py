@@ -164,6 +164,56 @@ class HashBase(ObjectBase):
             raise ObjectError("Set Failed")
 
 
+class TSHashBase(HashBase):
+    """
+    Time-stamped Hash Base Class
+    """
+
+    @classmethod
+    def from_new(cls, d, key=None):
+        """New Constructor"""
+
+        # Set Times
+        data = copy.deepcopy(d)
+        data['created_time'] = str(time.time())
+        data['modified_time'] = str(time.time())
+
+        # Call Parent
+        obj = super(TSHashBase, cls).from_new(data, key)
+
+        # Return Object
+        return obj
+
+    def __setitem__(self, k, v):
+        """Set Item"""
+
+        # Set Time
+        data = {}
+        data['modified_time'] = str(time.time())
+
+        # Set Value
+        data[k] = v
+
+        # Call Parent
+        ret = super(TSHashBase, cls).set_dict(data)
+
+        # Return
+        return ret
+
+    def set_dict(self, d):
+        """Set Dict"""
+
+        # Set Time
+        data = copy.deepcopy(d)
+        data['modified_time'] = str(time.time())
+
+        # Call Parent
+        ret = super(TSHashBase, cls).set_dict(data)
+
+        # Return
+        return ret
+
+
 class SetBase(ObjectBase):
     """
     Redis Set Base Class
