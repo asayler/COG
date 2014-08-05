@@ -11,13 +11,15 @@ import uuid
 import redis
 
 import backend
+from backend import BackendError, FactoryError, ObjectError, ObjectDNE
+
 
 _REDIS_CONF_DEFAULT = {'redis_host': "localhost",
                        'redis_port': 6379,
                        'redis_db': 4}
 
 
-### Objects
+### Objects ###
 
 class ObjectBase(backend.ObjectBase):
 
@@ -27,7 +29,7 @@ class ObjectBase(backend.ObjectBase):
 
         obj = super(ObjectBase, cls).from_new(key)
         if obj.db.exists(obj.full_key):
-            raise backend.ObjectError("Key already exists in DB")
+            raise ObjectError("Key already exists in DB")
         return obj
 
     @classmethod
@@ -36,7 +38,7 @@ class ObjectBase(backend.ObjectBase):
 
         obj = super(ObjectBase, cls).from_existing(key)
         if not obj.db.exists(obj.full_key):
-            raise backend.ObjectDNE(obj)
+            raise ObjectDNE(obj)
         return obj
 
     def delete(self):
@@ -45,7 +47,7 @@ class ObjectBase(backend.ObjectBase):
         super(ObjectBase, self).delete()
 
         if not self.db.delete(self.full_key):
-            raise backend.ObjectError("Delete Failed")
+            raise ObjectError("Delete Failed")
 
 
 class Factory(backend.Factory):
@@ -98,7 +100,7 @@ class HashBase(ObjectBase):
 
         # Check Input
         if not d:
-            raise backend.ObjectError("Input dict must not be None or empty")
+            raise ObjectError("Input dict must not be None or empty")
 
         # Call Parent
         obj = super(HashBase, cls).from_new(key)
@@ -111,7 +113,7 @@ class HashBase(ObjectBase):
 
         # Add Object Data to DB
         if not obj.db.hmset(obj.full_key, d):
-            raise backend.ObjectError("Create Failed")
+            raise ObjectError("Create Failed")
 
         # Return Object
         return obj
@@ -145,7 +147,7 @@ class HashBase(ObjectBase):
 
         ret = self.db.hgetall(self.full_key)
         if not ret:
-            raise backend.ObjectError("Get Failed")
+            raise ObjectError("Get Failed")
 
         return ret
 
@@ -159,7 +161,7 @@ class HashBase(ObjectBase):
 
         ret = self.db.hmset(self.full_key, d)
         if not ret:
-            raise backend.ObjectError("Set Failed")
+            raise ObjectError("Set Failed")
 
 
 class SetBase(ObjectBase):
@@ -174,14 +176,14 @@ class SetBase(ObjectBase):
 
         # Check Input
         if not v:
-            raise backend.ObjectError("Input set must not be None or empty")
+            raise ObjectError("Input set must not be None or empty")
 
         # Call Parent
         obj = super(SetBase, cls).from_new(key)
 
         # Add lst to DB
         if not obj.db.sadd(obj.full_key, *v):
-            raise backend.ObjectError("Create Failed")
+            raise ObjectError("Create Failed")
 
         # Return Object
         return obj

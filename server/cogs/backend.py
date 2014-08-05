@@ -6,12 +6,14 @@
 
 import abc
 
+
 _ENCODING = 'utf-8'
 _FIELD_SEP = ':'
 _TYPE_SEP = '+'
 _SUF_BASE = 'Base'
 
 assert(_FIELD_SEP != _TYPE_SEP)
+
 
 ### Exceptions ###
 
@@ -22,19 +24,19 @@ class BackendError(Exception):
         super(BackendError, self).__init__(*args, **kwargs)
 
 class FactoryError(BackendError):
-    """Backend Factory Exceptions"""
+    """Backend Factory Exception"""
 
     def __init__(self, *args, **kwargs):
         super(FactoryError, self).__init__(*args, **kwargs)
 
 class ObjectError(BackendError):
-    """Backend Object Exceptions"""
+    """Backend Object Exception"""
 
     def __init__(self, *args, **kwargs):
         super(ObjectError, self).__init__(*args, **kwargs)
 
 class ObjectDNE(ObjectError):
-    """Backend Object Exceptions"""
+    """Backend Object Does Not Exist"""
 
     def __init__(self, obj):
         msg = "{:s} does not exist.".format(obj)
@@ -59,7 +61,7 @@ class abstractclassmethod(classmethod):
     __isabstractmethod__ = True
 
 
-### Objects ###
+### Abstract Objects ###
 
 class ObjectBase(object):
 
