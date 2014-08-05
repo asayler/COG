@@ -7,6 +7,7 @@
 
 import copy
 import random
+import time
 import unittest
 import uuid
 
@@ -384,6 +385,98 @@ class RedisHashTestCase(DatatypesTestCase):
             val = d[key] + "_updated"
             obj[key] = val
             self.assertEqual(val, obj[key])
+
+
+class RedisTSHashTestCase(DatatypesTestCase):
+
+    def setUp(self):
+        super(RedisTSHashTestCase, self).setUp()
+
+        self.TSHashFactory = backend.Factory(backend.TSHashBase, db=self.db)
+
+    def tearDown(self):
+        super(RedisTSHashTestCase, self).tearDown()
+
+    def test_from_new(self):
+
+        # Test Empty Dict w/o Key
+        d = {}
+        self.assertRaises(backend.ObjectError, self.TSHashFactory.from_new, d)
+
+        # Test Empty Dict w/ Key
+        d = {}
+        k = "testkey_1"
+        h = self.TSHashFactory.from_new(d, k)
+        self.assertSubset(d, h.get_dict())
+        self.assertEqual(h['created_time'], h['modified_time'])
+
+        # Test Non-Empty Dict w/o Key
+        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        self.assertRaises(backend.ObjectError, self.TSHashFactory.from_new, d)
+
+        # Test Non-Empty Dict w Key
+        k = "testkey_2"
+        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        h = self.TSHashFactory.from_new(d, k)
+        self.assertSubset(d, h.get_dict())
+        self.assertEqual(h['created_time'], h['modified_time'])
+
+    def test_set_dict(self):
+
+        # Create Key
+        k = "testkey_{:03d}".format(random.randint(0, 999))
+
+        # Create and Get Object
+        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        h = self.TSHashFactory.from_new(d, k)
+        self.assertSubset(d, h.get_dict())
+        ct0 = float(h['created_time'])
+        mt0 = float(h['modified_time'])
+        self.assertEqual(ct0, mt0)
+
+        # Update and Get Object
+        time.sleep(0.01)
+        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        for k in d:
+            d[k] = "set_dict_test_val_{:s}".format(k)
+        self.assertNotEqual(d, test_common.DUMMY_TESTDICT)
+        h.set_dict(d)
+        self.assertSubset(d, h.get_dict())
+        ct1 = float(h['created_time'])
+        mt1 = float(h['modified_time'])
+        self.assertEqual(ct0, ct1)
+        self.assertTrue(ct1 < mt1)
+        self.assertTrue(mt0 < mt1)
+
+    def test_setitem(self):
+
+        # Temp Set Function
+        def set_item(d, key, val):
+            d[key] = val
+
+        # Create Object Key
+        k = "testkey_{:03d}".format(random.randint(0, 999))
+
+        # Create Object
+        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        h = self.TSHashFactory.from_new(d, k)
+        self.assertSubset(d, h.get_dict())
+        ct0 = float(h['created_time'])
+        mt0 = float(h['modified_time'])
+        self.assertEqual(ct0, mt0)
+
+        # Test Keys
+        for key in d:
+            time.sleep(0.01)
+            val = d[key] + "_updated"
+            h[key] = val
+            self.assertEqual(val, h[key])
+            ct1 = float(h['created_time'])
+            mt1 = float(h['modified_time'])
+            self.assertEqual(ct0, ct1)
+            self.assertTrue(ct1 < mt1)
+            self.assertTrue(mt0 < mt1)
+            mt0 = mt1
 
 
 class RedisUUIDHashTestCase(DatatypesTestCase):

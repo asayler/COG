@@ -6,8 +6,9 @@
 
 # pylint: disable=no-member
 
-import uuid
+import copy
 import time
+import uuid
 
 import redis
 
@@ -176,8 +177,9 @@ class TSHashBase(HashBase):
 
         # Set Times
         data = copy.deepcopy(d)
-        data['created_time'] = str(time.time())
-        data['modified_time'] = str(time.time())
+        t = str(time.time())
+        data['created_time'] = t
+        data['modified_time'] = t
 
         # Call Parent
         obj = super(TSHashBase, cls).from_new(data, key)
@@ -196,7 +198,7 @@ class TSHashBase(HashBase):
         data[k] = v
 
         # Call Parent
-        ret = super(TSHashBase, cls).set_dict(data)
+        ret = super(TSHashBase, self).set_dict(data)
 
         # Return
         return ret
@@ -209,7 +211,7 @@ class TSHashBase(HashBase):
         data['modified_time'] = str(time.time())
 
         # Call Parent
-        ret = super(TSHashBase, cls).set_dict(data)
+        ret = super(TSHashBase, self).set_dict(data)
 
         # Return
         return ret
