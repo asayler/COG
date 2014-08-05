@@ -36,7 +36,7 @@ class RedisObjectTestCase(DatatypesTestCase):
 
         self.db.set(self.rid, self.val)
 
-        self.ObjFactory = backend_redis.RedisFactory(backend_redis.ObjectBase, db=self.db)
+        self.ObjFactory = backend_redis.Factory(backend_redis.ObjectBase, db=self.db)
 
     def tearDown(self):
         super(RedisObjectTestCase, self).tearDown()
@@ -122,25 +122,25 @@ class RedisFactoryTestCase(DatatypesTestCase):
     def test_init(self):
 
         # Test w/o Prefix or Key
-        of = backend_redis.RedisFactory(backend_redis.ObjectBase, db=self.db)
+        of = backend_redis.Factory(backend_redis.ObjectBase, db=self.db)
         self.assertRaises(backend.ObjectError, of.from_new)
 
         # Test w/ Prefix but w/o Key
         p = "testprefix_{:03d}".format(random.randint(0, 999))
-        of = backend_redis.RedisFactory(backend_redis.ObjectBase, prefix=p, db=self.db)
+        of = backend_redis.Factory(backend_redis.ObjectBase, prefix=p, db=self.db)
         o = of.from_new()
         self.assertTrue(o)
 
         # Test w/ Key but w/o Prefix
         k = "testkey_{:03d}".format(random.randint(0, 999))
-        of = backend_redis.RedisFactory(backend_redis.ObjectBase, db=self.db)
+        of = backend_redis.Factory(backend_redis.ObjectBase, db=self.db)
         o = of.from_new(k)
         self.assertTrue(o)
 
         # Test w/ Prefix and Key
         p = "testprefix_{:03d}".format(random.randint(0, 999))
         k = "testkey_{:03d}".format(random.randint(0, 999))
-        of = backend_redis.RedisFactory(backend_redis.ObjectBase, prefix=p, db=self.db)
+        of = backend_redis.Factory(backend_redis.ObjectBase, prefix=p, db=self.db)
         o = of.from_new(k)
         self.assertTrue(o)
 
@@ -156,7 +156,7 @@ class RedisFactoryTestCase(DatatypesTestCase):
             self.db.set("object+{:s}".format(p), val)
 
         # Test Parents w/o Prefix
-        hf = backend_redis.RedisFactory(backend_redis.ObjectBase, db=self.db)
+        hf = backend_redis.Factory(backend_redis.ObjectBase, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(parents), fam)
         sib = hf.list_siblings()
@@ -171,7 +171,7 @@ class RedisFactoryTestCase(DatatypesTestCase):
             self.db.set("{:s}:object+{:s}".format(pre, p), val)
 
         # Test Parents w/ Prefix
-        hf = backend_redis.RedisFactory(backend_redis.ObjectBase, prefix=pre, db=self.db)
+        hf = backend_redis.Factory(backend_redis.ObjectBase, prefix=pre, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(parents), fam)
         sib = hf.list_siblings()
@@ -192,7 +192,7 @@ class RedisFactoryTestCase(DatatypesTestCase):
             full_children.append(child)
 
         # Test Parents + Children w/o Prefix
-        hf = backend_redis.RedisFactory(backend_redis.ObjectBase, db=self.db)
+        hf = backend_redis.Factory(backend_redis.ObjectBase, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(parents + full_children), fam)
         sib = hf.list_siblings()
@@ -202,7 +202,7 @@ class RedisFactoryTestCase(DatatypesTestCase):
 
         # Test Children w/o Prefix
         chd_pre = "object+{:s}".format(parents[0])
-        hf = backend_redis.RedisFactory(backend_redis.ObjectBase, prefix=chd_pre, db=self.db)
+        hf = backend_redis.Factory(backend_redis.ObjectBase, prefix=chd_pre, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(p1_children), fam)
         sib = hf.list_siblings()
@@ -223,7 +223,7 @@ class RedisFactoryTestCase(DatatypesTestCase):
             full_children.append(child)
 
         # Test Parents + Children w/ Prefix
-        hf = backend_redis.RedisFactory(backend_redis.ObjectBase, prefix=pre, db=self.db)
+        hf = backend_redis.Factory(backend_redis.ObjectBase, prefix=pre, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(parents + full_children), fam)
         sib = hf.list_siblings()
@@ -233,7 +233,7 @@ class RedisFactoryTestCase(DatatypesTestCase):
 
         # Test Children w/ Prefix
         chd_pre = "{:s}:object+{:s}".format(pre, parents[0])
-        hf = backend_redis.RedisFactory(backend_redis.ObjectBase, prefix=chd_pre, db=self.db)
+        hf = backend_redis.Factory(backend_redis.ObjectBase, prefix=chd_pre, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(p1_children), fam)
         sib = hf.list_siblings()
@@ -272,7 +272,7 @@ class RedisHashTestCase(DatatypesTestCase):
     def setUp(self):
         super(RedisHashTestCase, self).setUp()
 
-        self.HashFactory = backend_redis.RedisFactory(backend_redis.RedisHashBase, db=self.db)
+        self.HashFactory = backend_redis.Factory(backend_redis.RedisHashBase, db=self.db)
 
     def tearDown(self):
         super(RedisHashTestCase, self).tearDown()
@@ -428,7 +428,7 @@ class RedisSetTestCase(DatatypesTestCase):
     def setUp(self):
         super(RedisSetTestCase, self).setUp()
 
-        self.SetFactory = backend_redis.RedisFactory(backend_redis.RedisSetBase, db=self.db)
+        self.SetFactory = backend_redis.Factory(backend_redis.RedisSetBase, db=self.db)
 
     def tearDown(self):
         super(RedisSetTestCase, self).tearDown()
