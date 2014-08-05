@@ -256,13 +256,13 @@ class RedisUUIDFactoryTestCase(DatatypesTestCase):
     def test_init(self):
 
         # Test w/o Prefix
-        of = backend_redis.RedisUUIDFactory(backend_redis.ObjectBase, db=self.db)
+        of = backend_redis.UUIDFactory(backend_redis.ObjectBase, db=self.db)
         o = of.from_new()
         self.assertTrue(o)
 
         # Test w/ Prefix
         p = "testprefix_{:03d}".format(random.randint(0, 999))
-        of = backend_redis.RedisUUIDFactory(backend_redis.ObjectBase, prefix=p, db=self.db)
+        of = backend_redis.UUIDFactory(backend_redis.ObjectBase, prefix=p, db=self.db)
         o = of.from_new()
         self.assertTrue(o)
 
@@ -272,7 +272,7 @@ class RedisHashTestCase(DatatypesTestCase):
     def setUp(self):
         super(RedisHashTestCase, self).setUp()
 
-        self.HashFactory = backend_redis.Factory(backend_redis.RedisHashBase, db=self.db)
+        self.HashFactory = backend_redis.Factory(backend_redis.HashBase, db=self.db)
 
     def tearDown(self):
         super(RedisHashTestCase, self).tearDown()
@@ -391,7 +391,7 @@ class RedisUUIDHashTestCase(DatatypesTestCase):
     def setUp(self):
         super(RedisUUIDHashTestCase, self).setUp()
 
-        self.UUIDHashFactory = backend_redis.RedisUUIDFactory(backend_redis.RedisHashBase, db=self.db)
+        self.UUIDHashFactory = backend_redis.UUIDFactory(backend_redis.HashBase, db=self.db)
 
     def tearDown(self):
         super(RedisUUIDHashTestCase, self).tearDown()
@@ -428,7 +428,7 @@ class RedisSetTestCase(DatatypesTestCase):
     def setUp(self):
         super(RedisSetTestCase, self).setUp()
 
-        self.SetFactory = backend_redis.Factory(backend_redis.RedisSetBase, db=self.db)
+        self.SetFactory = backend_redis.Factory(backend_redis.SetBase, db=self.db)
 
     def tearDown(self):
         super(RedisSetTestCase, self).tearDown()
@@ -527,7 +527,7 @@ class RedisUUIDSetTestCase(DatatypesTestCase):
     def setUp(self):
         super(RedisUUIDSetTestCase, self).setUp()
 
-        self.UUIDSetFactory = backend_redis.RedisUUIDFactory(backend_redis.RedisSetBase, db=self.db)
+        self.UUIDSetFactory = backend_redis.UUIDFactory(backend_redis.SetBase, db=self.db)
 
     def tearDown(self):
         super(RedisUUIDSetTestCase, self).tearDown()

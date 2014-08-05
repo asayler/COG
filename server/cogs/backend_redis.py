@@ -77,14 +77,14 @@ class Factory(backend.Factory):
         return fam_keys
 
 
-class RedisUUIDFactory(Factory):
+class UUIDFactory(Factory):
 
     def from_new(self, *args, **kwargs):
         k = uuid.uuid4()
-        return super(RedisUUIDFactory, self).from_new(*args, key=k, **kwargs)
+        return super(UUIDFactory, self).from_new(*args, key=k, **kwargs)
 
 
-class RedisHashBase(ObjectBase):
+class HashBase(ObjectBase):
     """
     Redis Hash Base Class
 
@@ -101,7 +101,7 @@ class RedisHashBase(ObjectBase):
             raise backend.ObjectError("Input dict must not be None or empty")
 
         # Call Parent
-        obj = super(RedisHashBase, cls).from_new(key)
+        obj = super(HashBase, cls).from_new(key)
 
         # Check dict
         if obj.schema:
@@ -162,7 +162,7 @@ class RedisHashBase(ObjectBase):
             raise backend.ObjectError("Set Failed")
 
 
-class RedisSetBase(ObjectBase):
+class SetBase(ObjectBase):
     """
     Redis Set Base Class
 
@@ -177,7 +177,7 @@ class RedisSetBase(ObjectBase):
             raise backend.ObjectError("Input set must not be None or empty")
 
         # Call Parent
-        obj = super(RedisSetBase, cls).from_new(key)
+        obj = super(SetBase, cls).from_new(key)
 
         # Add lst to DB
         if not obj.db.sadd(obj.full_key, *v):

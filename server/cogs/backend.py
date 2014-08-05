@@ -213,3 +213,68 @@ class Factory(object):
 
     def from_existing(self, *args, **kwargs):
         return self.cls.from_existing(*args, **kwargs)
+
+
+class UUIDFactory(Factory):
+
+    def from_new(self, *args, **kwargs):
+        k = uuid.uuid4()
+        return super(UUIDFactory, self).from_new(*args, key=k, **kwargs)
+
+
+class HashBase(ObjectBase):
+    """
+    Hash Base Class
+
+    """
+
+    schema = None
+
+    @abstractclassmethod
+    def from_new(cls, d, key=None):
+        """New Constructor"""
+        pass
+
+    @abc.abstractmethod
+    def __getitem__(self, k):
+        """Get Dict Item"""
+        pass
+
+    @abc.abstractmethod
+    def __setitem__(self, k, v):
+        """Set Dict Item"""
+        pass
+
+    @abc.abstractmethod
+    def get_dict(self):
+        """Get Full Dict"""
+        pass
+
+    @abc.abstractmethod
+    def set_dict(self, d):
+        """Set Full Dict"""
+        pass
+
+
+class SetBase(ObjectBase):
+    """
+    Set Base Class
+
+    """
+
+    @classmethod
+    def from_new(cls, v, key=None):
+        """New Constructor"""
+        pass
+
+    def get_set(self):
+        """Get All Vals from Set"""
+        pass
+
+    def add_vals(self, v):
+        """Add Vals to Set"""
+        pass
+
+    def del_vals(self, v):
+        """Remove Vals from Set"""
+        pass
