@@ -10,129 +10,44 @@ import uuid
 
 import redis
 
+import backend
+
 _ENCODING = 'utf-8'
 _SUF_BASE = 'Base'
-_FIELD_SEP = ':'
-_TYPE_SEP = '+'
-assert(_FIELD_SEP != _TYPE_SEP)
 _REDIS_CONF_DEFAULT = {'redis_host': "localhost",
                        'redis_port': 6379,
                        'redis_db': 4}
 
-### Exceptions
-
-class DatatypesError(Exception):
-    """Base class for Datatypes Exceptions"""
-
-    def __init__(self, *args, **kwargs):
-        super(DatatypesError, self).__init__(*args, **kwargs)
-
-class RedisFactoryError(DatatypesError):
-    """Base class for Redis Factory Exceptions"""
-
-    def __init__(self, *args, **kwargs):
-        super(RedisFactoryError, self).__init__(*args, **kwargs)
-
-class RedisObjectError(DatatypesError):
-    """Base class for Redis Object Exceptions"""
-
-    def __init__(self, *args, **kwargs):
-        super(RedisObjectError, self).__init__(*args, **kwargs)
-
-class RedisObjectDNE(RedisObjectError):
-    """ Redis Object Does Not Exist"""
-
-    def __init__(self, obj):
-        msg = "{:s} does not exist.".format(obj)
-        super(RedisObjectDNE, self).__init__(msg)
-
 
 ### Objects
 
-class RedisObjectBase(object):
+class ObjectBase(backend.ObjectBase):
 
     @classmethod
     def from_new(cls, key=None):
         """New Constructor"""
 
-        obj = cls(key)
+        obj = super(ObjectBase, cls).from_new(key)
         if obj.db.exists(obj.full_key):
-            raise RedisObjectError("Key already exists in DB")
+            raise backend.ObjectError("Key already exists in DB")
         return obj
 
     @classmethod
     def from_existing(cls, key):
         """Existing Constructor"""
 
-        obj = cls(key)
+        obj = super(ObjectBase, cls).from_existing(key)
         if not obj.db.exists(obj.full_key):
-            raise RedisObjectDNE(obj)
+            raise backend.ObjectDNE(obj)
         return obj
-
-    def __init__(self, key=None):
-        """Base Constructor"""
-
-        super(RedisObjectBase, self).__init__()
-
-        if key:
-            if _FIELD_SEP in str(key):
-                raise RedisObjectError("Key may not contain '{:s}'".format(_FIELD_SEP))
-            if _TYPE_SEP in str(key):
-                raise RedisObjectError("Key may not contain '{:s}'".format(_TYPE_SEP))
-
-        if key:
-            self.obj_key = str(key)
-        else:
-            self.obj_key = ""
-        self.obj_rid = str(self)
-
-        if self.pre_key and self.obj_key:
-            self.full_key = "{:s}{:s}{:s}".format(self.pre_key, _FIELD_SEP, self.obj_rid).lower()
-        elif self.pre_key:
-            self.full_key = "{:s}".format(self.pre_key).lower()
-        elif self.obj_key:
-            self.full_key = "{:s}".format(self.obj_rid).lower()
-        else:
-            raise RedisObjectError("Either pre_key or full_key required")
-
-    def __unicode__(self):
-        """Return Unicode Representation"""
-
-        u = u"{:s}".format(type(self).__name__)
-        if self.obj_key:
-            u += u"{:s}{:s}".format(_TYPE_SEP, self.obj_key)
-        return u
-
-    def __str__(self):
-        """Return String Representation"""
-
-        s = unicode(self).encode(_ENCODING)
-        return s
-
-    def __repr__(self):
-        """Return Unique Representation"""
-
-        r = "{:s}".format(self.full_key)
-        return r
-
-    def __hash__(self):
-        """Return Hash"""
-
-        return hash(repr(self))
-
-    def __eq__(self, other):
-        """Test Equality"""
-
-        return (repr(self) == repr(other))
-
-    def key(self):
-        return self.obj_key
 
     def delete(self):
         """Delete Object"""
 
+        super(ObjectBase, self).delete()
+
         if not self.db.delete(self.full_key):
-            raise RedisObjectError("Delete Failed")
+            raise backend.ObjectError("Delete Failed")
 
 
 class RedisFactory(object):
@@ -143,8 +58,8 @@ class RedisFactory(object):
         super(RedisFactory, self).__init__()
 
         # Check Input
-        if not issubclass(base_cls, RedisObjectBase):
-            raise RedisFactoryError("cls must be subclass of RedisObjectBase")
+        if not issubclass(base_cls, ObjectBase):
+            raise RedisFactoryError("cls must be subclass of ObjectBase")
         base_name = base_cls.__name__
         if not base_name.endswith(_SUF_BASE):
             raise RedisFactoryError("cls name must end with '{:s}'".format(_SUF_BASE))
@@ -178,7 +93,7 @@ class RedisFactory(object):
     def list_family(self):
         """List Factory Objects"""
         if self.pre_key:
-            p = "{:s}{:s}".format(self.pre_key, _FIELD_SEP)
+            p = "{:s}{:s}".format(self.pre_key, backend._FIELD_SEP)
         else:
             p = ""
         q = "{:s}*".format(p)
@@ -186,7 +101,7 @@ class RedisFactory(object):
         fam_keys = set([])
         for full_key in fam_lst:
             fam_id = full_key[len(p): ]
-            fam_key = fam_id[(fam_id.find(_TYPE_SEP) + 1): ]
+            fam_key = fam_id[(fam_id.find(backend._TYPE_SEP) + 1): ]
             fam_keys.add(fam_key)
         return fam_keys
 
@@ -195,7 +110,7 @@ class RedisFactory(object):
         fam_keys = self.list_family()
         sib_keys = set([])
         for fam_key in fam_keys:
-            if _FIELD_SEP not in fam_key:
+            if backend._FIELD_SEP not in fam_key:
                 sib_keys.add(fam_key)
         return sib_keys
 
@@ -204,7 +119,7 @@ class RedisFactory(object):
         fam_keys = self.list_family()
         chd_keys = set([])
         for fam_key in fam_keys:
-            if _FIELD_SEP in fam_key:
+            if backend._FIELD_SEP in fam_key:
                 chd_keys.add(fam_key)
         return chd_keys
 
@@ -230,7 +145,7 @@ class RedisUUIDFactory(RedisFactory):
         return super(RedisUUIDFactory, self).from_new(*args, key=k, **kwargs)
 
 
-class RedisHashBase(RedisObjectBase):
+class RedisHashBase(ObjectBase):
     """
     Redis Hash Base Class
 
@@ -244,7 +159,7 @@ class RedisHashBase(RedisObjectBase):
 
         # Check Input
         if not d:
-            raise RedisObjectError("Input dict must not be None or empty")
+            raise backend.ObjectError("Input dict must not be None or empty")
 
         # Call Parent
         obj = super(RedisHashBase, cls).from_new(key)
@@ -257,7 +172,7 @@ class RedisHashBase(RedisObjectBase):
 
         # Add Object Data to DB
         if not obj.db.hmset(obj.full_key, d):
-            raise RedisObjectError("Create Failed")
+            raise backend.ObjectError("Create Failed")
 
         # Return Object
         return obj
@@ -291,7 +206,7 @@ class RedisHashBase(RedisObjectBase):
 
         ret = self.db.hgetall(self.full_key)
         if not ret:
-            raise RedisObjectError("Get Failed")
+            raise backend.ObjectError("Get Failed")
 
         return ret
 
@@ -305,10 +220,10 @@ class RedisHashBase(RedisObjectBase):
 
         ret = self.db.hmset(self.full_key, d)
         if not ret:
-            raise RedisObjectError("Set Failed")
+            raise backend.ObjectError("Set Failed")
 
 
-class RedisSetBase(RedisObjectBase):
+class RedisSetBase(ObjectBase):
     """
     Redis Set Base Class
 
@@ -320,14 +235,14 @@ class RedisSetBase(RedisObjectBase):
 
         # Check Input
         if not v:
-            raise RedisObjectError("Input set must not be None or empty")
+            raise backend.ObjectError("Input set must not be None or empty")
 
         # Call Parent
         obj = super(RedisSetBase, cls).from_new(key)
 
         # Add lst to DB
         if not obj.db.sadd(obj.full_key, *v):
-            raise RedisObjectError("Create Failed")
+            raise backend.ObjectError("Create Failed")
 
         # Return Object
         return obj
