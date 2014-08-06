@@ -17,16 +17,16 @@ import test_common
 import backend_redis as backend
 
 
-class DatatypesTestCase(test_common.CogsTestCase):
+class BackendRedisTestCase(test_common.CogsTestCase):
 
     def setUp(self):
-        super(DatatypesTestCase, self).setUp()
+        super(BackendRedisTestCase, self).setUp()
 
     def tearDown(self):
-        super(DatatypesTestCase, self).tearDown()
+        super(BackendRedisTestCase, self).tearDown()
 
 
-class RedisObjectTestCase(DatatypesTestCase):
+class RedisObjectTestCase(BackendRedisTestCase):
 
     def setUp(self):
         super(RedisObjectTestCase, self).setUp()
@@ -112,7 +112,7 @@ class RedisObjectTestCase(DatatypesTestCase):
         self.assertFalse(self.db.exists(self.rid))
 
 
-class RedisFactoryTestCase(DatatypesTestCase):
+class RedisFactoryTestCase(BackendRedisTestCase):
 
     def setUp(self):
         super(RedisFactoryTestCase, self).setUp()
@@ -243,10 +243,22 @@ class RedisFactoryTestCase(DatatypesTestCase):
         self.assertEqual(set([]), chd)
 
     def test_get(self):
-        pass
+
+        val = 'val'
+
+        # Add Parents w/o Prefix
+        self.db.flushdb()
+        parents = ['p01', 'p02', 'p03']
+        for p in parents:
+            self.db.set("object+{:s}".format(p), val)
+
+        # Test Parents w/o Prefix
+        hf = backend.Factory(backend.ObjectBase, db=self.db)
+        sibs = hf.get_siblings()
+        self.assertEqual(set(parents), set([s.key() for s in sibs]))
 
 
-class RedisUUIDFactoryTestCase(DatatypesTestCase):
+class RedisUUIDFactoryTestCase(BackendRedisTestCase):
 
     def setUp(self):
         super(RedisUUIDFactoryTestCase, self).setUp()
@@ -268,7 +280,7 @@ class RedisUUIDFactoryTestCase(DatatypesTestCase):
         self.assertTrue(o)
 
 
-class RedisHashTestCase(DatatypesTestCase):
+class RedisHashTestCase(BackendRedisTestCase):
 
     def setUp(self):
         super(RedisHashTestCase, self).setUp()
@@ -387,7 +399,7 @@ class RedisHashTestCase(DatatypesTestCase):
             self.assertEqual(val, obj[key])
 
 
-class RedisTSHashTestCase(DatatypesTestCase):
+class RedisTSHashTestCase(BackendRedisTestCase):
 
     def setUp(self):
         super(RedisTSHashTestCase, self).setUp()
@@ -479,7 +491,7 @@ class RedisTSHashTestCase(DatatypesTestCase):
             mt0 = mt1
 
 
-class RedisUUIDHashTestCase(DatatypesTestCase):
+class RedisUUIDHashTestCase(BackendRedisTestCase):
 
     def setUp(self):
         super(RedisUUIDHashTestCase, self).setUp()
@@ -516,7 +528,7 @@ class RedisUUIDHashTestCase(DatatypesTestCase):
         self.assertEqual(h1.get_dict(), h2.get_dict())
 
 
-class RedisSetTestCase(DatatypesTestCase):
+class RedisSetTestCase(BackendRedisTestCase):
 
     def setUp(self):
         super(RedisSetTestCase, self).setUp()
@@ -615,7 +627,7 @@ class RedisSetTestCase(DatatypesTestCase):
         self.assertEqual((v1 - v2 - v3), s.get_set())
 
 
-class RedisUUIDSetTestCase(DatatypesTestCase):
+class RedisUUIDSetTestCase(BackendRedisTestCase):
 
     def setUp(self):
         super(RedisUUIDSetTestCase, self).setUp()
