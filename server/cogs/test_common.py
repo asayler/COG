@@ -28,6 +28,8 @@ USER_TESTDICT        = {'username': "testuser",
                         'last': "User",
                         'auth': "moodle"}
 
+GROUP_TESTDICT        = {'name': "testgroup"}
+
 TEST_TESTDICT        = {'name': "Test_Assignment",
                         'contact': "Andy Sayler",
                         'type': "script",

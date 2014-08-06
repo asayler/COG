@@ -64,6 +64,16 @@ class Server(object):
     def list_users(self):
         return self.UserFactory.list_siblings()
 
+    # Group Methods
+    def create_group(self, d):
+        return self.GroupFactory.from_new(d)
+    def get_group(self, uuid_hex):
+        return self.GroupFactory.from_existing(uuid_hex)
+    def get_groups(self):
+        return self.GroupFactory.get_siblings()
+    def list_groups(self):
+        return self.GroupFactory.list_siblings()
+
 
 ### COGS Base Objects ###
 
@@ -101,7 +111,7 @@ class GroupBase(backend.TSHashBase):
         """Base Constructor"""
 
         # Call Parent Construtor
-        super(GrouptBase, self).__init__(uuid_obj)
+        super(GroupBase, self).__init__(uuid_obj)
 
         # Setup Lists
         sf = backend.Factory(UserListBase, prefix=self.full_key, db=self.db)

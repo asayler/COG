@@ -95,6 +95,11 @@ class ServerTestCase(TypesTestCase):
                                  self.srv.list_users,
                                  test_common.USER_TESTDICT)
 
+    def test_groups(self):
+        self.subHashDirectHelper(self.srv.create_group,
+                                 self.srv.list_groups,
+                                 test_common.GROUP_TESTDICT)
+
 
 class UserTestCase(TypesTestCase):
 
@@ -113,6 +118,25 @@ class UserTestCase(TypesTestCase):
         self.hashGetHelper(self.srv.create_user,
                            self.srv.get_user,
                            test_common.USER_TESTDICT)
+
+
+class GroupTestCase(TypesTestCase):
+
+    def setUp(self):
+        super(GroupTestCase, self).setUp()
+        self.srv = structs.Server(self.db)
+
+    def tearDown(self):
+        super(GroupTestCase, self).tearDown()
+
+    def test_create_group(self):
+        self.hashCreateHelper(self.srv.create_group,
+                              test_common.GROUP_TESTDICT)
+
+    def test_get_group(self):
+        self.hashGetHelper(self.srv.create_group,
+                           self.srv.get_group,
+                           test_common.GROUP_TESTDICT)
 
 
 class AssignmentTestCase(TypesTestCase):
