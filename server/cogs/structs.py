@@ -10,7 +10,7 @@ from backend_redis import BackendError, FactoryError, ObjectError, ObjectDNE
 
 
 _TS_SCHEMA = ['created_time', 'modified_time']
-_USER_SCHEMA = ['username', 'first', 'last', 'type']
+_USER_SCHEMA = ['username', 'first', 'last', 'auth']
 _GROUP_SCHEMA = ['name']
 _COL_PERMISSION_SCHEMA = ['create', 'list']
 _OBJ_PERMISSION_SCHEMA = ['read', 'write', 'delete']

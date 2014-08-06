@@ -26,7 +26,7 @@ ASSIGNMENT_TESTDICT  = {'name': "Test_Assignment",
 USER_TESTDICT        = {'username': "testuser",
                         'first': "Test",
                         'last': "User",
-                        'type': "moodle"}
+                        'auth': "moodle"}
 
 TEST_TESTDICT        = {'name': "Test_Assignment",
                         'contact': "Andy Sayler",
