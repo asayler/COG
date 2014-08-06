@@ -11,7 +11,7 @@ from backend_redis import BackendError, FactoryError, ObjectError, ObjectDNE
 
 _TS_SCHEMA = ['created_time', 'modified_time']
 _USER_SCHEMA = ['username', 'first', 'last', 'type']
-_GROUP_SCHEMA = ['name', 'members']
+_GROUP_SCHEMA = ['name']
 _COL_PERMISSION_SCHEMA = ['create', 'list']
 _OBJ_PERMISSION_SCHEMA = ['read', 'write', 'delete']
 _ASSIGNMENT_SCHEMA = ['name', 'contact', 'permissions']
@@ -42,6 +42,7 @@ class Server(object):
         # Setup Factories
         self.AssignmentFactory = backend.UUIDFactory(AssignmentBase, db=db)
         self.UserFactory = backend.UUIDFactory(UserBase, db=db)
+        self.GroupFactory = backend.UUIDFactory(GroupBase, db=db)
 
     # Assignment Methods
     def create_assignment(self, d):
@@ -76,6 +77,56 @@ class UserBase(backend.TSHashBase):
     schema = set(_TS_SCHEMA + _USER_SCHEMA)
 
 
+## User List Object ##
+class UserListBase(backend.SetBase):
+    """
+    COGS User Class
+
+    """
+
+    pass
+
+
+## User Group Object ##
+class GroupBase(backend.TSHashBase):
+    """
+    COGS Group Class
+
+    """
+
+    schema = set(_TS_SCHEMA + _GROUP_SCHEMA)
+
+    # # Override Constructor
+    # def __init__(self, uuid_obj):
+    #     """Base Constructor"""
+
+    #     # Call Parent Construtor
+    #     super(GrouptBase, self).__init__(uuid_obj)
+
+    #     # Setup Factories
+    #     self.users = backend.Factory(UserListBase, prefix=self.full_key, db=self.db).
+
+    # # Override New Constructor
+    # @classmethod
+    # def from_new(cls, d, key=None):
+    #     """New Constructor"""
+
+    #     # Call Parent New Construtor
+    #     obj = super(GrouptBase, cls).from_new(d, key=key)
+
+    #     # Setup Members List
+    #     obj.members = backend.Factory(UserListBase, prefix=self.full_key, db=self.db).from_new()
+
+
+    # Members Methods
+    def add_users(self, users):
+        return self.members.add_vals(users)
+    def del_users(self, users):
+        return self.members.del_vals(users)
+    def get_users(self):
+        return self.members.get_set()
+
+
 ## Assignment Object ##
 class AssignmentBase(backend.TSHashBase):
     """
@@ -86,11 +137,11 @@ class AssignmentBase(backend.TSHashBase):
     schema = set(_TS_SCHEMA + _ASSIGNMENT_SCHEMA)
 
     # Override Constructor
-    def __init__(self, uuid_obj):
+    def __init__(self, key=None):
         """Base Constructor"""
 
         # Call Parent Construtor
-        super(AssignmentBase, self).__init__(uuid_obj)
+        super(AssignmentBase, self).__init__(key)
 
         # Setup Factories
         self.TestFactory = backend.UUIDFactory(TestBase, prefix=self.full_key, db=self.db)
@@ -144,9 +195,9 @@ class TestBase(backend.TSHashBase):
     schema = set(_TS_SCHEMA + _TEST_SCHEMA)
 
     # Override Constructor
-    def __init__(self, uuid_obj):
+    def __init__(self, key=None):
         """Base Constructor"""
-        super(TestBase, self).__init__(uuid_obj)
+        super(TestBase, self).__init__(key)
         self.FileFactory = backend.UUIDFactory(FileBase, prefix=self.full_key, db=self.db)
 
     # Override Delete
@@ -182,9 +233,9 @@ class SubmissionBase(backend.TSHashBase):
     schema = set(_TS_SCHEMA + _SUBMISSION_SCHEMA)
 
     # Override Constructor
-    def __init__(self, uuid_obj):
+    def __init__(self, key=None):
         """Base Constructor"""
-        super(SubmissionBase, self).__init__(uuid_obj)
+        super(SubmissionBase, self).__init__(key)
         self.FileFactory = backend.UUIDFactory(FileBase, prefix=self.full_key, db=self.db)
         self.RunFactory = backend.UUIDFactory(RunBase, prefix=self.full_key, db=self.db)
 
