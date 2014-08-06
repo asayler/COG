@@ -84,8 +84,16 @@ class Factory(backend.Factory):
 class UUIDFactory(Factory):
 
     def from_new(self, *args, **kwargs):
-        k = uuid.uuid4()
-        return super(UUIDFactory, self).from_new(*args, key=k, **kwargs)
+        key = uuid.uuid4()
+        obj = super(UUIDFactory, self).from_new(*args, key=key, **kwargs)
+        obj.uuid = key
+        return obj
+
+    def from_existing(self, uuid_str, *args, **kwargs):
+        key = uuid.UUID(uuid_str)
+        obj = super(UUIDFactory, self).from_existing(key, *args, **kwargs)
+        obj.uuid = key
+        return obj
 
 
 class HashBase(ObjectBase):

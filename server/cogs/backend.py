@@ -219,10 +219,13 @@ class Factory(object):
 
 class UUIDFactory(Factory):
 
+    @abc.abstractmethod
     def from_new(self, *args, **kwargs):
-        k = uuid.uuid4()
-        return super(UUIDFactory, self).from_new(*args, key=k, **kwargs)
+        pass
 
+    @abc.abstractmethod
+    def from_existing(self, *args, **kwargs):
+        pass
 
 class HashBase(ObjectBase):
     """

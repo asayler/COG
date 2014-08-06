@@ -44,7 +44,7 @@ class ServerTestCase(TypesTestCase):
             d = copy.deepcopy(test_common.ASSIGNMENT_TESTDICT)
             for k in d:
                 d[k] = "{:s}_test_{:02d}".format(d[k], i)
-            assignments_in.add(self.s.create_assignment(d).obj_key)
+            assignments_in.add(str(self.s.create_assignment(d).uuid))
 
         # List Assignments
         assignments_out = self.s.list_assignments()
@@ -95,7 +95,7 @@ class AssignmentTestCase(TypesTestCase):
         # Test Valid UUID
         d = copy.deepcopy(test_common.ASSIGNMENT_TESTDICT)
         asn1 = self.srv.create_assignment(d)
-        asn1_uuid = asn1.obj_key
+        asn1_uuid = asn1.uuid
         asn2 = self.srv.get_assignment(asn1_uuid)
         self.assertEqual(asn1, asn2)
 
@@ -144,7 +144,7 @@ class TestTestCase(TypesTestCase):
         # Test Valid UUID
         d = copy.deepcopy(test_common.TEST_TESTDICT)
         tst1 = self.asn.create_test(d)
-        tst1_uuid = tst1.obj_key
+        tst1_uuid = tst1.uuid
         tst2 = self.asn.get_test(tst1_uuid)
         self.assertEqual(tst1, tst2)
 

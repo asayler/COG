@@ -10,14 +10,8 @@ import json
 import unittest
 import uuid
 
-import redis
-
 import cogs_api
 import cogs.test_common as test_common
-
-_REDIS_CONF_TEST = {'redis_host': "localhost",
-                    'redis_port': 6379,
-                    'redis_db': 5}
 
 
 class CogsApiTestCase(test_common.CogsTestCase):
@@ -245,9 +239,6 @@ class CogsApiTestTestCase(CogsApiTestHelpers):
         self.asn_uuid = self.create_assignment()
 
     def tearDown(self):
-
-        # Delete Assignment
-        self.delete_assignment(self.asn_uuid)
 
         # Call Parent tearDown()
         super(CogsApiTestTestCase, self).tearDown()

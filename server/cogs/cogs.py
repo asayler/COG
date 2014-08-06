@@ -167,9 +167,9 @@ class TestBase(backend.TSHashBase):
     def get_file(self, uuid_hex):
         return self.FileFactory.from_existing(uuid_hex)
     def get_files(self):
-        return self.FileFactory.get_objs()
+        return self.FileFactory.get_siblings()
     def list_files(self):
-        return self.FileFactory.list_objs()
+        return self.FileFactory.list_siblings()
 
 
 ## Assignment Submission Object ##
@@ -211,9 +211,9 @@ class SubmissionBase(backend.TSHashBase):
     def get_file(self, uuid_hex):
         return self.FileFactory.from_existing(uuid_hex)
     def get_files(self):
-        return self.FileFactory.get_objs()
+        return self.FileFactory.get_siblings()
     def list_files(self):
-        return self.FileFactory.list_objs()
+        return self.FileFactory.list_siblings()
 
     # Run Methods
     def execute_run(self, tst, sub):
@@ -221,9 +221,9 @@ class SubmissionBase(backend.TSHashBase):
     def get_run(self, uuid_hex):
         return self.RunFactory.from_existing(uuid_hex)
     def get_runs(self):
-        return self.RunFactory.get_objs()
+        return self.RunFactory.get_siblings()
     def list_runs(self):
-        return self.RunFactory.list_objs()
+        return self.RunFactory.list_siblings()
 
 
 ## Test Run Object ##
