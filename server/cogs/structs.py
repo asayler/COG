@@ -96,27 +96,16 @@ class GroupBase(backend.TSHashBase):
 
     schema = set(_TS_SCHEMA + _GROUP_SCHEMA)
 
-    # # Override Constructor
-    # def __init__(self, uuid_obj):
-    #     """Base Constructor"""
+    # Override Constructor
+    def __init__(self, uuid_obj):
+        """Base Constructor"""
 
-    #     # Call Parent Construtor
-    #     super(GrouptBase, self).__init__(uuid_obj)
+        # Call Parent Construtor
+        super(GrouptBase, self).__init__(uuid_obj)
 
-    #     # Setup Factories
-    #     self.users = backend.Factory(UserListBase, prefix=self.full_key, db=self.db).
-
-    # # Override New Constructor
-    # @classmethod
-    # def from_new(cls, d, key=None):
-    #     """New Constructor"""
-
-    #     # Call Parent New Construtor
-    #     obj = super(GrouptBase, cls).from_new(d, key=key)
-
-    #     # Setup Members List
-    #     obj.members = backend.Factory(UserListBase, prefix=self.full_key, db=self.db).from_new()
-
+        # Setup Lists
+        sf = backend.Factory(UserListBase, prefix=self.full_key, db=self.db)
+        self.members = sf.from_raw('members')
 
     # Members Methods
     def add_users(self, users):
