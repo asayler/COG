@@ -39,6 +39,37 @@ class TypesTestCase(test_common.CogsTestCase):
         objects_out = hash_list()
         self.assertEqual(objects_in, objects_out)
 
+    def subSetReferenceHelper(self, set_add, set_rem, set_list, uuid_objs):
+
+        # List Objects (Empty DB)
+        objects_out = set_list()
+        self.assertEqual(set([]), objects_out)
+
+        # Add Set
+        objects_in = set([str(o.uuid) for o in uuid_objs])
+        self.assertEqual(set_add(objects_in), len(objects_in))
+
+        # List Objects
+        objects_out = set_list()
+        self.assertEqual(objects_in, objects_out)
+
+        # Remove Some Objects
+        for i in range(5):
+            k = objects_in.pop()
+            self.assertEqual(set_rem(set([k])), 1)
+
+        # List Objects
+        objects_out = set_list()
+        self.assertEqual(objects_in, objects_out)
+
+        # Remove Remaining Objects
+        self.assertEqual(set_rem(objects_in), len(objects_in))
+
+        # List Objects (Empty List)
+        objects_out = set_list()
+        self.assertEqual(set([]), objects_out)
+
+
     def hashCreateHelper(self, hash_create, input_dict):
 
         # Test Empty Dict
@@ -125,6 +156,12 @@ class GroupTestCase(TypesTestCase):
     def setUp(self):
         super(GroupTestCase, self).setUp()
         self.srv = structs.Server(self.db)
+        self.users = set([])
+        for i in range(10):
+            d = copy.copy(test_common.USER_TESTDICT)
+            for k in d:
+                d[k] = "test_{:s}_{:02d}".format(k, i)
+            self.users.add(self.srv.create_user(d))
 
     def tearDown(self):
         super(GroupTestCase, self).tearDown()
@@ -137,6 +174,10 @@ class GroupTestCase(TypesTestCase):
         self.hashGetHelper(self.srv.create_group,
                            self.srv.get_group,
                            test_common.GROUP_TESTDICT)
+
+    def test_members(self):
+        grp = self.srv.create_group(test_common.GROUP_TESTDICT)
+        self.subSetReferenceHelper(grp.add_users, grp.rem_users, grp.list_users, self.users)
 
 
 class AssignmentTestCase(TypesTestCase):

@@ -118,11 +118,11 @@ class GroupBase(backend.TSHashBase):
         self.members = sf.from_raw('members')
 
     # Members Methods
-    def add_users(self, users):
-        return self.members.add_vals(users)
-    def del_users(self, users):
-        return self.members.del_vals(users)
-    def get_users(self):
+    def add_users(self, user_uuids):
+        return self.members.add_vals(user_uuids)
+    def rem_users(self, user_uuids):
+        return self.members.del_vals(user_uuids)
+    def list_users(self):
         return self.members.get_set()
 
 
