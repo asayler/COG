@@ -31,7 +31,7 @@ class ServerTestCase(TypesTestCase):
         del(self.s)
         super(ServerTestCase, self).tearDown()
 
-    def test_list_assignments(self):
+    def test_assignments(self):
 
         assignments_in = set([])
 
@@ -39,7 +39,7 @@ class ServerTestCase(TypesTestCase):
         assignments_out = self.s.list_assignments()
         self.assertEqual(assignments_in, assignments_out)
 
-        # Generate 10 Assingments
+        # Generate 10 Assignments
         for i in range(10):
             d = copy.deepcopy(test_common.ASSIGNMENT_TESTDICT)
             for k in d:
@@ -49,6 +49,25 @@ class ServerTestCase(TypesTestCase):
         # List Assignments
         assignments_out = self.s.list_assignments()
         self.assertEqual(assignments_in, assignments_out)
+
+    def test_users(self):
+
+        users_in = set([])
+
+        # List Users (Empty DB)
+        users_out = self.s.list_users()
+        self.assertEqual(users_in, users_out)
+
+        # Generate 10 Users
+        for i in range(10):
+            d = copy.deepcopy(test_common.USER_TESTDICT)
+            for k in d:
+                d[k] = "{:s}_test_{:02d}".format(d[k], i)
+            users_in.add(str(self.s.create_user(d).uuid))
+
+        # List Users
+        users_out = self.s.list_users()
+        self.assertEqual(users_in, users_out)
 
 
 class AssignmentTestCase(TypesTestCase):

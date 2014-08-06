@@ -23,6 +23,11 @@ ASSIGNMENT_TESTDICT  = {'name': "Test_Assignment",
                         'contact': "Andy Sayler",
                         'permissions': '01c47915-4777-11d8-bc70-0090272ff725'}
 
+USER_TESTDICT        = {'username': "testuser",
+                        'first': "Test",
+                        'last': "User",
+                        'type': "moodle"}
+
 TEST_TESTDICT        = {'name': "Test_Assignment",
                         'contact': "Andy Sayler",
                         'type': "script",
