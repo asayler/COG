@@ -90,7 +90,7 @@ class UUIDFactory(Factory):
         return obj
 
     def from_existing(self, uuid_str, *args, **kwargs):
-        key = uuid.UUID(uuid_str)
+        key = uuid.UUID(str(uuid_str))
         obj = super(UUIDFactory, self).from_existing(key, *args, **kwargs)
         obj.uuid = key
         return obj
