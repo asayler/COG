@@ -10,7 +10,7 @@ import time
 import flask
 import redis
 
-import cogs.cogs as datatypes
+import cogs.structs
 
 ### Constants ###
 
@@ -52,7 +52,7 @@ def get_root():
 def process_assignments():
 
     # Create Server
-    srv = datatypes.Server(db)
+    srv = cogs.structs.Server(db)
 
     # Process
     if flask.request.method == 'GET':
@@ -83,12 +83,12 @@ def process_assignments():
 def process_assignment(uuid_hex):
 
     # Create Server
-    s = datatypes.Server(db)
+    s = cogs.structs.Server(db)
 
     # Get Assignment
     try:
         a = s.get_assignment(uuid_hex)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -131,12 +131,12 @@ def process_assignment(uuid_hex):
 def process_tests(asn_uuid):
 
     # Create Server
-    srv = datatypes.Server(db)
+    srv = cogs.structs.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -172,12 +172,12 @@ def process_tests(asn_uuid):
 def process_test(asn_uuid, tst_uuid):
 
     # Create Server
-    srv = datatypes.Server(db)
+    srv = cogs.structs.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -187,7 +187,7 @@ def process_test(asn_uuid, tst_uuid):
     # Get Test
     try:
         tst = asn.get_test(tst_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -229,12 +229,12 @@ def process_test(asn_uuid, tst_uuid):
 def process_test_files(asn_uuid, tst_uuid):
 
     # Create Server
-    srv = datatypes.Server(db)
+    srv = cogs.structs.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -244,7 +244,7 @@ def process_test_files(asn_uuid, tst_uuid):
     # Get Test
     try:
         tst = asn.get_test(tst_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -286,12 +286,12 @@ def process_test_files(asn_uuid, tst_uuid):
 def process_test_file(asn_uuid, tst_uuid, fle_uuid):
 
     # Create Server
-    srv = datatypes.Server(db)
+    srv = cogs.structs.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -301,7 +301,7 @@ def process_test_file(asn_uuid, tst_uuid, fle_uuid):
     # Get Test
     try:
         tst = asn.get_test(tst_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -311,7 +311,7 @@ def process_test_file(asn_uuid, tst_uuid, fle_uuid):
     # Get File
     try:
         fle = tst.get_file(fle_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -340,12 +340,12 @@ def process_test_file(asn_uuid, tst_uuid, fle_uuid):
 def process_submissions(asn_uuid):
 
     # Create Server
-    srv = datatypes.Server(db)
+    srv = cogs.structs.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -381,12 +381,12 @@ def process_submissions(asn_uuid):
 def process_submission(asn_uuid, sub_uuid):
 
     # Create Server
-    srv = datatypes.Server(db)
+    srv = cogs.structs.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -396,7 +396,7 @@ def process_submission(asn_uuid, sub_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -438,12 +438,12 @@ def process_submission(asn_uuid, sub_uuid):
 def process_submission_files(asn_uuid, sub_uuid):
 
     # Create Server
-    srv = datatypes.Server(db)
+    srv = cogs.structs.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -453,7 +453,7 @@ def process_submission_files(asn_uuid, sub_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -495,12 +495,12 @@ def process_submission_files(asn_uuid, sub_uuid):
 def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
 
     # Create Server
-    srv = datatypes.Server(db)
+    srv = cogs.structs.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -510,7 +510,7 @@ def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -520,7 +520,7 @@ def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
     # Get File
     try:
         fle = sub.get_file(fle_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -549,12 +549,12 @@ def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
 def process_runs(asn_uuid, sub_uuid):
 
     # Create Server
-    srv = datatypes.Server(db)
+    srv = cogs.structs.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -564,7 +564,7 @@ def process_runs(asn_uuid, sub_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -603,12 +603,12 @@ def process_runs(asn_uuid, sub_uuid):
 def process_run(asn_uuid, sub_uuid, run_uuid):
 
     # Create Server
-    srv = datatypes.Server(db)
+    srv = cogs.structs.Server(db)
 
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -618,7 +618,7 @@ def process_run(asn_uuid, sub_uuid, run_uuid):
     # Get Submission
     try:
         sub = asn.get_submission(sub_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)
@@ -628,7 +628,7 @@ def process_run(asn_uuid, sub_uuid, run_uuid):
     # Get Run
     try:
         run = sub.get_run(run_uuid)
-    except datatypes.ObjectDNE as e:
+    except cogs.structs.ObjectDNE as e:
         err = { 'status': 404,
                 'message': str(e) }
         err_res = flask.jsonify(err)

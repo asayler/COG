@@ -10,16 +10,16 @@ import json
 import unittest
 import uuid
 
-import cogs_api
-import cogs.test_common as test_common
+import api
+import cogs.test_common
 
 
-class CogsApiTestCase(test_common.CogsTestCase):
+class CogsApiTestCase(cogs.test_common.CogsTestCase):
 
     def setUp(self):
         super(CogsApiTestCase, self).setUp()
-        cogs_api.db = self.db
-        self.app = cogs_api.app.test_client()
+        api.db = self.db
+        self.app = api.app.test_client()
 
     def tearDown(self):
         super(CogsApiTestCase, self).tearDown()
@@ -37,15 +37,15 @@ class CogsApiAssignmentHelpers(CogsApiTestCase):
         # List Assignments
         res = self.app.get('/assignments/')
         self.assertEqual(res.status_code, 200)
-        asn_lst = json.loads(res.data)[cogs_api._ASSIGNMENTS_KEY]
+        asn_lst = json.loads(res.data)[api._ASSIGNMENTS_KEY]
         return set(asn_lst)
 
-    def create_assignment(self, d=test_common.ASSIGNMENT_TESTDICT):
+    def create_assignment(self, d=cogs.test_common.ASSIGNMENT_TESTDICT):
         # Create Assignment
         ds = json.dumps(d)
         res = self.app.post('/assignments/', data=ds)
         self.assertEqual(res.status_code, 200)
-        asn_lst = json.loads(res.data)[cogs_api._ASSIGNMENTS_KEY]
+        asn_lst = json.loads(res.data)[api._ASSIGNMENTS_KEY]
         self.assertEqual(len(asn_lst), 1)
         asn_uuid = uuid.UUID(asn_lst[0])
         self.assertTrue(asn_uuid)
@@ -60,7 +60,7 @@ class CogsApiAssignmentHelpers(CogsApiTestCase):
         self.assertEqual(asn_uuid, asn_out_uuid)
         return asn_out
 
-    def set_assignment(self, asn_uuid, d=test_common.ASSIGNMENT_TESTDICT):
+    def set_assignment(self, asn_uuid, d=cogs.test_common.ASSIGNMENT_TESTDICT):
         # Set Assignment
         ds = json.dumps(d)
         res = self.app.put('/assignments/{:s}/'.format(asn_uuid), data=ds)
@@ -87,15 +87,15 @@ class CogsApiTestHelpers(CogsApiAssignmentHelpers):
         # List Tests
         res = self.app.get('/assignments/{:s}/tests/'.format(self.asn_uuid))
         self.assertEqual(res.status_code, 200)
-        tst_lst = json.loads(res.data)[cogs_api._TESTS_KEY]
+        tst_lst = json.loads(res.data)[api._TESTS_KEY]
         return set(tst_lst)
 
-    def create_test(self, d=test_common.TEST_TESTDICT):
+    def create_test(self, d=cogs.test_common.TEST_TESTDICT):
         # Create Test
         ds = json.dumps(d)
         res = self.app.post('/assignments/{:s}/tests/'.format(self.asn_uuid), data=ds)
         self.assertEqual(res.status_code, 200)
-        tst_lst = json.loads(res.data)[cogs_api._TESTS_KEY]
+        tst_lst = json.loads(res.data)[api._TESTS_KEY]
         self.assertEqual(len(tst_lst), 1)
         tst_uuid = uuid.UUID(tst_lst[0])
         self.assertTrue(tst_uuid)
@@ -110,7 +110,7 @@ class CogsApiTestHelpers(CogsApiAssignmentHelpers):
         self.assertEqual(tst_uuid, tst_out_uuid)
         return tst_out
 
-    def set_test(self, tst_uuid, d=test_common.TEST_TESTDICT):
+    def set_test(self, tst_uuid, d=cogs.test_common.TEST_TESTDICT):
         # Set Test
         ds = json.dumps(d)
         res = self.app.put('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid), data=ds)
@@ -137,7 +137,7 @@ class CogsApiRootTestCase(CogsApiTestCase):
     def test_root_get(self):
         res = self.app.get('/')
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.data, cogs_api._MSG_ROOT)
+        self.assertEqual(res.data, api._MSG_ROOT)
 
 
 ## Assignment Tests
@@ -158,22 +158,22 @@ class CogsApiAssignmentTestCase(CogsApiAssignmentHelpers):
     def test_get_assignment(self):
 
         # Create Assignment
-        asn_uuid = self.create_assignment(test_common.ASSIGNMENT_TESTDICT)
+        asn_uuid = self.create_assignment(cogs.test_common.ASSIGNMENT_TESTDICT)
 
         # Get Assignment
         asn = self.get_assignment(asn_uuid)
-        self.assertSubset(test_common.ASSIGNMENT_TESTDICT, asn[str(asn_uuid)])
+        self.assertSubset(cogs.test_common.ASSIGNMENT_TESTDICT, asn[str(asn_uuid)])
 
     def test_set_assignment(self):
 
         # Create Assignment
-        asn_uuid = self.create_assignment(test_common.ASSIGNMENT_TESTDICT)
+        asn_uuid = self.create_assignment(cogs.test_common.ASSIGNMENT_TESTDICT)
 
         # Update Assignment
-        d = copy.deepcopy(test_common.ASSIGNMENT_TESTDICT)
+        d = copy.deepcopy(cogs.test_common.ASSIGNMENT_TESTDICT)
         for k in d:
             d[k] = d[k] + "_update"
-        self.assertNotEqual(test_common.ASSIGNMENT_TESTDICT, d)
+        self.assertNotEqual(cogs.test_common.ASSIGNMENT_TESTDICT, d)
         asn = self.set_assignment(asn_uuid, d)
         self.assertSubset(d, asn[str(asn_uuid)])
 
@@ -184,7 +184,7 @@ class CogsApiAssignmentTestCase(CogsApiAssignmentHelpers):
     def test_delete_assignment(self):
 
         # Create Assignment
-        asn_uuid = self.create_assignment(test_common.ASSIGNMENT_TESTDICT)
+        asn_uuid = self.create_assignment(cogs.test_common.ASSIGNMENT_TESTDICT)
 
         # Get Assignment
         res = self.app.get('/assignments/{:s}/'.format(asn_uuid))
@@ -207,7 +207,7 @@ class CogsApiAssignmentTestCase(CogsApiAssignmentHelpers):
 
         # Create Assignments
         for i in range(10):
-            d = copy.deepcopy(test_common.ASSIGNMENT_TESTDICT)
+            d = copy.deepcopy(cogs.test_common.ASSIGNMENT_TESTDICT)
             for k in d:
                 d[k] = d[k] + "_{:02d}".format(i)
             asn_uuid = self.create_assignment(d)
@@ -252,22 +252,22 @@ class CogsApiTestTestCase(CogsApiTestHelpers):
     def test_get_test(self):
 
         # Create Test
-        tst_uuid = self.create_test(test_common.TEST_TESTDICT)
+        tst_uuid = self.create_test(cogs.test_common.TEST_TESTDICT)
 
         # Get Test
         tst = self.get_test(tst_uuid)
-        self.assertSubset(test_common.TEST_TESTDICT, tst[str(tst_uuid)])
+        self.assertSubset(cogs.test_common.TEST_TESTDICT, tst[str(tst_uuid)])
 
     def test_set_test(self):
 
         # Create Test
-        tst_uuid = self.create_test(test_common.TEST_TESTDICT)
+        tst_uuid = self.create_test(cogs.test_common.TEST_TESTDICT)
 
         # Update Test
-        d = copy.deepcopy(test_common.TEST_TESTDICT)
+        d = copy.deepcopy(cogs.test_common.TEST_TESTDICT)
         for k in d:
             d[k] = d[k] + "_update"
-        self.assertNotEqual(test_common.TEST_TESTDICT, d)
+        self.assertNotEqual(cogs.test_common.TEST_TESTDICT, d)
         tst = self.set_test(tst_uuid, d)
         self.assertSubset(d, tst[str(tst_uuid)])
 
@@ -278,7 +278,7 @@ class CogsApiTestTestCase(CogsApiTestHelpers):
     def test_delete_test(self):
 
         # Create Test
-        tst_uuid = self.create_test(test_common.TEST_TESTDICT)
+        tst_uuid = self.create_test(cogs.test_common.TEST_TESTDICT)
 
         # Get Test
         res = self.app.get('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid))
@@ -301,7 +301,7 @@ class CogsApiTestTestCase(CogsApiTestHelpers):
 
         # Create Tests
         for i in range(10):
-            d = copy.deepcopy(test_common.TEST_TESTDICT)
+            d = copy.deepcopy(cogs.test_common.TEST_TESTDICT)
             for k in d:
                 d[k] = d[k] + "_{:02d}".format(i)
             tst_uuid = self.create_test(d)
