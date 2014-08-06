@@ -136,6 +136,7 @@ class ObjectBase(object):
         """Existing Constructor"""
         return cls(key)
 
+    @classmethod
     def from_raw(cls, key=None):
         """Raw Constructor"""
         return cls(key)
@@ -231,7 +232,11 @@ class UUIDFactory(Factory):
         pass
 
     @abc.abstractmethod
-    def from_existing(self, *args, **kwargs):
+    def from_existing(self, uuid_str, *args, **kwargs):
+        pass
+
+    @abc.abstractmethod
+    def from_raw(self, uuid_str, *args, **kwargs):
         pass
 
 

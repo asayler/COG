@@ -95,8 +95,11 @@ class UUIDFactory(Factory):
         obj.uuid = key
         return obj
 
-    def from_raw(self, *args, **kwargs):
-        raise NotImplementedError("UUID Factory does not support from_raw()")
+    def from_raw(self, uuid_str, *args, **kwargs):
+        key = uuid.UUID(str(uuid_str))
+        obj = super(UUIDFactory, self).from_raw(*args, key=key, **kwargs)
+        obj.uuid = key
+        return obj
 
 
 class HashBase(ObjectBase):
@@ -139,9 +142,6 @@ class HashBase(ObjectBase):
                 raise KeyError("Key {:s} not valid in {:s}".format(k, self))
 
         ret = self.db.hget(self.full_key, k)
-        if not ret:
-            raise KeyError("Key {:s} not found in {:s}".format(k, self))
-
         return ret
 
     def __setitem__(self, k, v):
@@ -159,13 +159,14 @@ class HashBase(ObjectBase):
         """Get Full Dict"""
 
         ret = self.db.hgetall(self.full_key)
-        if not ret:
-            raise ObjectError("Get Failed")
-
         return ret
 
     def set_dict(self, d):
         """Set Full Dict"""
+
+        # Check Input
+        if not d:
+            raise ObjectError("Input dict must not be None or empty")
 
         if self.schema is not None:
             s = set(d.keys())

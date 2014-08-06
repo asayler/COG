@@ -67,6 +67,14 @@ class RedisObjectTestCase(BackendRedisTestCase):
         # Test Existing Object
         self.assertTrue(self.ObjFactory.from_existing(self.key))
 
+    def test_from_raw(self):
+
+        # Test Non-Existant Object
+        self.assertTrue(self.ObjFactory.from_existing(self.key))
+
+        # Test Existing Object
+        self.assertTrue(self.ObjFactory.from_existing(self.key))
+
     def test_str(self):
 
         # Test Not Equal
@@ -328,6 +336,26 @@ class RedisHashTestCase(BackendRedisTestCase):
         self.assertEqual(h1, h2)
         self.assertEqual(h1.get_dict(), h2.get_dict())
 
+    def test_from_raw(self):
+
+        # Create Key
+        k = "testkey_{:03d}".format(random.randint(0, 999))
+
+        # Test Non-Existant Object
+        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        h1 = self.HashFactory.from_raw(k)
+        self.assertFalse(h1.get_dict())
+        h1.set_dict(d)
+        self.assertSubset(d, h1.get_dict())
+
+        # Test Existing Object
+        h2 = self.HashFactory.from_raw(k)
+        self.assertSubset(d, h2.get_dict())
+
+        # Compare Objects
+        self.assertEqual(h1, h2)
+        self.assertEqual(h1.get_dict(), h2.get_dict())
+
     def test_get_dict(self):
 
         # Create Key
@@ -373,7 +401,7 @@ class RedisHashTestCase(BackendRedisTestCase):
         obj = self.HashFactory.from_new(d, k)
 
         # Test Bad Key
-        self.assertRaises(KeyError, get_item, obj, 'test')
+        self.assertFalse(obj['test'])
 
         # Test Good Keys
         for key in d:
@@ -573,6 +601,26 @@ class RedisSetTestCase(BackendRedisTestCase):
         s1 = self.SetFactory.from_new(v, k)
         self.assertEqual(v, s1.get_set())
         s2 = self.SetFactory.from_existing(k)
+        self.assertEqual(s1, s2)
+        self.assertEqual(s1.get_set(), s2.get_set())
+
+    def test_from_raw(self):
+
+        # Create Key
+        k = "testkey_{:03d}".format(random.randint(0, 999))
+
+        # Test Non-Existant Object
+        v = set(['a', 'b', 'c'])
+        s1 = self.SetFactory.from_raw(k)
+        self.assertFalse(s1.get_set())
+        s1.add_vals(v)
+        self.assertEqual(v, s1.get_set())
+
+        # Test Existing Object
+        s2 = self.SetFactory.from_raw(k)
+        self.assertEqual(v, s2.get_set())
+
+        # Compare Objects
         self.assertEqual(s1, s2)
         self.assertEqual(s1.get_set(), s2.get_set())
 
