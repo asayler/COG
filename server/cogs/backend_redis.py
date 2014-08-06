@@ -35,7 +35,7 @@ class ObjectBase(backend.ObjectBase):
         return obj
 
     @classmethod
-    def from_existing(cls, key):
+    def from_existing(cls, key=None):
         """Existing Constructor"""
 
         obj = super(ObjectBase, cls).from_existing(key)
@@ -91,9 +91,12 @@ class UUIDFactory(Factory):
 
     def from_existing(self, uuid_str, *args, **kwargs):
         key = uuid.UUID(str(uuid_str))
-        obj = super(UUIDFactory, self).from_existing(key, *args, **kwargs)
+        obj = super(UUIDFactory, self).from_existing(*args, key=key, **kwargs)
         obj.uuid = key
         return obj
+
+    def from_raw(self, *args, **kwargs):
+        raise NotImplementedError("UUID Factory does not support from_raw()")
 
 
 class HashBase(ObjectBase):
