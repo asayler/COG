@@ -20,54 +20,99 @@ class TypesTestCase(test_common.CogsTestCase):
     def tearDown(self):
         super(TypesTestCase, self).tearDown()
 
+    def subHashDirectHelper(self, hash_create, hash_list, input_dict):
+
+        objects_in = set([])
+
+        # List Objects (Empty DB)
+        objects_out = hash_list()
+        self.assertEqual(objects_in, objects_out)
+
+        # Generate 10 Objects
+        for i in range(10):
+            d = copy.copy(input_dict)
+            for k in d:
+                d[k] = "{:s}_test_{:02d}".format(d[k], i)
+            objects_in.add(str(hash_create(d).obj_key))
+
+        # List Objects
+        objects_out = hash_list()
+        self.assertEqual(objects_in, objects_out)
+
+    def hashCreateHelper(self, hash_create, input_dict):
+
+        # Test Empty Dict
+        d = {}
+        self.assertRaises(KeyError, hash_create, d)
+
+        # Test Bad Dict
+        d = {'badkey': "test"}
+        self.assertRaises(KeyError, hash_create, d)
+
+        # Test Sub Dict
+        d = copy.copy(input_dict)
+        d.pop(d.keys()[0])
+        self.assertRaises(KeyError, hash_create, d)
+
+        # Test Super Dict
+        d = copy.copy(input_dict)
+        d['badkey'] = "test"
+        self.assertRaises(KeyError, hash_create, d)
+
+    def hashGetHelper(self, hash_create, hash_get, input_dict):
+
+        # Test Invalid UUID
+        self.assertRaises(structs.ObjectDNE,
+                          hash_get,
+                          'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
+
+        # Test Valid UUID
+        d = copy.copy(input_dict)
+        obj1 = hash_create(d)
+        obj1_key = obj1.obj_key
+        obj2 = hash_get(obj1_key)
+        self.assertEqual(obj1, obj2)
+        self.assertEqual(obj1.get_dict(), obj2.get_dict())
+
 
 class ServerTestCase(TypesTestCase):
 
     def setUp(self):
         super(ServerTestCase, self).setUp()
-        self.s = structs.Server(db=self.db)
+        self.srv = structs.Server(db=self.db)
 
     def tearDown(self):
-        del(self.s)
+        del(self.srv)
         super(ServerTestCase, self).tearDown()
 
     def test_assignments(self):
-
-        assignments_in = set([])
-
-        # List Assignments (Empty DB)
-        assignments_out = self.s.list_assignments()
-        self.assertEqual(assignments_in, assignments_out)
-
-        # Generate 10 Assignments
-        for i in range(10):
-            d = copy.deepcopy(test_common.ASSIGNMENT_TESTDICT)
-            for k in d:
-                d[k] = "{:s}_test_{:02d}".format(d[k], i)
-            assignments_in.add(str(self.s.create_assignment(d).uuid))
-
-        # List Assignments
-        assignments_out = self.s.list_assignments()
-        self.assertEqual(assignments_in, assignments_out)
+        self.subHashDirectHelper(self.srv.create_assignment,
+                                 self.srv.list_assignments,
+                                 test_common.ASSIGNMENT_TESTDICT)
 
     def test_users(self):
+        self.subHashDirectHelper(self.srv.create_user,
+                                 self.srv.list_users,
+                                 test_common.USER_TESTDICT)
 
-        users_in = set([])
 
-        # List Users (Empty DB)
-        users_out = self.s.list_users()
-        self.assertEqual(users_in, users_out)
+class UserTestCase(TypesTestCase):
 
-        # Generate 10 Users
-        for i in range(10):
-            d = copy.deepcopy(test_common.USER_TESTDICT)
-            for k in d:
-                d[k] = "{:s}_test_{:02d}".format(d[k], i)
-            users_in.add(str(self.s.create_user(d).uuid))
+    def setUp(self):
+        super(UserTestCase, self).setUp()
+        self.srv = structs.Server(self.db)
 
-        # List Users
-        users_out = self.s.list_users()
-        self.assertEqual(users_in, users_out)
+    def tearDown(self):
+        super(UserTestCase, self).tearDown()
+
+    def test_create_user(self):
+        self.hashCreateHelper(self.srv.create_user,
+                              test_common.USER_TESTDICT)
+
+    def test_get_user(self):
+        self.hashGetHelper(self.srv.create_user,
+                           self.srv.get_user,
+                           test_common.USER_TESTDICT)
 
 
 class AssignmentTestCase(TypesTestCase):
@@ -80,43 +125,14 @@ class AssignmentTestCase(TypesTestCase):
         super(AssignmentTestCase, self).tearDown()
 
     def test_create_assignment(self):
-
-        # Test Empty Dict
-        d = {}
-        self.assertRaises(KeyError, self.srv.create_assignment, d)
-
-        # Test Bad Dict
-        d = {'test': "test"}
-        self.assertRaises(KeyError, self.srv.create_assignment, d)
-
-        # Test Sub Dict
-        d = copy.deepcopy(test_common.ASSIGNMENT_TESTDICT)
-        d.pop(d.keys()[0])
-        self.assertRaises(KeyError, self.srv.create_assignment, d)
-
-        # Test Super Dict
-        d = copy.deepcopy(test_common.ASSIGNMENT_TESTDICT)
-        d['test'] = "test"
-        self.assertRaises(KeyError, self.srv.create_assignment, d)
-
-        # Test Valid
-        d = copy.deepcopy(test_common.ASSIGNMENT_TESTDICT)
-        asn = self.srv.create_assignment(d)
-        self.assertSubset(d, asn.get_dict())
+        self.hashCreateHelper(self.srv.create_assignment,
+                              test_common.ASSIGNMENT_TESTDICT)
 
     def test_get_assignment(self):
+        self.hashGetHelper(self.srv.create_assignment,
+                           self.srv.get_assignment,
+                           test_common.ASSIGNMENT_TESTDICT)
 
-        # Test Invalid UUID
-        self.assertRaises(structs.ObjectDNE,
-                          self.srv.get_assignment,
-                          'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
-
-        # Test Valid UUID
-        d = copy.deepcopy(test_common.ASSIGNMENT_TESTDICT)
-        asn1 = self.srv.create_assignment(d)
-        asn1_uuid = asn1.uuid
-        asn2 = self.srv.get_assignment(asn1_uuid)
-        self.assertEqual(asn1, asn2)
 
 class TestTestCase(TypesTestCase):
 
@@ -129,43 +145,13 @@ class TestTestCase(TypesTestCase):
         super(TestTestCase, self).tearDown()
 
     def test_create_test(self):
-
-        # Test Empty Dict
-        d = {}
-        self.assertRaises(KeyError, self.asn.create_test, d)
-
-        # Test Bad Dict
-        d = {'test': "test"}
-        self.assertRaises(KeyError, self.asn.create_test, d)
-
-        # Test Sub Dict
-        d = copy.deepcopy(test_common.TEST_TESTDICT)
-        d.pop(d.keys()[0])
-        self.assertRaises(KeyError, self.asn.create_test, d)
-
-        # Test Super Dict
-        d = copy.deepcopy(test_common.TEST_TESTDICT)
-        d['test'] = "test"
-        self.assertRaises(KeyError, self.asn.create_test, d)
-
-        # Test Valid
-        d = copy.deepcopy(test_common.TEST_TESTDICT)
-        tst = self.asn.create_test(d)
-        self.assertSubset(d, tst.get_dict())
+        self.hashCreateHelper(self.asn.create_test,
+                              test_common.TEST_TESTDICT)
 
     def test_get_test(self):
-
-        # Test Invalid UUID
-        self.assertRaises(structs.ObjectDNE,
-                          self.asn.get_test,
-                          'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
-
-        # Test Valid UUID
-        d = copy.deepcopy(test_common.TEST_TESTDICT)
-        tst1 = self.asn.create_test(d)
-        tst1_uuid = tst1.uuid
-        tst2 = self.asn.get_test(tst1_uuid)
-        self.assertEqual(tst1, tst2)
+        self.hashGetHelper(self.asn.create_test,
+                           self.asn.get_test,
+                           test_common.TEST_TESTDICT)
 
 
 # Main
