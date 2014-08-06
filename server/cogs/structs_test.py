@@ -8,7 +8,7 @@
 import copy
 import unittest
 
-import cogs
+import structs
 import test_common
 
 
@@ -25,7 +25,7 @@ class ServerTestCase(TypesTestCase):
 
     def setUp(self):
         super(ServerTestCase, self).setUp()
-        self.s = cogs.Server(db=self.db)
+        self.s = structs.Server(db=self.db)
 
     def tearDown(self):
         del(self.s)
@@ -55,7 +55,7 @@ class AssignmentTestCase(TypesTestCase):
 
     def setUp(self):
         super(AssignmentTestCase, self).setUp()
-        self.srv = cogs.Server(self.db)
+        self.srv = structs.Server(self.db)
 
     def tearDown(self):
         super(AssignmentTestCase, self).tearDown()
@@ -88,7 +88,7 @@ class AssignmentTestCase(TypesTestCase):
     def test_get_assignment(self):
 
         # Test Invalid UUID
-        self.assertRaises(cogs.ObjectDNE,
+        self.assertRaises(structs.ObjectDNE,
                           self.srv.get_assignment,
                           'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
 
@@ -103,7 +103,7 @@ class TestTestCase(TypesTestCase):
 
     def setUp(self):
         super(TestTestCase, self).setUp()
-        self.srv = cogs.Server(self.db)
+        self.srv = structs.Server(self.db)
         self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT)
 
     def tearDown(self):
@@ -137,7 +137,7 @@ class TestTestCase(TypesTestCase):
     def test_get_test(self):
 
         # Test Invalid UUID
-        self.assertRaises(cogs.ObjectDNE,
+        self.assertRaises(structs.ObjectDNE,
                           self.asn.get_test,
                           'eb424026-6f54-4ef8-a4d0-bb658a1fc6cf')
 
