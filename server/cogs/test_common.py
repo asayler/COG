@@ -19,10 +19,6 @@ DUMMY_TESTDICT       = {'key1': "val1",
                         'key2': "val2",
                         'key3': "val3"}
 
-ASSIGNMENT_TESTDICT  = {'name': "Test_Assignment",
-                        'contact': "Andy Sayler",
-                        'permissions': '01c47915-4777-11d8-bc70-0090272ff725'}
-
 USER_TESTDICT        = {'username': "testuser",
                         'first': "Test",
                         'last': "User",
@@ -30,8 +26,11 @@ USER_TESTDICT        = {'username': "testuser",
 
 GROUP_TESTDICT        = {'name': "testgroup"}
 
-TEST_TESTDICT        = {'name': "Test_Assignment",
-                        'contact': "Andy Sayler",
+ASSIGNMENT_TESTDICT  = {'owner': "01c47915-4777-11d8-bc70-0090272ff725",
+                        'name': "Test_Assignment"}
+
+TEST_TESTDICT        = {'owner': "01c47915-4777-11d8-bc70-0090272ff725",
+                        'name': "Test_Assignment",
                         'type': "script",
                         'maxscore': "10"}
 

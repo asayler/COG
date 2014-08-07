@@ -14,13 +14,11 @@ from backend_redis import BackendError, FactoryError, ObjectError, ObjectDNE
 _TS_SCHEMA = ['created_time', 'modified_time']
 _USER_SCHEMA = ['username', 'first', 'last', 'auth']
 _GROUP_SCHEMA = ['name']
-_COL_PERMISSION_SCHEMA = ['create', 'list']
-_OBJ_PERMISSION_SCHEMA = ['read', 'write', 'delete']
-_ASSIGNMENT_SCHEMA = ['name', 'contact', 'permissions']
-_TEST_SCHEMA = ['name', 'contact', 'type', 'maxscore']
-_SUBMISSION_SCHEMA = ['author']
-_RUN_SCHEMA = ['test', 'status', 'score', 'output']
-_FILE_SCHEMA = ['key', 'name', 'type', 'encoding', 'path']
+_ASSIGNMENT_SCHEMA = ['owner', 'name']
+_TEST_SCHEMA = ['owner', 'name', 'type', 'maxscore']
+_SUBMISSION_SCHEMA = ['owner']
+_RUN_SCHEMA = ['owner', 'test', 'status', 'score', 'output']
+_FILE_SCHEMA = ['owner', 'key', 'name', 'type', 'encoding', 'path']
 
 _FILES_DIR = "./files/"
 
