@@ -5,6 +5,25 @@
 
 GET     /                                               <UNDEFINED>
 
+GET     */allow/<method>/                               List Allowed Groups (Specify Method)
+PUT     */allow/<method>/                               Add Allowed Groups (Specify Method)
+DELETE  */allow/<method>/                               Remove Allowed Groups (Specify Method)
+
+GET     /users/                                         List Users
+POST    /users/                                         Add User
+GET     /users/<ID>/                                    Show User
+PUT     /users/<ID>/                                    Update User
+DELETE  /users/<ID>/                                    Remove User
+
+GET     /groups/                                        List Groups
+POST    /groups/                                        Add Group
+GET     /groups/<ID>/                                   Show Group
+PUT     /groups/<ID>/                                   Update Group
+DELETE  /groups/<ID>/                                   Remove Group
+GET     /groups/<ID>/members/                           List Group Members
+PUT     /groups/<ID>/members/                           Add Group Members
+DELETE  /groups/<ID>/members/                           Delete Group Members
+
 GET     /assignments/                                   List Assignments
 POST    /assignments/                                   Add Assignment
 GET     /assignments/<ID>/                              Show Assignment
@@ -17,7 +36,6 @@ POST    /assignments/<ID>/submissions/                  Add Assignment Submissio
 
 GET     /submissions/                                   List All Submissions
 GET     /submissions/<ID>/                              Show Submission
-PUT     /submissions/<ID>/                              Update Submission
 DELETE  /submissions/<ID>/                              Delete Submission
 GET     /submissions/<ID>/files/                        List Submission Files
 POST    /submissions/<ID>/files/                        Add Submission File
@@ -26,7 +44,6 @@ POST    /submissions/<ID>/runs/                         Execute New Test Run
 
 GET     /tests/                                         List All Tests
 GET     /tests/<ID>/                                    Show Grading Test
-PUT     /tests/<ID>/                                    Update Grading Test
 DELETE  /tests/<ID>/                                    Remove Grading Test
 GET     /tests/<ID>/files/                              List Grading Test Files
 POST    /tests/<ID>/files/                              Add Grading Test File
@@ -37,5 +54,4 @@ DELETE  /runs/<ID>/                                     Delete Test Run Results
 
 GET     /files/                                         List All Files
 GET     /files/<ID>/                                    Show File
-PUT     /files/<ID>/                                    Update File
 DELETE  /files/<ID>/                                    Remove File
