@@ -80,39 +80,36 @@ class ObjectBase(object):
             if _TYPE_SEP in str(key):
                 raise ObjectError("Key may not contain '{:s}'".format(_TYPE_SEP))
 
-        # Save Object Key
+        # Save Object Keys
+        self.typ_str = str(type(self).__name__)
+        self.typ_key = self.typ_str
         if key:
             self.obj_key = str(key)
+            self.typ_key += "{:s}{:s}".format(_TYPE_SEP, self.obj_key)
         else:
             self.obj_key = ""
-        self.obj_rid = str(self)
 
         # Compute Full Key
         if self.pre_key and self.obj_key:
-            self.full_key = "{:s}{:s}{:s}".format(self.pre_key, _FIELD_SEP, self.obj_rid).lower()
+            self.full_key = "{:s}{:s}{:s}".format(self.pre_key, _FIELD_SEP, self.typ_key).lower()
         elif self.pre_key:
             self.full_key = "{:s}".format(self.pre_key).lower()
         elif self.obj_key:
-            self.full_key = "{:s}".format(self.obj_rid).lower()
+            self.full_key = "{:s}".format(self.typ_key).lower()
         else:
             raise ObjectError("Either pre_key or full_key required")
 
     def __unicode__(self):
         """Return Unicode Representation"""
-        u = u"{:s}".format(type(self).__name__)
-        if self.obj_key:
-            u += u"{:s}{:s}".format(_TYPE_SEP, self.obj_key)
-        return u
+        return unicode(self.typ_key)
 
     def __str__(self):
         """Return String Representation"""
-        s = unicode(self).encode(_ENCODING)
-        return s
+        return unicode(self).encode(_ENCODING)
 
     def __repr__(self):
         """Return Unique Representation"""
-        r = "{:s}".format(self.full_key)
-        return r
+        return "{:s}".format(self.full_key)
 
     def __hash__(self):
         """Return Hash"""
@@ -165,7 +162,7 @@ class Factory(object):
             raise FactoryError("cls name must end with '{:s}'".format(_SUF_BASE))
 
         # Setup Class Name
-        cls_name = base_name[0:base_name.rfind(_SUF_BASE)]
+        self.cls_name = base_name[0:base_name.rfind(_SUF_BASE)]
 
         # Setup DB
         self.db = db
@@ -181,7 +178,8 @@ class Factory(object):
             pre_key = self.pre_key
             db = self.db
 
-        cls.__name__ = cls_name
+        # Set Class Attributes and Return
+        cls.__name__ = self.cls_name
         self.cls = cls
 
     @abc.abstractmethod
