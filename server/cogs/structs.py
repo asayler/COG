@@ -4,6 +4,7 @@
 # Summer 2014
 # Univerity of Colorado
 
+import copy
 
 import auth
 
@@ -15,9 +16,9 @@ _TS_SCHEMA = ['created_time', 'modified_time']
 _USER_SCHEMA = ['username', 'first', 'last', 'auth']
 _GROUP_SCHEMA = ['name']
 _ASSIGNMENT_SCHEMA = ['owner', 'name']
-_TEST_SCHEMA = ['owner', 'name', 'type', 'maxscore']
-_SUBMISSION_SCHEMA = ['owner']
-_RUN_SCHEMA = ['owner', 'test', 'status', 'score', 'output']
+_TEST_SCHEMA = ['owner', 'assignment', 'name', 'type', 'maxscore']
+_SUBMISSION_SCHEMA = ['owner', 'assignment']
+_RUN_SCHEMA = ['owner', 'submission', 'test', 'status', 'score', 'output']
 _FILE_SCHEMA = ['owner', 'key', 'name', 'type', 'encoding', 'path']
 
 _FILES_DIR = "./files/"
@@ -44,26 +45,15 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
         self.srv = self
 
         # Setup Factories
-        self.AssignmentFactory = backend.UUIDFactory(AssignmentBase, db=self.db, srv=self.srv)
         self.UserFactory = backend.UUIDFactory(UserBase, db=self.db, srv=self.srv)
         self.GroupFactory = backend.UUIDFactory(GroupBase, db=self.db, srv=self.srv)
+        self.FileFactory = backend.UUIDFactory(FileBase, db=self.db, srv=self.srv)
+        self.AssignmentFactory = backend.UUIDFactory(AssignmentBase, db=self.db, srv=self.srv)
+        self.SubmissionFactory = backend.UUIDFactory(SubmissionBase, db=self.db, srv=self.srv)
+        self.TestFactory = backend.UUIDFactory(TestBase, db=self.db, srv=self.srv)
 
         # Setup Admins
         self.init_admins()
-
-    # Assignment Methods
-    @auth.requires_authorization
-    def create_assignment(self, d):
-        return self.AssignmentFactory.from_new(d)
-    @auth.requires_authorization
-    def get_assignment(self, uuid_hex):
-        return self.AssignmentFactory.from_existing(uuid_hex)
-    @auth.requires_authorization
-    def get_assignments(self):
-        return self.AssignmentFactory.get_siblings()
-    @auth.requires_authorization
-    def list_assignments(self):
-        return self.AssignmentFactory.list_siblings()
 
     # User Methods
     @auth.requires_authorization
@@ -72,9 +62,6 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
     @auth.requires_authorization
     def get_user(self, uuid_hex):
         return self._get_user(uuid_hex)
-    @auth.requires_authorization
-    def get_users(self):
-        return self._get_users()
     @auth.requires_authorization
     def list_users(self):
         return self._list_users()
@@ -87,11 +74,46 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
     def get_group(self, uuid_hex):
         return self._get_group(uuid_hex)
     @auth.requires_authorization
-    def get_groups(self):
-        return self._get_groups()
-    @auth.requires_authorization
     def list_groups(self):
         return self._list_groups()
+
+    # File Methods
+    @auth.requires_authorization
+    def create_file(self, d, file_obj):
+        return self.FileFactory.from_new(d, file_obj)
+    @auth.requires_authorization
+    def get_file(self, uuid_hex):
+        return self.FileFactory.from_existing(uuid_hex)
+    @auth.requires_authorization
+    def list_files(self):
+        return self.FileFactory.list_siblings()
+
+    # Assignment Methods
+    @auth.requires_authorization
+    def create_assignment(self, d):
+        return self.AssignmentFactory.from_new(d)
+    @auth.requires_authorization
+    def get_assignment(self, uuid_hex):
+        return self.AssignmentFactory.from_existing(uuid_hex)
+    @auth.requires_authorization
+    def list_assignments(self):
+        return self.AssignmentFactory.list_siblings()
+
+    # Test Methods
+    @auth.requires_authorization
+    def get_test(self, uuid_hex):
+        return self.TestFactory.from_existing(uuid_hex)
+    @auth.requires_authorization
+    def list_tests(self):
+        return self.TestFactory.list_siblings()
+
+    # Submission Methods
+    @auth.requires_authorization
+    def get_submission(self, uuid_hex):
+        return self.SubmissionFactory.from_existing(uuid_hex)
+    @auth.requires_authorization
+    def list_submissions(self):
+        return self.SubmissionFactory.list_siblings()
 
     # Private User Methods
     def _create_user(self, d):
@@ -193,56 +215,22 @@ class AssignmentBase(backend.TSHashBase):
         super(AssignmentBase, self).__init__(key)
 
         # Setup Factories
-        self.TestFactory = backend.UUIDFactory(TestBase, prefix=self.full_key,
-                                               db=self.db, srv=self.srv)
-        self.SubmissionFactory = backend.UUIDFactory(SubmissionBase,
-                                                     prefix=self.full_key,
-                                                     db=self.db, srv=self.srv)
-
-    # Override Delete
-    def delete(self):
-        """Delete"""
-
-        # Delete Tests
-        for t_uuid in self.list_tests():
-            tst = self.get_test(t_uuid)
-            tst.delete()
-
-        # Delete Submissions
-        for s_uuid in self.list_submissions():
-            sub = self.get_submission(s_uuid)
-            sub.delete()
-
-        # Delete Self
-        super(AssignmentBase, self).delete()
+        self.TestFactory = backend.UUIDFactory(TestBase, db=self.db, srv=self.srv)
+        self.SubmissionFactory = backend.UUIDFactory(SubmissionBase, db=self.db, srv=self.srv)
 
     # Test Methods
     @auth.requires_authorization
-    def create_test(self, d):
+    def create_test(self, dic):
+        d = copy.copy(dic)
+        d['assignment': str(self.uuid)]
         return self.TestFactory.from_new(d)
-    @auth.requires_authorization
-    def get_test(self, uuid_hex):
-        return self.TestFactory.from_existing(uuid_hex)
-    @auth.requires_authorization
-    def get_tests(self):
-        return self.TestFactory.get_siblings()
-    @auth.requires_authorization
-    def list_tests(self):
-        return self.TestFactory.list_siblings()
 
     # Submission Methods
     @auth.requires_authorization
-    def create_submission(self, d):
+    def create_submission(self, dic):
+        d = copy.copy(dic)
+        d['assignment': str(self.uuid)]
         return self.SubmissionFactory.from_new(d)
-    @auth.requires_authorization
-    def get_submission(self, uuid_hex):
-        return self.SubmissionFactory.from_existing(uuid_hex)
-    @auth.requires_authorization
-    def get_submissions(self):
-        return self.SubmissionFactory.get_siblings()
-    @auth.requires_authorization
-    def list_submissions(self):
-        return self.SubmissionFactory.list_siblings()
 
 
 ## Assignment Test Object ##
@@ -253,39 +241,6 @@ class TestBase(backend.TSHashBase):
     """
 
     schema = set(_TS_SCHEMA + _TEST_SCHEMA)
-
-    # Override Constructor
-    def __init__(self, key=None):
-        """Base Constructor"""
-        super(TestBase, self).__init__(key)
-        self.FileFactory = backend.UUIDFactory(FileBase, prefix=self.full_key,
-                                               db=self.db, srv=self.srv)
-
-    # Override Delete
-    def delete(self):
-        """Delete"""
-
-        # Delete Files
-        for f_uuid in self.list_files():
-            fle = self.get_file(f_uuid)
-            fle.delete(force=True)
-
-        # Delete Self
-        super(TestBase, self).delete()
-
-    # File Methods
-    @auth.requires_authorization
-    def create_file(self, d, file_obj):
-        return self.FileFactory.from_new(d, file_obj)
-    @auth.requires_authorization
-    def get_file(self, uuid_hex):
-        return self.FileFactory.from_existing(uuid_hex)
-    @auth.requires_authorization
-    def get_files(self):
-        return self.FileFactory.get_siblings()
-    @auth.requires_authorization
-    def list_files(self):
-        return self.FileFactory.list_siblings()
 
 
 ## Assignment Submission Object ##
@@ -301,55 +256,13 @@ class SubmissionBase(backend.TSHashBase):
     def __init__(self, key=None):
         """Base Constructor"""
         super(SubmissionBase, self).__init__(key)
-        self.FileFactory = backend.UUIDFactory(FileBase, prefix=self.full_key,
-                                               db=self.db, srv=self.srv)
         self.RunFactory = backend.UUIDFactory(RunBase, prefix=self.full_key,
                                               db=self.db, srv=self.srv)
-
-    # Override Delete
-    def delete(self):
-        """Delete"""
-
-        # Delete Files
-        for f_uuid in self.list_files():
-            fle = self.get_file(f_uuid)
-            fle.delete(force=True)
-
-        # Delete Runs
-        for r_uuid in self.list_runs():
-            run = self.get_run(r_uuid)
-            run.delete()
-
-        # Delete Self
-        super(Submission, self).delete()
-
-    # File Methods
-    @auth.requires_authorization
-    def create_file(self, d, file_obj):
-        return self.FileFactory.from_new(d, file_obj)
-    @auth.requires_authorization
-    def get_file(self, uuid_hex):
-        return self.FileFactory.from_existing(uuid_hex)
-    @auth.requires_authorization
-    def get_files(self):
-        return self.FileFactory.get_siblings()
-    @auth.requires_authorization
-    def list_files(self):
-        return self.FileFactory.list_siblings()
 
     # Run Methods
     @auth.requires_authorization
     def execute_run(self, tst, sub):
         return self.RunFactory.from_new(tst, sub)
-    @auth.requires_authorization
-    def get_run(self, uuid_hex):
-        return self.RunFactory.from_existing(uuid_hex)
-    @auth.requires_authorization
-    def get_runs(self):
-        return self.RunFactory.get_siblings()
-    @auth.requires_authorization
-    def list_runs(self):
-        return self.RunFactory.list_siblings()
 
 
 ## Test Run Object ##

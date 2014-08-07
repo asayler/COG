@@ -10,48 +10,50 @@ PUT     */allow/<method>/                               Add Allowed Groups (Spec
 DELETE  */allow/<method>/                               Remove Allowed Groups (Specify Method)
 
 GET     /users/                                         List Users
-POST    /users/                                         Add User
+POST    /users/                                         Create New User
 GET     /users/<ID>/                                    Show User
 PUT     /users/<ID>/                                    Update User
-DELETE  /users/<ID>/                                    Remove User
+DELETE  /users/<ID>/                                    Delete User
 
 GET     /groups/                                        List Groups
-POST    /groups/                                        Add Group
+POST    /groups/                                        Create New Group
 GET     /groups/<ID>/                                   Show Group
 PUT     /groups/<ID>/                                   Update Group
-DELETE  /groups/<ID>/                                   Remove Group
+DELETE  /groups/<ID>/                                   Delete Group
 GET     /groups/<ID>/members/                           List Group Members
 PUT     /groups/<ID>/members/                           Add Group Members
-DELETE  /groups/<ID>/members/                           Delete Group Members
+DELETE  /groups/<ID>/members/                           Remove Group Members
 
 GET     /assignments/                                   List Assignments
-POST    /assignments/                                   Add Assignment
+POST    /assignments/                                   Create New Assignment
 GET     /assignments/<ID>/                              Show Assignment
 PUT     /assignments/<ID>/                              Update Assignment
-DELETE  /assignments/<ID>/                              Remove Assignment
+DELETE  /assignments/<ID>/                              Delete Assignment
 GET     /assignments/<ID>/tests/                        List Assignment Grading Tests
-POST    /assignments/<ID>/tests/                        Add Assignment Grading Test
+POST    /assignments/<ID>/tests/                        Create New Assignment Grading Test
 GET     /assignments/<ID>/submissions/                  List Assignment Submissions
-POST    /assignments/<ID>/submissions/                  Add Assignment Submission
+POST    /assignments/<ID>/submissions/                  Create New Assignment Submission
 
 GET     /submissions/                                   List All Submissions
 GET     /submissions/<ID>/                              Show Submission
 DELETE  /submissions/<ID>/                              Delete Submission
 GET     /submissions/<ID>/files/                        List Submission Files
-POST    /submissions/<ID>/files/                        Add Submission File
-GET     /submissions/<ID>/runs/                         List Submission Test Runs
+PUT     /submissions/<ID>/files/                        Add Submission File
+DELETE  /submissions/<ID>/files/                        Remove Submission File
 POST    /submissions/<ID>/runs/                         Execute New Test Run
 
 GET     /tests/                                         List All Tests
 GET     /tests/<ID>/                                    Show Grading Test
-DELETE  /tests/<ID>/                                    Remove Grading Test
-GET     /tests/<ID>/files/                              List Grading Test Files
-POST    /tests/<ID>/files/                              Add Grading Test File
+DELETE  /tests/<ID>/                                    Delete Grading Test
+GET     /tests/<ID>/files/                              List Test Files
+PUT     /tests/<ID>/files/                              Add Test File
+DELETE  /tests/<ID>/files/                              Remove Test File
 
 GET     /runs/                                          List All Test Runs
 GET     /runs/<ID>/                                     Show Test Run Results
 DELETE  /runs/<ID>/                                     Delete Test Run Results
 
 GET     /files/                                         List All Files
+POST    /files/                                         Create New File
 GET     /files/<ID>/                                    Show File
-DELETE  /files/<ID>/                                    Remove File
+DELETE  /files/<ID>/                                    Delete File

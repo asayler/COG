@@ -141,184 +141,184 @@ class CogsApiRootTestCase(CogsApiTestCase):
 
 
 ## Assignment Tests
-class CogsApiAssignmentTestCase(CogsApiAssignmentHelpers):
+# class CogsApiAssignmentTestCase(CogsApiAssignmentHelpers):
 
-    def setUp(self):
-        super(CogsApiAssignmentTestCase, self).setUp()
+#     def setUp(self):
+#         super(CogsApiAssignmentTestCase, self).setUp()
 
-    def tearDown(self):
-        super(CogsApiAssignmentTestCase, self).tearDown()
+#     def tearDown(self):
+#         super(CogsApiAssignmentTestCase, self).tearDown()
 
-    def test_create_assignment(self):
+#     def test_create_assignment(self):
 
-        # Create Assignment
-        asn_uuid = self.create_assignment()
-        self.assertTrue(asn_uuid)
+#         # Create Assignment
+#         asn_uuid = self.create_assignment()
+#         self.assertTrue(asn_uuid)
 
-    def test_get_assignment(self):
+#     def test_get_assignment(self):
 
-        # Create Assignment
-        asn_uuid = self.create_assignment(cogs.test_common.ASSIGNMENT_TESTDICT)
+#         # Create Assignment
+#         asn_uuid = self.create_assignment(cogs.test_common.ASSIGNMENT_TESTDICT)
 
-        # Get Assignment
-        asn = self.get_assignment(asn_uuid)
-        self.assertSubset(cogs.test_common.ASSIGNMENT_TESTDICT, asn[str(asn_uuid)])
+#         # Get Assignment
+#         asn = self.get_assignment(asn_uuid)
+#         self.assertSubset(cogs.test_common.ASSIGNMENT_TESTDICT, asn[str(asn_uuid)])
 
-    def test_set_assignment(self):
+#     def test_set_assignment(self):
 
-        # Create Assignment
-        asn_uuid = self.create_assignment(cogs.test_common.ASSIGNMENT_TESTDICT)
+#         # Create Assignment
+#         asn_uuid = self.create_assignment(cogs.test_common.ASSIGNMENT_TESTDICT)
 
-        # Update Assignment
-        d = copy.deepcopy(cogs.test_common.ASSIGNMENT_TESTDICT)
-        for k in d:
-            d[k] = d[k] + "_update"
-        self.assertNotEqual(cogs.test_common.ASSIGNMENT_TESTDICT, d)
-        asn = self.set_assignment(asn_uuid, d)
-        self.assertSubset(d, asn[str(asn_uuid)])
+#         # Update Assignment
+#         d = copy.deepcopy(cogs.test_common.ASSIGNMENT_TESTDICT)
+#         for k in d:
+#             d[k] = d[k] + "_update"
+#         self.assertNotEqual(cogs.test_common.ASSIGNMENT_TESTDICT, d)
+#         asn = self.set_assignment(asn_uuid, d)
+#         self.assertSubset(d, asn[str(asn_uuid)])
 
-        # Get Assignment
-        asn = self.get_assignment(asn_uuid)
-        self.assertSubset(d, asn[str(asn_uuid)])
+#         # Get Assignment
+#         asn = self.get_assignment(asn_uuid)
+#         self.assertSubset(d, asn[str(asn_uuid)])
 
-    def test_delete_assignment(self):
+#     def test_delete_assignment(self):
 
-        # Create Assignment
-        asn_uuid = self.create_assignment(cogs.test_common.ASSIGNMENT_TESTDICT)
+#         # Create Assignment
+#         asn_uuid = self.create_assignment(cogs.test_common.ASSIGNMENT_TESTDICT)
 
-        # Get Assignment
-        res = self.app.get('/assignments/{:s}/'.format(asn_uuid))
-        self.assertEqual(res.status_code, 200)
+#         # Get Assignment
+#         res = self.app.get('/assignments/{:s}/'.format(asn_uuid))
+#         self.assertEqual(res.status_code, 200)
 
-        # Delete Assignment
-        self.delete_assignment(asn_uuid)
+#         # Delete Assignment
+#         self.delete_assignment(asn_uuid)
 
-        # Get Assignment
-        res = self.app.get('/assignments/{:s}/'.format(asn_uuid))
-        self.assertEqual(res.status_code, 404)
+#         # Get Assignment
+#         res = self.app.get('/assignments/{:s}/'.format(asn_uuid))
+#         self.assertEqual(res.status_code, 404)
 
-    def test_list_assignments(self):
+#     def test_list_assignments(self):
 
-        assignments_in = set([])
+#         assignments_in = set([])
 
-        # Get Assignments (Empty)
-        assignments_out = self.lst_assignments()
-        self.assertEqual(assignments_in, assignments_out)
+#         # Get Assignments (Empty)
+#         assignments_out = self.lst_assignments()
+#         self.assertEqual(assignments_in, assignments_out)
 
-        # Create Assignments
-        for i in range(10):
-            d = copy.deepcopy(cogs.test_common.ASSIGNMENT_TESTDICT)
-            for k in d:
-                d[k] = d[k] + "_{:02d}".format(i)
-            asn_uuid = self.create_assignment(d)
-            assignments_in.add(str(asn_uuid))
+#         # Create Assignments
+#         for i in range(10):
+#             d = copy.deepcopy(cogs.test_common.ASSIGNMENT_TESTDICT)
+#             for k in d:
+#                 d[k] = d[k] + "_{:02d}".format(i)
+#             asn_uuid = self.create_assignment(d)
+#             assignments_in.add(str(asn_uuid))
 
-        # Get Assignments
-        assignments_out = self.lst_assignments()
-        self.assertEqual(assignments_in, assignments_out)
+#         # Get Assignments
+#         assignments_out = self.lst_assignments()
+#         self.assertEqual(assignments_in, assignments_out)
 
-        # Delete Assignments
-        for i in range(5):
-            rmv_uuid = assignments_in.pop()
-            self.delete_assignment(rmv_uuid)
+#         # Delete Assignments
+#         for i in range(5):
+#             rmv_uuid = assignments_in.pop()
+#             self.delete_assignment(rmv_uuid)
 
-        # Get Assignments
-        assignments_out = self.lst_assignments()
-        self.assertEqual(assignments_in, assignments_out)
+#         # Get Assignments
+#         assignments_out = self.lst_assignments()
+#         self.assertEqual(assignments_in, assignments_out)
 
 
-## Assignment Test Tests
-class CogsApiTestTestCase(CogsApiTestHelpers):
+# ## Assignment Test Tests
+# class CogsApiTestTestCase(CogsApiTestHelpers):
 
-    def setUp(self):
+#     def setUp(self):
 
-        # Call Parent setUp()
-        super(CogsApiTestTestCase, self).setUp()
+#         # Call Parent setUp()
+#         super(CogsApiTestTestCase, self).setUp()
 
-        # Create Assignment
-        self.asn_uuid = self.create_assignment()
+#         # Create Assignment
+#         self.asn_uuid = self.create_assignment()
 
-    def tearDown(self):
+#     def tearDown(self):
 
-        # Call Parent tearDown()
-        super(CogsApiTestTestCase, self).tearDown()
+#         # Call Parent tearDown()
+#         super(CogsApiTestTestCase, self).tearDown()
 
-    def test_create_test(self):
+#     def test_create_test(self):
 
-        # Create Test
-        tst_uuid = self.create_test()
-        self.assertTrue(tst_uuid)
+#         # Create Test
+#         tst_uuid = self.create_test()
+#         self.assertTrue(tst_uuid)
 
-    def test_get_test(self):
+#     def test_get_test(self):
 
-        # Create Test
-        tst_uuid = self.create_test(cogs.test_common.TEST_TESTDICT)
+#         # Create Test
+#         tst_uuid = self.create_test(cogs.test_common.TEST_TESTDICT)
 
-        # Get Test
-        tst = self.get_test(tst_uuid)
-        self.assertSubset(cogs.test_common.TEST_TESTDICT, tst[str(tst_uuid)])
+#         # Get Test
+#         tst = self.get_test(tst_uuid)
+#         self.assertSubset(cogs.test_common.TEST_TESTDICT, tst[str(tst_uuid)])
 
-    def test_set_test(self):
+#     def test_set_test(self):
 
-        # Create Test
-        tst_uuid = self.create_test(cogs.test_common.TEST_TESTDICT)
+#         # Create Test
+#         tst_uuid = self.create_test(cogs.test_common.TEST_TESTDICT)
 
-        # Update Test
-        d = copy.deepcopy(cogs.test_common.TEST_TESTDICT)
-        for k in d:
-            d[k] = d[k] + "_update"
-        self.assertNotEqual(cogs.test_common.TEST_TESTDICT, d)
-        tst = self.set_test(tst_uuid, d)
-        self.assertSubset(d, tst[str(tst_uuid)])
+#         # Update Test
+#         d = copy.deepcopy(cogs.test_common.TEST_TESTDICT)
+#         for k in d:
+#             d[k] = d[k] + "_update"
+#         self.assertNotEqual(cogs.test_common.TEST_TESTDICT, d)
+#         tst = self.set_test(tst_uuid, d)
+#         self.assertSubset(d, tst[str(tst_uuid)])
 
-        # Get Test
-        tst = self.get_test(tst_uuid)
-        self.assertSubset(d, tst[str(tst_uuid)])
+#         # Get Test
+#         tst = self.get_test(tst_uuid)
+#         self.assertSubset(d, tst[str(tst_uuid)])
 
-    def test_delete_test(self):
+#     def test_delete_test(self):
 
-        # Create Test
-        tst_uuid = self.create_test(cogs.test_common.TEST_TESTDICT)
+#         # Create Test
+#         tst_uuid = self.create_test(cogs.test_common.TEST_TESTDICT)
 
-        # Get Test
-        res = self.app.get('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid))
-        self.assertEqual(res.status_code, 200)
+#         # Get Test
+#         res = self.app.get('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid))
+#         self.assertEqual(res.status_code, 200)
 
-        # Delete Test
-        self.delete_test(tst_uuid)
+#         # Delete Test
+#         self.delete_test(tst_uuid)
 
-        # Get Test
-        res = self.app.get('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid))
-        self.assertEqual(res.status_code, 404)
+#         # Get Test
+#         res = self.app.get('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid))
+#         self.assertEqual(res.status_code, 404)
 
-    def test_list_tests(self):
+#     def test_list_tests(self):
 
-        tests_in = set([])
+#         tests_in = set([])
 
-        # Get Tests (Empty)
-        tests_out = self.lst_tests()
-        self.assertEqual(tests_in, tests_out)
+#         # Get Tests (Empty)
+#         tests_out = self.lst_tests()
+#         self.assertEqual(tests_in, tests_out)
 
-        # Create Tests
-        for i in range(10):
-            d = copy.deepcopy(cogs.test_common.TEST_TESTDICT)
-            for k in d:
-                d[k] = d[k] + "_{:02d}".format(i)
-            tst_uuid = self.create_test(d)
-            tests_in.add(str(tst_uuid))
+#         # Create Tests
+#         for i in range(10):
+#             d = copy.deepcopy(cogs.test_common.TEST_TESTDICT)
+#             for k in d:
+#                 d[k] = d[k] + "_{:02d}".format(i)
+#             tst_uuid = self.create_test(d)
+#             tests_in.add(str(tst_uuid))
 
-        # Get Tests
-        tests_out = self.lst_tests()
-        self.assertEqual(tests_in, tests_out)
+#         # Get Tests
+#         tests_out = self.lst_tests()
+#         self.assertEqual(tests_in, tests_out)
 
-        # Delete Tests
-        for i in range(5):
-            rmv_uuid = tests_in.pop()
-            self.delete_test(rmv_uuid)
+#         # Delete Tests
+#         for i in range(5):
+#             rmv_uuid = tests_in.pop()
+#             self.delete_test(rmv_uuid)
 
-        # Get Tests
-        tests_out = self.lst_tests()
-        self.assertEqual(tests_in, tests_out)
+#         # Get Tests
+#         tests_out = self.lst_tests()
+#         self.assertEqual(tests_in, tests_out)
 
 ### Main
 if __name__ == '__main__':
