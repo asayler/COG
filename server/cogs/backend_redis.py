@@ -54,7 +54,7 @@ class ObjectBase(backend.ObjectBase):
 
 class Factory(backend.Factory):
 
-    def __init__(self, base_cls, prefix=None, db=None):
+    def __init__(self, base_cls, prefix=None, db=None, srv=None):
 
         # Setup DB
         if not db:
@@ -63,7 +63,7 @@ class Factory(backend.Factory):
                                    db=_REDIS_CONF_DEFAULT['redis_db'])
 
         # Call Parent
-        super(Factory, self).__init__(base_cls, prefix=prefix, db=db)
+        super(Factory, self).__init__(base_cls, prefix=prefix, db=db, srv=srv)
 
     def list_family(self):
         """List Factory Objects"""
@@ -73,12 +73,14 @@ class Factory(backend.Factory):
             p = ""
         q = "{:s}*".format(p)
         fam_lst = self.db.keys(q)
-        fam_keys = set([])
-        for full_key in fam_lst:
-            fam_id = full_key[len(p): ]
-            fam_key = fam_id[(fam_id.find(backend._TYPE_SEP) + 1): ]
-            fam_keys.add(fam_key)
-        return fam_keys
+        obj_keys = set([])
+        for itm in fam_lst:
+            full_key = itm[len(p): ]
+            typ_key = full_key[0:full_key.find(backend._TYPE_SEP)]
+            obj_key = full_key[(len(typ_key) + 1): ]
+            if typ_key.lower() == self.cls_name.lower():
+                obj_keys.add(obj_key)
+        return obj_keys
 
 
 class UUIDFactory(Factory):

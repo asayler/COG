@@ -149,7 +149,7 @@ class Factory(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def __init__(self, base_cls, prefix=None, db=None):
+    def __init__(self, base_cls, prefix=None, db=None, srv=None):
 
         # Call Parent
         super(Factory, self).__init__()
@@ -174,9 +174,12 @@ class Factory(object):
             self.pre_key = ""
 
         # Setup Class
+        p_db = db
+        p_srv = srv
         class cls(base_cls):
             pre_key = self.pre_key
-            db = self.db
+            db = p_db
+            srv = p_srv
 
         # Set Class Attributes and Return
         cls.__name__ = self.cls_name
