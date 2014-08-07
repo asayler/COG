@@ -218,22 +218,30 @@ class AssignmentBase(backend.TSHashBase):
         super(AssignmentBase, self).delete()
 
     # Test Methods
+    @auth.requires_authorization
     def create_test(self, d):
         return self.TestFactory.from_new(d)
+    @auth.requires_authorization
     def get_test(self, uuid_hex):
         return self.TestFactory.from_existing(uuid_hex)
+    @auth.requires_authorization
     def get_tests(self):
         return self.TestFactory.get_siblings()
+    @auth.requires_authorization
     def list_tests(self):
         return self.TestFactory.list_siblings()
 
     # Submission Methods
+    @auth.requires_authorization
     def create_submission(self, d):
         return self.SubmissionFactory.from_new(d)
+    @auth.requires_authorization
     def get_submission(self, uuid_hex):
         return self.SubmissionFactory.from_existing(uuid_hex)
+    @auth.requires_authorization
     def get_submissions(self):
         return self.SubmissionFactory.get_siblings()
+    @auth.requires_authorization
     def list_submissions(self):
         return self.SubmissionFactory.list_siblings()
 
@@ -267,12 +275,16 @@ class TestBase(backend.TSHashBase):
         super(TestBase, self).delete()
 
     # File Methods
+    @auth.requires_authorization
     def create_file(self, d, file_obj):
         return self.FileFactory.from_new(d, file_obj)
+    @auth.requires_authorization
     def get_file(self, uuid_hex):
         return self.FileFactory.from_existing(uuid_hex)
+    @auth.requires_authorization
     def get_files(self):
         return self.FileFactory.get_siblings()
+    @auth.requires_authorization
     def list_files(self):
         return self.FileFactory.list_siblings()
 
@@ -313,22 +325,30 @@ class SubmissionBase(backend.TSHashBase):
         super(Submission, self).delete()
 
     # File Methods
+    @auth.requires_authorization
     def create_file(self, d, file_obj):
         return self.FileFactory.from_new(d, file_obj)
+    @auth.requires_authorization
     def get_file(self, uuid_hex):
         return self.FileFactory.from_existing(uuid_hex)
+    @auth.requires_authorization
     def get_files(self):
         return self.FileFactory.get_siblings()
+    @auth.requires_authorization
     def list_files(self):
         return self.FileFactory.list_siblings()
 
     # Run Methods
+    @auth.requires_authorization
     def execute_run(self, tst, sub):
         return self.RunFactory.from_new(tst, sub)
+    @auth.requires_authorization
     def get_run(self, uuid_hex):
         return self.RunFactory.from_existing(uuid_hex)
+    @auth.requires_authorization
     def get_runs(self):
         return self.RunFactory.get_siblings()
+    @auth.requires_authorization
     def list_runs(self):
         return self.RunFactory.list_siblings()
 
