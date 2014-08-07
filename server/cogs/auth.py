@@ -122,7 +122,6 @@ def requires_authorization(func):
 
         # Check if User is in ADMIN Group
         if not allowed:
-            print("groups = {:s}".format(self.srv._list_groups()))
             if _SPECIAL_GROUP_ADMIN in self.srv._list_groups():
                 admins = self.srv._get_group(_SPECIAL_GROUP_ADMIN)
                 if user_uuid in admins._list_users():
@@ -142,10 +141,10 @@ def requires_authorization(func):
                     break
 
         # Call Wrapped Function
-        return func(self, *args, **kwargs)
-        # if allowed:
-        #     return func(self, *args, **kwargs)
-        # else:
-        #     raise UserNotAuthorizedError(user_uuid, func)
+        # return func(self, *args, **kwargs)
+        if allowed:
+            return func(self, *args, **kwargs)
+        else:
+            raise UserNotAuthorizedError(user_uuid, func)
 
     return _wrapper
