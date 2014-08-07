@@ -23,6 +23,12 @@ _FILE_SCHEMA = ['key', 'name', 'type', 'encoding', 'path']
 _FILES_DIR = "./files/"
 
 
+### COGS Auth Decorators ###
+def requiresAuthorization(func):
+    def wrapper(self, *args, **kwargs):
+        return func(self, *args, **kwargs)
+    return wrapper
+
 ### COGS Core Objects ###
 
 ## Top-Level Server Object ##
@@ -45,6 +51,7 @@ class Server(object):
         self.GroupFactory = backend.UUIDFactory(GroupBase, db=db)
 
     # Assignment Methods
+    @requiresAuthorization
     def create_assignment(self, d):
         return self.AssignmentFactory.from_new(d)
     def get_assignment(self, uuid_hex):
@@ -90,7 +97,7 @@ class UserBase(backend.TSHashBase):
 ## User List Object ##
 class UserListBase(backend.SetBase):
     """
-    COGS User Class
+    COGS User List Class
 
     """
 
@@ -124,6 +131,16 @@ class GroupBase(backend.TSHashBase):
         return self.members.del_vals(user_uuids)
     def list_users(self):
         return self.members.get_set()
+
+
+## User List Object ##
+class GroupListBase(backend.SetBase):
+    """
+    COGS Group List Class
+
+    """
+
+    pass
 
 
 ## Assignment Object ##
