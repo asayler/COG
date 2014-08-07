@@ -22,6 +22,7 @@ _FILE_SCHEMA = ['owner', 'key', 'name', 'type', 'encoding', 'path']
 
 _FILES_DIR = "./files/"
 
+
 ### COGS Core Objects ###
 
 ## Top-Level Server Object ##
