@@ -5,6 +5,8 @@
 # Univerity of Colorado
 
 
+import auth
+
 import backend_redis as backend
 from backend_redis import BackendError, FactoryError, ObjectError, ObjectDNE
 
@@ -22,17 +24,10 @@ _FILE_SCHEMA = ['key', 'name', 'type', 'encoding', 'path']
 
 _FILES_DIR = "./files/"
 
-
-### COGS Auth Decorators ###
-def requiresAuthorization(func):
-    def wrapper(self, *args, **kwargs):
-        return func(self, *args, **kwargs)
-    return wrapper
-
 ### COGS Core Objects ###
 
 ## Top-Level Server Object ##
-class Server(object):
+class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
     """
     COGS Server Class
 
@@ -45,40 +40,75 @@ class Server(object):
         # Call Parent Construtor
         super(Server, self).__init__()
 
+        # Save db
+        self.db = db
+        self.srv = self
+
         # Setup Factories
-        self.AssignmentFactory = backend.UUIDFactory(AssignmentBase, db=db)
-        self.UserFactory = backend.UUIDFactory(UserBase, db=db)
-        self.GroupFactory = backend.UUIDFactory(GroupBase, db=db)
+        self.AssignmentFactory = backend.UUIDFactory(AssignmentBase, db=self.db, srv=self.srv)
+        self.UserFactory = backend.UUIDFactory(UserBase, db=self.db, srv=self.srv)
+        self.GroupFactory = backend.UUIDFactory(GroupBase, db=self.db, srv=self.srv)
 
     # Assignment Methods
-    @requiresAuthorization
+    @auth.requires_authorization
     def create_assignment(self, d):
         return self.AssignmentFactory.from_new(d)
+    @auth.requires_authorization
     def get_assignment(self, uuid_hex):
         return self.AssignmentFactory.from_existing(uuid_hex)
+    @auth.requires_authorization
     def get_assignments(self):
         return self.AssignmentFactory.get_siblings()
+    @auth.requires_authorization
     def list_assignments(self):
         return self.AssignmentFactory.list_siblings()
 
     # User Methods
+    @auth.requires_authorization
     def create_user(self, d):
-        return self.UserFactory.from_new(d)
+        return self._create_user(d)
+    @auth.requires_authorization
     def get_user(self, uuid_hex):
-        return self.UserFactory.from_existing(uuid_hex)
+        return self._get_user(uuid_hex)
+    @auth.requires_authorization
     def get_users(self):
-        return self.UserFactory.get_siblings()
+        return self._get_users()
+    @auth.requires_authorization
     def list_users(self):
-        return self.UserFactory.list_siblings()
+        return self._list_users()
 
     # Group Methods
+    @auth.requires_authorization
     def create_group(self, d):
-        return self.GroupFactory.from_new(d)
+        return self._create_group(d)
+    @auth.requires_authorization
     def get_group(self, uuid_hex):
-        return self.GroupFactory.from_existing(uuid_hex)
+        return self._get_group(uuid_hex)
+    @auth.requires_authorization
     def get_groups(self):
-        return self.GroupFactory.get_siblings()
+        return self._get_groups()
+    @auth.requires_authorization
     def list_groups(self):
+        return self._list_groups()
+
+    # Private User Methods
+    def _create_user(self, d):
+        return self.UserFactory.from_new(d)
+    def _get_user(self, uuid_hex):
+        return self.UserFactory.from_existing(uuid_hex)
+    def _get_users(self):
+        return self.UserFactory.get_siblings()
+    def _list_users(self):
+        return self.UserFactory.list_siblings()
+
+    # Private Group Methods
+    def _create_group(self, d):
+        return self.GroupFactory.from_new(d)
+    def _get_group(self, uuid_hex):
+        return self.GroupFactory.from_existing(uuid_hex)
+    def _get_groups(self):
+        return self.GroupFactory.get_siblings()
+    def _list_groups(self):
         return self.GroupFactory.list_siblings()
 
 
@@ -121,26 +151,27 @@ class GroupBase(backend.TSHashBase):
         super(GroupBase, self).__init__(uuid_obj)
 
         # Setup Lists
-        sf = backend.Factory(UserListBase, prefix=self.full_key, db=self.db)
+        sf = backend.Factory(UserListBase, prefix=self.full_key, db=self.db, srv=self.srv)
         self.members = sf.from_raw('members')
 
     # Members Methods
+    @auth.requires_authorization
     def add_users(self, user_uuids):
-        return self.members.add_vals(user_uuids)
+        return self._add_users(user_uuids)
+    @auth.requires_authorization
     def rem_users(self, user_uuids):
-        return self.members.del_vals(user_uuids)
+        return self._rem_users(user_uuids)
+    @auth.requires_authorization
     def list_users(self):
+        return self._list_users()
+
+    # Private Members Methods
+    def _add_users(self, user_uuids):
+        return self.members.add_vals(user_uuids)
+    def _rem_users(self, user_uuids):
+        return self.members.del_vals(user_uuids)
+    def _list_users(self):
         return self.members.get_set()
-
-
-## User List Object ##
-class GroupListBase(backend.SetBase):
-    """
-    COGS Group List Class
-
-    """
-
-    pass
 
 
 ## Assignment Object ##
@@ -160,8 +191,11 @@ class AssignmentBase(backend.TSHashBase):
         super(AssignmentBase, self).__init__(key)
 
         # Setup Factories
-        self.TestFactory = backend.UUIDFactory(TestBase, prefix=self.full_key, db=self.db)
-        self.SubmissionFactory = backend.UUIDFactory(SubmissionBase, prefix=self.full_key, db=self.db, )
+        self.TestFactory = backend.UUIDFactory(TestBase, prefix=self.full_key,
+                                               db=self.db, srv=self.srv)
+        self.SubmissionFactory = backend.UUIDFactory(SubmissionBase,
+                                                     prefix=self.full_key,
+                                                     db=self.db, srv=self.srv)
 
     # Override Delete
     def delete(self):
@@ -214,7 +248,8 @@ class TestBase(backend.TSHashBase):
     def __init__(self, key=None):
         """Base Constructor"""
         super(TestBase, self).__init__(key)
-        self.FileFactory = backend.UUIDFactory(FileBase, prefix=self.full_key, db=self.db)
+        self.FileFactory = backend.UUIDFactory(FileBase, prefix=self.full_key,
+                                               db=self.db, srv=self.srv)
 
     # Override Delete
     def delete(self):
@@ -252,8 +287,10 @@ class SubmissionBase(backend.TSHashBase):
     def __init__(self, key=None):
         """Base Constructor"""
         super(SubmissionBase, self).__init__(key)
-        self.FileFactory = backend.UUIDFactory(FileBase, prefix=self.full_key, db=self.db)
-        self.RunFactory = backend.UUIDFactory(RunBase, prefix=self.full_key, db=self.db)
+        self.FileFactory = backend.UUIDFactory(FileBase, prefix=self.full_key,
+                                               db=self.db, srv=self.srv)
+        self.RunFactory = backend.UUIDFactory(RunBase, prefix=self.full_key,
+                                              db=self.db, srv=self.srv)
 
     # Override Delete
     def delete(self):

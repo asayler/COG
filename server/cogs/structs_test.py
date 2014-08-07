@@ -7,6 +7,7 @@
 
 import copy
 import unittest
+import time
 
 import structs
 import test_common
@@ -20,12 +21,15 @@ class TypesTestCase(test_common.CogsTestCase):
     def tearDown(self):
         super(TypesTestCase, self).tearDown()
 
-    def subHashDirectHelper(self, hash_create, hash_list, input_dict):
+    def subHashDirectHelper(self, hash_create, hash_list, input_dict, extra_objs=None, user=None):
 
-        objects_in = set([])
+        if extra_objs:
+            objects_in = set(extra_objs)
+        else:
+            objects_in = set([])
 
         # List Objects (Empty DB)
-        objects_out = hash_list()
+        objects_out = hash_list(user=user)
         self.assertEqual(objects_in, objects_out)
 
         # Generate 10 Objects
@@ -33,10 +37,10 @@ class TypesTestCase(test_common.CogsTestCase):
             d = copy.copy(input_dict)
             for k in d:
                 d[k] = "{:s}_test_{:02d}".format(d[k], i)
-            objects_in.add(str(hash_create(d).obj_key))
+            objects_in.add(str(hash_create(d, user=user).obj_key))
 
         # List Objects
-        objects_out = hash_list()
+        objects_out = hash_list(user=user)
         self.assertEqual(objects_in, objects_out)
 
     def subSetReferenceHelper(self, set_add, set_rem, set_list, uuid_objs):
@@ -111,25 +115,33 @@ class ServerTestCase(TypesTestCase):
     def setUp(self):
         super(ServerTestCase, self).setUp()
         self.srv = structs.Server(db=self.db)
+        self.admin = str(self.srv._create_user(test_common.USER_TESTDICT).uuid)
+        self.admins = self.srv.add_admins([self.admin])
 
     def tearDown(self):
         del(self.srv)
         super(ServerTestCase, self).tearDown()
 
     def test_assignments(self):
+        print("admin = {:s}".format(self.admin))
+        print("admins = {:s}".format(self.srv.list_admins()))
         self.subHashDirectHelper(self.srv.create_assignment,
                                  self.srv.list_assignments,
-                                 test_common.ASSIGNMENT_TESTDICT)
+                                 test_common.ASSIGNMENT_TESTDICT,
+                                 user=self.admin)
 
     def test_users(self):
         self.subHashDirectHelper(self.srv.create_user,
                                  self.srv.list_users,
-                                 test_common.USER_TESTDICT)
+                                 test_common.USER_TESTDICT,
+                                 extra_objs=[self.admin],
+                                 user=self.admin)
 
     def test_groups(self):
         self.subHashDirectHelper(self.srv.create_group,
                                  self.srv.list_groups,
-                                 test_common.GROUP_TESTDICT)
+                                 test_common.GROUP_TESTDICT,
+                                 user=self.admin)
 
 
 class UserTestCase(TypesTestCase):
