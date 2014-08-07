@@ -113,12 +113,19 @@ def requires_authorization(func):
 
         # Extract Inputs
         user_uuid = kwargs.pop('user', None)
+        owner_uuid = kwargs.pop('owner', None)
         prefix = getattr(self, 'full_key', None)
         allowed = False
 
+        # Check if owner
+        if owner_uuid:
+            if user_uuid.lower() == owner_uuid.lower():
+                allowed = True
+
         # Setup Group List
-        sf = backend.Factory(GroupListBase, prefix=prefix, db=self.db)
-        group_uuids = sf.from_raw("{:s}_{:s}".format(func.__name__, 'groups')).get_set()
+        if not allowed:
+            sf = backend.Factory(GroupListBase, prefix=prefix, db=self.db)
+            group_uuids = sf.from_raw("{:s}_{:s}".format(func.__name__, 'groups')).get_set()
 
         # Check if User is in ADMIN Group
         if not allowed:
@@ -141,7 +148,6 @@ def requires_authorization(func):
                     break
 
         # Call Wrapped Function
-        # return func(self, *args, **kwargs)
         if allowed:
             return func(self, *args, **kwargs)
         else:
