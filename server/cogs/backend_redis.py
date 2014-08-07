@@ -91,6 +91,12 @@ class UUIDFactory(Factory):
         obj.uuid = key
         return obj
 
+    def from_custom(self, uuid_str, *args, **kwargs):
+        key = uuid.UUID(str(uuid_str))
+        obj = super(UUIDFactory, self).from_new(*args, key=key, **kwargs)
+        obj.uuid = key
+        return obj
+
     def from_existing(self, uuid_str, *args, **kwargs):
         key = uuid.UUID(str(uuid_str))
         obj = super(UUIDFactory, self).from_existing(*args, key=key, **kwargs)
@@ -141,7 +147,7 @@ class HashBase(ObjectBase):
 
         if self.schema is not None:
             if k not in self.schema:
-                raise KeyError("Key {:s} not valid in {:s}".format(k, self))
+                raise KeyError("Key {:s} not valid in {:s}".format(str(k), self.schema))
 
         ret = self.db.hget(self.full_key, k)
         return ret

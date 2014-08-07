@@ -233,6 +233,10 @@ class UUIDFactory(Factory):
         pass
 
     @abc.abstractmethod
+    def from_custom(self, uuid_str, *args, **kwargs):
+        pass
+
+    @abc.abstractmethod
     def from_existing(self, uuid_str, *args, **kwargs):
         pass
 

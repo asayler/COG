@@ -7,7 +7,6 @@
 
 import copy
 import unittest
-import time
 
 import structs
 import test_common
@@ -141,6 +140,7 @@ class ServerTestCase(TypesTestCase):
         self.subHashDirectHelper(self.srv.create_group,
                                  self.srv.list_groups,
                                  test_common.GROUP_TESTDICT,
+                                 extra_objs=[structs.auth._SPECIAL_GROUP_ADMIN],
                                  user=self.admin)
 
 

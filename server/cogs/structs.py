@@ -40,7 +40,7 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
         # Call Parent Construtor
         super(Server, self).__init__()
 
-        # Save db
+        # Save vars
         self.db = db
         self.srv = self
 
@@ -48,6 +48,9 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
         self.AssignmentFactory = backend.UUIDFactory(AssignmentBase, db=self.db, srv=self.srv)
         self.UserFactory = backend.UUIDFactory(UserBase, db=self.db, srv=self.srv)
         self.GroupFactory = backend.UUIDFactory(GroupBase, db=self.db, srv=self.srv)
+
+        # Setup Admins
+        self.init_admins()
 
     # Assignment Methods
     @auth.requires_authorization

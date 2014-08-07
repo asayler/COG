@@ -11,6 +11,7 @@ import backend_redis as backend
 _SPECIAL_GROUP_ADMIN = '99999999-9999-9999-9999-999999999999'
 _SPECIAL_GROUP_ANY = '00000000-0000-0000-0000-000000000000'
 
+_GROUP_ADMIN_DICT = {'name': "ADMIN"}
 
 ### Exceptions ###
 
@@ -47,17 +48,18 @@ class AuthorizationAdminMixin(object):
 
     """
 
+    def init_admins(self):
+        if _SPECIAL_GROUP_ADMIN not in self.srv.GroupFactory.list_siblings():
+            self.admins = self.srv.GroupFactory.from_custom(_SPECIAL_GROUP_ADMIN, _GROUP_ADMIN_DICT)
+
     def list_admins(self):
-        admin_grp = self.srv.GroupFactory.from_raw(_SPECIAL_GROUP_ADMIN)
-        return admin_grp._list_users()
+        return self.srv.admins._list_users()
 
     def add_admins(self, user_uuids):
-        admin_grp = self.srv.GroupFactory.from_raw(_SPECIAL_GROUP_ADMIN)
-        return admin_grp._add_users(user_uuids)
+        return self.srv.admins._add_users(user_uuids)
 
     def rem_admins(self, user_uuids):
-        admin_grp = self.srv.GroupFactory.from_raw(_SPECIAL_GROUP_ADMIN)
-        return admin_grp._rem_users(user_uuids)
+        return self.srv.admins._rem_users(user_uuids)
 
 
 class AuthorizationMgmtMixin(object):
@@ -122,8 +124,8 @@ def requires_authorization(func):
         if not allowed:
             print("groups = {:s}".format(self.srv._list_groups()))
             if _SPECIAL_GROUP_ADMIN in self.srv._list_groups():
-                print("Admin Group Detected")
-                if user_uuid in self.srv._get_group(_SPECIAL_GROUP_ADMIN):
+                admins = self.srv._get_group(_SPECIAL_GROUP_ADMIN)
+                if user_uuid in admins._list_users():
                     allowed = True
 
         # Check if ANY is an Allowed Group
