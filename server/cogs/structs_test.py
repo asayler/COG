@@ -65,6 +65,7 @@ class TypesTestCase(test_common.CogsTestCase):
         for obj_in in objects:
             uuid = str(obj_in.uuid)
             obj_in.delete(user=user)
+            self.assertFalse(obj_in.exists())
             uuids_in.remove(uuid)
 
         # List UUIDs (Empty DB)
@@ -152,6 +153,26 @@ class TypesTestCase(test_common.CogsTestCase):
         self.assertEqual(obj1, obj2)
         self.assertEqual(obj1.get_dict(), obj2.get_dict())
 
+    def hashUpdateHelper(self, hash_create, input_dict, user=None):
+
+        # Create Obj
+        obj = hash_create(input_dict, user=user)
+        self.assertSubset(input_dict, obj.get_dict())
+
+        # Update Obj
+        update_dict = {}
+        for k in input_dict:
+            update_dict[k] = "{:s}_updated".format(input_dict[k])
+        obj.update(update_dict, user=user)
+        self.assertSubset(update_dict, obj.get_dict())
+
+    def hashDeleteHelper(self, hash_create, input_dict, user=None):
+
+        # Test Valid UUID
+        obj = hash_create(input_dict, user=user)
+        obj.delete(user=user)
+        self.assertFalse(obj.exists())
+
 
 class ServerTestCase(TypesTestCase):
 
@@ -214,6 +235,16 @@ class UserTestCase(TypesTestCase):
                            test_common.USER_TESTDICT,
                            user=self.admin)
 
+    def test_update_user(self):
+        self.hashUpdateHelper(self.srv.create_user,
+                              test_common.USER_TESTDICT,
+                              user=self.admin)
+
+    def test_delete_user(self):
+        self.hashDeleteHelper(self.srv.create_user,
+                              test_common.USER_TESTDICT,
+                              user=self.admin)
+
 
 class GroupTestCase(TypesTestCase):
 
@@ -240,6 +271,16 @@ class GroupTestCase(TypesTestCase):
                            test_common.GROUP_TESTDICT,
                            user=self.admin)
 
+    def test_delete_group(self):
+        self.hashDeleteHelper(self.srv.create_group,
+                              test_common.GROUP_TESTDICT,
+                              user=self.admin)
+
+    def test_update_group(self):
+        self.hashUpdateHelper(self.srv.create_group,
+                              test_common.GROUP_TESTDICT,
+                              user=self.admin)
+
     def test_members(self):
         grp = self.srv.create_group(test_common.GROUP_TESTDICT, user=self.admin)
         self.subSetReferenceHelper(grp.add_users, grp.rem_users, grp.list_users,
@@ -265,6 +306,15 @@ class AssignmentTestCase(TypesTestCase):
                            test_common.ASSIGNMENT_TESTDICT,
                            user=self.admin)
 
+    def test_update_assignment(self):
+        self.hashUpdateHelper(self.srv.create_assignment,
+                              test_common.ASSIGNMENT_TESTDICT,
+                              user=self.admin)
+
+    def test_delete_assignment(self):
+        self.hashDeleteHelper(self.srv.create_assignment,
+                              test_common.ASSIGNMENT_TESTDICT,
+                              user=self.admin)
 
 # class TestTestCase(TypesTestCase):
 

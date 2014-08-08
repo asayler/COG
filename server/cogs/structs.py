@@ -150,7 +150,7 @@ class AuthTSHashBase(auth.AuthorizationMgmtMixin, backend.TSHashBase):
         return self._delete()
 
     # Private Methods
-    def _update(self):
+    def _update(self, data):
         return super(AuthTSHashBase, self).set_dict(data)
     def _delete(self):
         return super(AuthTSHashBase, self).delete()
@@ -168,7 +168,7 @@ class AuthOwnedTSHashBase(auth.AuthorizationMgmtMixin, backend.OwnedTSHashBase):
         return self._delete()
 
     # Private Methods
-    def _update(self):
+    def _update(self, data):
         return super(AuthOwnedTSHashBase, self).set_dict(data)
     def _delete(self):
         return super(AuthOwnedTSHashBase, self).delete()
