@@ -185,7 +185,7 @@ class GroupBase(backend.TSHashBase):
 
 
 ## Assignment Object ##
-class AssignmentBase(backend.TSHashBase):
+class AssignmentBase(backend.OwnedTSHashBase):
     """
     COGS Assignment Class
 
@@ -211,23 +211,6 @@ class AssignmentBase(backend.TSHashBase):
         SubmissionListFactory = backend.Factory(SubmissionListBase, prefix=self.full_key,
                                                 db=self.db, srv=self.srv)
         self.submissions = SubmissionListFactory.from_raw('submissions')
-
-    # Override from_new
-    @classmethod
-    def from_new(cls, dictionary, user="", **kwargs):
-        """New Constructor"""
-
-        # Copy Data
-        data = copy.copy(dictionary)
-
-        # Add Data
-        data['owner'] = user
-
-        # Create Test
-        asn = super(AssignmentBase, cls).from_new(data, **kwargs)
-
-        # Return Run
-        return asn
 
     # Public Test Methods
     @auth.requires_authorization(pass_user=True)
@@ -266,28 +249,9 @@ class AssignmentBase(backend.TSHashBase):
 
 
 ## Test Object ##
-class TestBase(backend.TSHashBase):
+class TestBase(backend.OwnedTSHashBase):
     """COGS Test Class"""
-
     schema = set(_TS_SCHEMA + _TEST_SCHEMA)
-
-    # Override from_new
-    @classmethod
-    def from_new(cls, dictionary, asn_uuid, user="", **kwargs):
-        """New Constructor"""
-
-        # Copy Data
-        data = copy.copy(dictionary)
-
-        # Add Data
-        data['assignment'] = asn_uuid
-        data['owner'] = user
-
-        # Create Test
-        tst = super(TestBase, cls).from_new(data)
-
-        # Return Run
-        return tst
 
 
 ## Test List Object ##
@@ -297,7 +261,7 @@ class TestListBase(backend.SetBase):
 
 
 ## Submission Object ##
-class SubmissionBase(backend.TSHashBase):
+class SubmissionBase(backend.OwnedTSHashBase):
     """COGS Submission Class"""
 
     schema = set(_TS_SCHEMA + _SUBMISSION_SCHEMA)
@@ -322,7 +286,7 @@ class SubmissionListBase(backend.SetBase):
 
 
 ## Test Run Object ##
-class RunBase(backend.TSHashBase):
+class RunBase(backend.OwnedTSHashBase):
     """
     COGS Run Class
 
@@ -367,7 +331,7 @@ class RunBase(backend.TSHashBase):
 
 
 ## File Object ##
-class FileBase(backend.TSHashBase):
+class FileBase(backend.OwnedTSHashBase):
     """
     COGS File Class
 

@@ -192,17 +192,17 @@ class TSHashBase(HashBase):
     """
 
     @classmethod
-    def from_new(cls, d, key=None):
+    def from_new(cls, dictionary, key=None):
         """New Constructor"""
 
         # Set Times
-        data = copy.deepcopy(d)
+        data = copy.copy(dictionary)
         t = str(time.time())
         data['created_time'] = t
         data['modified_time'] = t
 
         # Call Parent
-        obj = super(TSHashBase, cls).from_new(data, key)
+        obj = super(TSHashBase, cls).from_new(data, key=key)
 
         # Return Object
         return obj
@@ -235,6 +235,26 @@ class TSHashBase(HashBase):
 
         # Return
         return ret
+
+
+class OwnedTSHashBase(TSHashBase):
+    """
+    Owned and Time-stamped Hash Base Class
+    """
+
+    @classmethod
+    def from_new(cls, dictionary, key=None, user=""):
+        """New Constructor"""
+
+        # Set Owner
+        data = copy.copy(dictionary)
+        data['owner'] = user
+
+        # Call Parent
+        obj = super(OwnedTSHashBase, cls).from_new(data, key=key)
+
+        # Return Run
+        return obj
 
 
 class SetBase(ObjectBase):
