@@ -54,25 +54,25 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
 
     # User Methods
     @auth.requires_authorization()
-    def create_user(self, d):
-        return self._create_user(d)
-    @auth.requires_authorization()
-    def get_user(self, uuid_hex):
-        return self._get_user(uuid_hex)
-    @auth.requires_authorization()
     def list_users(self):
         return self._list_users()
+    @auth.requires_authorization()
+    def create_user(self, data):
+        return self._create_user(data)
+    @auth.requires_authorization()
+    def get_user(self, user_uuid):
+        return self._get_user(user_uuid)
 
     # Group Methods
     @auth.requires_authorization()
-    def create_group(self, d):
-        return self._create_group(d)
-    @auth.requires_authorization()
-    def get_group(self, uuid_hex):
-        return self._get_group(uuid_hex)
-    @auth.requires_authorization()
     def list_groups(self):
         return self._list_groups()
+    @auth.requires_authorization()
+    def create_group(self, data):
+        return self._create_group(data)
+    @auth.requires_authorization()
+    def get_group(self, group_uuid):
+        return self._get_group(group_uuid)
 
     # File Methods
     @auth.requires_authorization(pass_user=True)
@@ -95,6 +95,7 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
     @auth.requires_authorization()
     def list_assignments(self):
         return self.AssignmentFactory.list_siblings()
+
 
     # Test Methods
     @auth.requires_authorization()
@@ -135,8 +136,32 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
 
 ### COGS Base Objects ###
 
+## Authorized TSHashBase ##
+class AuthTSHashBase(backend.TSHashBase):
+
+    @auth.requires_authorization()
+    def update(self, data):
+        return super(AuthTSHashBase, self).set_dict(data)
+
+    @auth.requires_authorization()
+    def delete(self):
+        return super(AuthTSHashBase, self).delete()
+
+
+## Authorized OwnedTSHashBase ##
+class AuthOwnedTSHashBase(backend.OwnedTSHashBase):
+
+    @auth.requires_authorization()
+    def update(self, data):
+        return super(AuthOwnedTSHashBase, self).set_dict(data)
+
+    @auth.requires_authorization()
+    def delete(self):
+        return super(AuthOwnedTSHashBase, self).delete()
+
+
 ## User Account Object ##
-class UserBase(backend.TSHashBase):
+class UserBase(AuthTSHashBase):
     """COGS User Class"""
     schema = set(_TS_SCHEMA + _USER_SCHEMA)
 
@@ -148,7 +173,7 @@ class UserListBase(backend.SetBase):
 
 
 ## User Group Object ##
-class GroupBase(backend.TSHashBase):
+class GroupBase(AuthTSHashBase):
     """COGS Group Class"""
 
     schema = set(_TS_SCHEMA + _GROUP_SCHEMA)
@@ -185,7 +210,7 @@ class GroupBase(backend.TSHashBase):
 
 
 ## Assignment Object ##
-class AssignmentBase(backend.OwnedTSHashBase):
+class AssignmentBase(AuthOwnedTSHashBase):
     """
     COGS Assignment Class
 
@@ -245,7 +270,7 @@ class AssignmentBase(backend.OwnedTSHashBase):
 
 
 ## Test Object ##
-class TestBase(backend.OwnedTSHashBase):
+class TestBase(AuthOwnedTSHashBase):
     """COGS Test Class"""
     schema = set(_TS_SCHEMA + _TEST_SCHEMA)
 
@@ -257,7 +282,7 @@ class TestListBase(backend.SetBase):
 
 
 ## Submission Object ##
-class SubmissionBase(backend.OwnedTSHashBase):
+class SubmissionBase(AuthOwnedTSHashBase):
     """COGS Submission Class"""
 
     schema = set(_TS_SCHEMA + _SUBMISSION_SCHEMA)
@@ -268,14 +293,14 @@ class SubmissionBase(backend.OwnedTSHashBase):
         return self.srv.RunFactory.from_new(tst, sub)
 
 
-## Test List Object ##
+## Submission List Object ##
 class SubmissionListBase(backend.SetBase):
     """COGS Submission List Class"""
     pass
 
 
 ## Test Run Object ##
-class RunBase(backend.OwnedTSHashBase):
+class RunBase(AuthOwnedTSHashBase):
     """COGS Run Class"""
 
     schema = set(_TS_SCHEMA + _RUN_SCHEMA)
@@ -317,7 +342,7 @@ class RunBase(backend.OwnedTSHashBase):
 
 
 ## File Object ##
-class FileBase(backend.OwnedTSHashBase):
+class FileBase(AuthOwnedTSHashBase):
     """
     COGS File Class
 

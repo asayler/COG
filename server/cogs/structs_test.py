@@ -56,6 +56,17 @@ class TypesTestCase(test_common.CogsTestCase):
             self.assertEqual(obj_in, obj_out)
             self.assertSubset(obj_in.get_dict(), obj_out.get_dict())
 
+        # Delete Objects
+        for obj_in in objects:
+            uuid = str(obj_in.uuid)
+            obj_in.delete(user=user)
+            uuids_in.remove(uuid)
+
+        # List UUIDs (Empty DB)
+        uuids_out = hash_list(user=user)
+        self.assertEqual(uuids_in, uuids_out)
+
+
     def subSetReferenceHelper(self, set_add, set_rem, set_list, uuids,
                               extra_uuids=None, user=None):
 
