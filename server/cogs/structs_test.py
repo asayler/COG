@@ -113,31 +113,35 @@ class TypesTestCase(test_common.CogsTestCase):
         objects_out = set_list(user=user)
         self.assertEqual(objects_in, objects_out)
 
-    def hashCreateHelper(self, hash_create, input_dict, user=None):
+    def hashCreateHelper(self, hash_create, input_dict, extra_kwargs={}, user=None):
 
         # Test Empty Dict
         d = {}
-        self.assertRaises(KeyError, hash_create, d, user=user)
+        self.assertRaises(KeyError, hash_create, d, user=user, **extra_kwargs)
 
         # Test Bad Dict
         d = {'badkey': "test"}
-        self.assertRaises(KeyError, hash_create, d, user=user)
+        self.assertRaises(KeyError, hash_create, d, user=user, **extra_kwargs)
 
         # Test Sub Dict
         d = copy.copy(input_dict)
         d.pop(d.keys()[0])
-        self.assertRaises(KeyError, hash_create, d, user=user)
+        self.assertRaises(KeyError, hash_create, d, user=user, **extra_kwargs)
 
         # Test Super Dict
         d = copy.copy(input_dict)
         d['badkey'] = "test"
-        self.assertRaises(KeyError, hash_create, d, user=user)
+        self.assertRaises(KeyError, hash_create, d, user=user, **extra_kwargs)
 
         # Test Good Dict
-        obj = hash_create(input_dict, user=user)
+        obj = hash_create(input_dict, user=user, **extra_kwargs)
         self.assertSubset(input_dict, obj.get_dict())
 
-    def hashGetHelper(self, hash_create, hash_get, input_dict, user=None):
+        # Delete Obj
+        obj.delete(user=user)
+        self.assertFalse(obj.exists())
+
+    def hashGetHelper(self, hash_create, hash_get, input_dict, extra_kwargs={}, user=None):
 
         # Test Invalid UUID
         self.assertRaises(structs.ObjectDNE,
@@ -146,17 +150,21 @@ class TypesTestCase(test_common.CogsTestCase):
                           user=user)
 
         # Test Valid UUID
-        obj1 = hash_create(input_dict, user=user)
+        obj1 = hash_create(input_dict, user=user, **extra_kwargs)
         self.assertSubset(input_dict, obj1.get_dict())
         obj1_key = obj1.obj_key
         obj2 = hash_get(obj1_key, user=user)
         self.assertEqual(obj1, obj2)
         self.assertEqual(obj1.get_dict(), obj2.get_dict())
 
-    def hashUpdateHelper(self, hash_create, input_dict, user=None):
+        # Delete Obj
+        obj1.delete(user=user)
+        self.assertFalse(obj1.exists())
+
+    def hashUpdateHelper(self, hash_create, input_dict, extra_kwargs={}, user=None):
 
         # Create Obj
-        obj = hash_create(input_dict, user=user)
+        obj = hash_create(input_dict, user=user, **extra_kwargs)
         self.assertSubset(input_dict, obj.get_dict())
 
         # Update Obj
@@ -166,10 +174,14 @@ class TypesTestCase(test_common.CogsTestCase):
         obj.update(update_dict, user=user)
         self.assertSubset(update_dict, obj.get_dict())
 
-    def hashDeleteHelper(self, hash_create, input_dict, user=None):
+        # Delete Obj
+        obj.delete(user=user)
+        self.assertFalse(obj.exists())
+
+    def hashDeleteHelper(self, hash_create, input_dict, extra_kwargs={}, user=None):
 
         # Test Valid UUID
-        obj = hash_create(input_dict, user=user)
+        obj = hash_create(input_dict, user=user, **extra_kwargs)
         obj.delete(user=user)
         self.assertFalse(obj.exists())
 
@@ -301,6 +313,42 @@ class GroupTestCase(TypesTestCase):
         grp = self.srv.create_group(test_common.GROUP_TESTDICT, user=self.admin)
         self.subSetReferenceHelper(grp.add_users, grp.rem_users, grp.list_users,
                                    self.users, user=self.admin)
+
+
+class FileTestCase(TypesTestCase):
+
+    def setUp(self):
+        super(FileTestCase, self).setUp()
+        src_file = open("./Makefile", 'rb')
+        self.file_obj = werkzeug.datastructures.FileStorage(stream=src_file, filename="Makefile")
+
+    def tearDown(self):
+        super(FileTestCase, self).tearDown()
+
+    def test_create_file(self):
+        self.hashCreateHelper(self.srv.create_file,
+                              test_common.FILE_TESTDICT,
+                              extra_kwargs={'file_obj': self.file_obj},
+                              user=self.admin)
+
+    def test_get_file(self):
+        self.hashGetHelper(self.srv.create_file,
+                           self.srv.get_file,
+                           test_common.FILE_TESTDICT,
+                              extra_kwargs={'file_obj': self.file_obj},
+                           user=self.admin)
+
+    def test_update_file(self):
+        self.hashUpdateHelper(self.srv.create_file,
+                              test_common.FILE_TESTDICT,
+                              extra_kwargs={'file_obj': self.file_obj},
+                              user=self.admin)
+
+    def test_delete_file(self):
+        self.hashDeleteHelper(self.srv.create_file,
+                              test_common.FILE_TESTDICT,
+                              extra_kwargs={'file_obj': self.file_obj},
+                              user=self.admin)
 
 
 class AssignmentTestCase(TypesTestCase):
