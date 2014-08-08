@@ -325,25 +325,35 @@ class AssignmentTestCase(TypesTestCase):
                               test_common.ASSIGNMENT_TESTDICT,
                               user=self.admin)
 
-# class TestTestCase(TypesTestCase):
+class TestTestCase(TypesTestCase):
 
-#     def setUp(self):
-#         super(TestTestCase, self).setUp()
-#         self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, user=self.admin)
+    def setUp(self):
+        super(TestTestCase, self).setUp()
+        self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, user=self.admin)
 
-#     def tearDown(self):
-#         super(TestTestCase, self).tearDown()
+    def tearDown(self):
+        super(TestTestCase, self).tearDown()
 
-#     def test_create_test(self):
-#         self.hashCreateHelper(self.asn.create_test,
-#                               test_common.TEST_TESTDICT,
-#                               user=self.admin)
+    def test_create_test(self):
+        self.hashCreateHelper(self.asn.create_test,
+                              test_common.TEST_TESTDICT,
+                              user=self.admin)
 
-#     def test_get_test(self):
-#         self.hashGetHelper(self.asn.create_test,
-#                            self.asn.get_test,
-#                            test_common.TEST_TESTDICT,
-#                            user=self.admin)
+    def test_get_test(self):
+        self.hashGetHelper(self.asn.create_test,
+                           self.srv.get_test,
+                           test_common.TEST_TESTDICT,
+                           user=self.admin)
+
+    def test_update_test(self):
+        self.hashUpdateHelper(self.asn.create_test,
+                              test_common.TEST_TESTDICT,
+                              user=self.admin)
+
+    def test_delete_test(self):
+        self.hashDeleteHelper(self.asn.create_test,
+                              test_common.TEST_TESTDICT,
+                              user=self.admin)
 
 
 # Main
