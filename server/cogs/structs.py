@@ -263,10 +263,27 @@ class AssignmentBase(AuthOwnedTSHashBase):
 
     # Override Delete
     def _delete(self):
+
+        # Remove Test Objects
+        for tst_uuid in self._list_tests():
+            tst = self.srv.get_test(tst_uuid)
+            tst.delete()
+        assert(not self._list_tests())
+
+        # Remove Test List
         if self.tests.exists():
             self.tests.delete()
+
+        # Remove Submission Objects
+        for sub_uuid in self._list_submissions():
+            sub = self.srv.get_submission(sub_uuid)
+            sub.delete()
+        assert(not self._list_submissions())
+
+        # Remove Submission List
         if self.submissions.exists():
             self.submissions.delete()
+
         super(AssignmentBase, self)._delete()
 
     # Public Test Methods
