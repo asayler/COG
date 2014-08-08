@@ -215,11 +215,19 @@ class ServerTestCase(TypesTestCase):
                                  test_common.ASSIGNMENT_TESTDICT,
                                  user=self.admin)
 
-    def test_tests(self):
+    def test_asn_tests(self):
         asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, user=self.admin)
         self.subHashDirectHelper(asn.create_test,
                                  self.srv.get_test,
                                  asn.list_tests,
+                                 test_common.TEST_TESTDICT,
+                                 user=self.admin)
+
+    def test_srv_tests(self):
+        asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, user=self.admin)
+        self.subHashDirectHelper(asn.create_test,
+                                 self.srv.get_test,
+                                 self.srv.list_tests,
                                  test_common.TEST_TESTDICT,
                                  user=self.admin)
 
