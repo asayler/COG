@@ -23,29 +23,41 @@ class TypesTestCase(test_common.CogsTestCase):
     def tearDown(self):
         super(TypesTestCase, self).tearDown()
 
-    def subHashDirectHelper(self, hash_create, hash_list, input_dict, extra_objs=None, user=None):
+    def subHashDirectHelper(self, hash_create, hash_get, hash_list, input_dict,
+                            extra_objs=None, user=None):
 
         if extra_objs:
-            objects_in = set(extra_objs)
+            uuids_in = set(extra_objs)
         else:
-            objects_in = set([])
+            uuids_in = set([])
 
-        # List Objects (Empty DB)
-        objects_out = hash_list(user=user)
-        self.assertEqual(objects_in, objects_out)
+        # List UUIDs (Empty DB)
+        uuids_out = hash_list(user=user)
+        self.assertEqual(uuids_in, uuids_out)
 
         # Generate 10 Objects
+        objects = []
         for i in range(10):
             d = copy.copy(input_dict)
             for k in d:
                 d[k] = "{:s}_test_{:02d}".format(d[k], i)
-            objects_in.add(str(hash_create(d, user=user).obj_key))
+            obj = hash_create(d, user=user)
+            self.assertSubset(d, obj.get_dict())
+            objects.append(obj)
+            uuids_in.add(str(obj.uuid))
 
-        # List Objects
-        objects_out = hash_list(user=user)
-        self.assertEqual(objects_in, objects_out)
+        # List UUIDs
+        uuids_out = hash_list(user=user)
+        self.assertEqual(uuids_in, uuids_out)
 
-    def subSetReferenceHelper(self, set_add, set_rem, set_list, uuids, extra_uuids=None, user=None):
+        # Check Objects
+        for obj_in in objects:
+            obj_out = hash_get(str(obj_in.uuid), user=user)
+            self.assertEqual(obj_in, obj_out)
+            self.assertSubset(obj_in.get_dict(), obj_out.get_dict())
+
+    def subSetReferenceHelper(self, set_add, set_rem, set_list, uuids,
+                              extra_uuids=None, user=None):
 
         uuids_in = set(uuids)
 
@@ -135,12 +147,14 @@ class ServerTestCase(TypesTestCase):
 
     def test_assignments(self):
         self.subHashDirectHelper(self.srv.create_assignment,
+                                 self.srv.get_assignment,
                                  self.srv.list_assignments,
                                  test_common.ASSIGNMENT_TESTDICT,
                                  user=self.admin)
 
     def test_users(self):
         self.subHashDirectHelper(self.srv.create_user,
+                                 self.srv.get_user,
                                  self.srv.list_users,
                                  test_common.USER_TESTDICT,
                                  extra_objs=[self.admin],
@@ -148,6 +162,7 @@ class ServerTestCase(TypesTestCase):
 
     def test_groups(self):
         self.subHashDirectHelper(self.srv.create_group,
+                                 self.srv.get_group,
                                  self.srv.list_groups,
                                  test_common.GROUP_TESTDICT,
                                  extra_objs=[structs.auth._SPECIAL_GROUP_ADMIN],
