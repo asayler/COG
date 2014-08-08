@@ -5,6 +5,9 @@
 # Univerity of Colorado
 
 import copy
+import os
+import werkzeug
+import mimetypes
 
 import auth
 
@@ -139,24 +142,36 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
 ## Authorized TSHashBase ##
 class AuthTSHashBase(auth.AuthorizationMgmtMixin, backend.TSHashBase):
 
+    # Public Methods
     @auth.requires_authorization()
     def update(self, data):
-        return super(AuthTSHashBase, self).set_dict(data)
-
+        return self._update(data)
     @auth.requires_authorization()
     def delete(self):
+        return self._delete()
+
+    # Private Methods
+    def _update(self):
+        return super(AuthTSHashBase, self).set_dict(data)
+    def _delete(self):
         return super(AuthTSHashBase, self).delete()
 
 
 ## Authorized OwnedTSHashBase ##
 class AuthOwnedTSHashBase(auth.AuthorizationMgmtMixin, backend.OwnedTSHashBase):
 
+    # Public Methods
     @auth.requires_authorization()
     def update(self, data):
-        return super(AuthOwnedTSHashBase, self).set_dict(data)
-
+        return self._update(data)
     @auth.requires_authorization()
     def delete(self):
+        return self._delete()
+
+    # Private Methods
+    def _update(self):
+        return super(AuthOwnedTSHashBase, self).set_dict(data)
+    def _delete(self):
         return super(AuthOwnedTSHashBase, self).delete()
 
 
@@ -352,20 +367,21 @@ class FileBase(AuthOwnedTSHashBase):
 
     # Override from_new
     @classmethod
-    def from_new(cls, d, file_obj=None, dst=None, **kwargs):
+    def from_new(cls, data, file_obj=None, dst=None, **kwargs):
         """New Constructor"""
 
         # Create New Object
-        data = copy.deepcopy(d)
+        data = copy.copy(data)
 
         # Setup file_obj
         if file_obj is None:
             src_path = os.path.abspath("{:s}".format(data['path']))
             src_file = open(src_path, 'rb')
             file_obj = werkzeug.datastructures.FileStorage(stream=src_file, filename=data['name'])
-        else:
-            data['name'] = str(file_obj.filename)
-            data['path'] = ""
+
+        # Setup data
+        data['name'] = str(file_obj.filename)
+        data['path'] = ""
 
         # Get Type
         typ = mimetypes.guess_type(file_obj.filename)
@@ -384,17 +400,16 @@ class FileBase(AuthOwnedTSHashBase):
         # Save File
         try:
             file_obj.save(fle['path'])
-            file_obj.close()
         except IOError:
             # Clean up on failure
-            fle.delete(force=True)
+            fle._delete(force=True)
             raise
 
         # Return File
         return fle
 
     # Override Delete
-    def delete(self, force=False):
+    def _delete(self, force=False):
         """Delete Object"""
 
         # Delete File
@@ -407,4 +422,4 @@ class FileBase(AuthOwnedTSHashBase):
                 raise
 
         # Delete Self
-        super(FileBase, self).delete()
+        super(FileBase, self)._delete()

@@ -7,6 +7,7 @@
 
 import copy
 import unittest
+import werkzeug
 
 import structs
 import test_common
@@ -31,7 +32,7 @@ class TypesTestCase(test_common.CogsTestCase):
         super(TypesTestCase, self).tearDown()
 
     def subHashDirectHelper(self, hash_create, hash_get, hash_list, input_dict,
-                            extra_objs=None, user=None):
+                            extra_kwargs={}, extra_objs=None, user=None):
 
         if extra_objs:
             uuids_in = set(extra_objs)
@@ -45,11 +46,8 @@ class TypesTestCase(test_common.CogsTestCase):
         # Generate 10 Objects
         objects = []
         for i in range(10):
-            d = copy.copy(input_dict)
-            for k in d:
-                d[k] = "{:s}_test_{:02d}".format(d[k], i)
-            obj = hash_create(d, user=user)
-            self.assertSubset(d, obj.get_dict())
+            obj = hash_create(input_dict, user=user, **extra_kwargs)
+            self.assertSubset(input_dict, obj.get_dict())
             objects.append(obj)
             uuids_in.add(str(obj.uuid))
 
@@ -177,6 +175,16 @@ class ServerTestCase(TypesTestCase):
                                  self.srv.list_groups,
                                  test_common.GROUP_TESTDICT,
                                  extra_objs=[structs.auth._SPECIAL_GROUP_ADMIN],
+                                 user=self.admin)
+
+    def test_files(self):
+        src_file = open("./Makefile", 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=src_file, filename="Makefile")
+        self.subHashDirectHelper(self.srv.create_file,
+                                 self.srv.get_file,
+                                 self.srv.list_files,
+                                 test_common.FILE_TESTDICT,
+                                 extra_kwargs={'file_obj': file_obj},
                                  user=self.admin)
 
     def test_assignments(self):
