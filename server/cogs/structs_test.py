@@ -232,7 +232,6 @@ class ServerTestCase(TypesTestCase):
                                  user=self.admin)
 
 
-
 class UserTestCase(TypesTestCase):
 
     def setUp(self):
@@ -272,7 +271,7 @@ class GroupTestCase(TypesTestCase):
             d = copy.copy(test_common.USER_TESTDICT)
             for k in d:
                 d[k] = "test_{:s}_{:02d}".format(k, i)
-            self.users.add(str(self.srv._create_user(d).uuid))
+            self.users.add(str(self.srv.create_user(d, user=self.admin).uuid))
 
     def tearDown(self):
         super(GroupTestCase, self).tearDown()
@@ -333,13 +332,36 @@ class AssignmentTestCase(TypesTestCase):
                               test_common.ASSIGNMENT_TESTDICT,
                               user=self.admin)
 
+
 class TestTestCase(TypesTestCase):
 
     def setUp(self):
+
+        # Call Parent
         super(TestTestCase, self).setUp()
+
+        # Create Assignment
         self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, user=self.admin)
 
+        # Create Files
+        src_file = open("./Makefile", 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=src_file, filename="Makefile")
+        self.files = set([])
+        for i in range(10):
+            data = copy.copy(test_common.FILE_TESTDICT)
+            for k in data:
+                data[k] = "test_{:s}_{:02d}".format(k, i)
+            self.files.add(str(self.srv.create_file(data, file_obj=file_obj, user=self.admin).uuid))
+
+
     def tearDown(self):
+
+        # Delete Files
+        for fle_uuid in self.files:
+            fle = self.srv.get_file(fle_uuid, user=self.admin)
+            fle.delete(user=self.admin)
+
+        # Call Parent
         super(TestTestCase, self).tearDown()
 
     def test_create_test(self):
@@ -362,6 +384,11 @@ class TestTestCase(TypesTestCase):
         self.hashDeleteHelper(self.asn.create_test,
                               test_common.TEST_TESTDICT,
                               user=self.admin)
+
+    def test_files(self):
+        tst = self.asn.create_test(test_common.TEST_TESTDICT, user=self.admin)
+        self.subSetReferenceHelper(tst.add_files, tst.rem_files, tst.list_files,
+                                   self.files, user=self.admin)
 
 
 # Main

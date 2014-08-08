@@ -80,13 +80,13 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
     # File Methods
     @auth.requires_authorization(pass_user=True)
     def create_file(self, data, file_obj=None, dst=None, user=None):
-        return self.FileFactory.from_new(data, file_obj=file_obj, dst=dst, user=user)
+        return self._create_file(data, file_obj=file_obj, dst=dst, user=user)
     @auth.requires_authorization()
     def get_file(self, uuid_hex):
-        return self.FileFactory.from_existing(uuid_hex)
+        return self._get_file(uuid_hex)
     @auth.requires_authorization()
     def list_files(self):
-        return self.FileFactory.list_siblings()
+        return self._list_files()
 
     # Assignment Methods
     @auth.requires_authorization(pass_user=True)
@@ -120,8 +120,6 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
         return self.UserFactory.from_new(data)
     def _get_user(self, uuid_hex):
         return self.UserFactory.from_existing(uuid_hex)
-    def _get_users(self):
-        return self.UserFactory.get_siblings()
     def _list_users(self):
         return self.UserFactory.list_siblings()
 
@@ -130,10 +128,16 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
         return self.GroupFactory.from_new(data)
     def _get_group(self, uuid_hex):
         return self.GroupFactory.from_existing(uuid_hex)
-    def _get_groups(self):
-        return self.GroupFactory.get_siblings()
     def _list_groups(self):
         return self.GroupFactory.list_siblings()
+
+    # Private File Methods
+    def _create_file(self, data, file_obj=None, dst=None, user=None):
+        return self.FileFactory.from_new(data, file_obj=file_obj, dst=dst, user=user)
+    def _get_file(self, uuid_hex):
+        return self.FileFactory.from_existing(uuid_hex)
+    def _list_files(self):
+        return self.FileFactory.list_siblings()
 
     # Private Assignment Methods
     def _create_assignment(self, data, user=None):
@@ -328,6 +332,36 @@ class TestBase(AuthOwnedTSHashBase):
 
     schema = set(_TS_SCHEMA + _TEST_SCHEMA)
 
+    # Override Constructor
+    def __init__(self, uuid_obj):
+        """Base Constructor"""
+
+        # Call Parent Construtor
+        super(TestBase, self).__init__(uuid_obj)
+
+        # Setup Lists
+        FileFactory = backend.Factory(FileListBase, prefix=self.full_key, db=self.db, srv=self.srv)
+        self.files = FileFactory.from_raw('files')
+
+    # Override Delete
+    def _delete(self):
+        # Remove from assignment
+        tst_uuid = str(self.uuid)
+        asn_uuid = self['assignment']
+        if asn_uuid:
+            asn = self.srv._get_assignment(asn_uuid)
+            if not asn._rem_tests([tst_uuid]):
+                msg = "Could not remove Test {:s} for Assignment {:s}".format(tst_uuid, asn_uuid)
+                raise backend.ObjectError(msg)
+
+        # Remove file list
+        if self.files.exists():
+            self.files.delete()
+
+        # Call Parent
+        super(TestBase, self)._delete()
+
+    # Override from_new
     @classmethod
     def from_new(cls, data, asn=None, **kwargs):
 
@@ -344,15 +378,24 @@ class TestBase(AuthOwnedTSHashBase):
         # Return Test
         return obj
 
-    def _delete(self):
-        tst_uuid = str(self.uuid)
-        asn_uuid = self['assignment']
-        if asn_uuid:
-            asn = self.srv._get_assignment(asn_uuid)
-            if not asn._rem_tests([tst_uuid]):
-                msg = "Could not remove Test {:s} for Assignment {:s}".format(tst_uuid, asn_uuid)
-                raise backend.ObjectError(msg)
-        super(TestBase, self)._delete()
+    # Files Methods
+    @auth.requires_authorization()
+    def add_files(self, file_uuids):
+        return self._add_files(file_uuids)
+    @auth.requires_authorization()
+    def rem_files(self, file_uuids):
+        return self._rem_files(file_uuids)
+    @auth.requires_authorization()
+    def list_files(self):
+        return self._list_files()
+
+    # Private Files Methods
+    def _add_files(self, file_uuids):
+        return self.files.add_vals(file_uuids)
+    def _rem_files(self, file_uuids):
+        return self.files.del_vals(file_uuids)
+    def _list_files(self):
+        return self.files.get_set()
 
 
 ## Test List Object ##
@@ -488,3 +531,9 @@ class FileBase(AuthOwnedTSHashBase):
 
         # Delete Self
         super(FileBase, self)._delete()
+
+
+## File List Object ##
+class FileListBase(backend.SetBase):
+    """COGS File List Class"""
+    pass
