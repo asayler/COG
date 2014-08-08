@@ -143,6 +143,11 @@ class ObjectBase(object):
         """Delete Object"""
         pass
 
+    @abc.abstractmethod
+    def exists(self):
+        """Check if Object Exists"""
+        pass
+
 
 class Factory(object):
 

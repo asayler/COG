@@ -47,9 +47,14 @@ class ObjectBase(backend.ObjectBase):
         """Delete Object"""
 
         super(ObjectBase, self).delete()
-
         if not self.db.delete(self.full_key):
             raise ObjectError("Delete Failed")
+
+    def exists(self):
+        """Check if object exists"""
+
+        super(ObjectBase, self).delete()
+        return self.db.exists(self.full_key)
 
 
 class Factory(backend.Factory):
