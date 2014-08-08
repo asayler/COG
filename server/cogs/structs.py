@@ -28,10 +28,7 @@ _FILES_DIR = "./files/"
 
 ## Top-Level Server Object ##
 class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
-    """
-    COGS Server Class
-
-    """
+    """COGS Server Class"""
 
     # Override Constructor
     def __init__(self, db=None):
@@ -56,62 +53,62 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
         self.init_admins()
 
     # User Methods
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def create_user(self, d):
         return self._create_user(d)
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def get_user(self, uuid_hex):
         return self._get_user(uuid_hex)
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def list_users(self):
         return self._list_users()
 
     # Group Methods
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def create_group(self, d):
         return self._create_group(d)
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def get_group(self, uuid_hex):
         return self._get_group(uuid_hex)
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def list_groups(self):
         return self._list_groups()
 
     # File Methods
-    @auth.requires_authorization
-    def create_file(self, d, file_obj):
-        return self.FileFactory.from_new(d, file_obj)
-    @auth.requires_authorization
+    @auth.requires_authorization(pass_user=True)
+    def create_file(self, d, file_obj, user=""):
+        return self.FileFactory.from_new(d, file_obj, user="")
+    @auth.requires_authorization()
     def get_file(self, uuid_hex):
         return self.FileFactory.from_existing(uuid_hex)
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def list_files(self):
         return self.FileFactory.list_siblings()
 
     # Assignment Methods
-    @auth.requires_authorization
-    def create_assignment(self, d):
-        return self.AssignmentFactory.from_new(d)
-    @auth.requires_authorization
+    @auth.requires_authorization(pass_user=True)
+    def create_assignment(self, d, user=""):
+        return self.AssignmentFactory.from_new(d, user="")
+    @auth.requires_authorization()
     def get_assignment(self, uuid_hex):
         return self.AssignmentFactory.from_existing(uuid_hex)
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def list_assignments(self):
         return self.AssignmentFactory.list_siblings()
 
     # Test Methods
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def get_test(self, uuid_hex):
         return self.TestFactory.from_existing(uuid_hex)
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def list_tests(self):
         return self.TestFactory.list_siblings()
 
     # Submission Methods
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def get_submission(self, uuid_hex):
         return self.SubmissionFactory.from_existing(uuid_hex)
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def list_submissions(self):
         return self.SubmissionFactory.list_siblings()
 
@@ -140,30 +137,19 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
 
 ## User Account Object ##
 class UserBase(backend.TSHashBase):
-    """
-    COGS User Class
-
-    """
-
+    """COGS User Class"""
     schema = set(_TS_SCHEMA + _USER_SCHEMA)
 
 
 ## User List Object ##
 class UserListBase(backend.SetBase):
-    """
-    COGS User List Class
-
-    """
-
+    """COGS User List Class"""
     pass
 
 
 ## User Group Object ##
 class GroupBase(backend.TSHashBase):
-    """
-    COGS Group Class
-
-    """
+    """COGS Group Class"""
 
     schema = set(_TS_SCHEMA + _GROUP_SCHEMA)
 
@@ -179,13 +165,13 @@ class GroupBase(backend.TSHashBase):
         self.members = sf.from_raw('members')
 
     # Members Methods
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def add_users(self, user_uuids):
         return self._add_users(user_uuids)
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def rem_users(self, user_uuids):
         return self._rem_users(user_uuids)
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def list_users(self):
         return self._list_users()
 
@@ -218,37 +204,101 @@ class AssignmentBase(backend.TSHashBase):
         self.TestFactory = backend.UUIDFactory(TestBase, db=self.db, srv=self.srv)
         self.SubmissionFactory = backend.UUIDFactory(SubmissionBase, db=self.db, srv=self.srv)
 
-    # Test Methods
-    @auth.requires_authorization
-    def create_test(self, dic):
-        d = copy.copy(dic)
-        d['assignment': str(self.uuid)]
-        return self.TestFactory.from_new(d)
+        # Setup Lists
+        TestListFactory = backend.Factory(TestListBase, prefix=self.full_key,
+                                          db=self.db, srv=self.srv)
+        self.tests = TestListFactory.from_raw('tests')
+        SubmissionListFactory = backend.Factory(SubmissionListBase, prefix=self.full_key,
+                                                db=self.db, srv=self.srv)
+        self.submissions = SubmissionListFactory.from_raw('submissions')
 
-    # Submission Methods
-    @auth.requires_authorization
-    def create_submission(self, dic):
-        d = copy.copy(dic)
-        d['assignment': str(self.uuid)]
-        return self.SubmissionFactory.from_new(d)
+    # Override from_new
+    @classmethod
+    def from_new(cls, dictionary, user="", **kwargs):
+        """New Constructor"""
+
+        # Copy Data
+        data = copy.copy(dictionary)
+
+        # Add Data
+        data['owner'] = user
+
+        # Create Test
+        asn = super(AssignmentBase, cls).from_new(data, **kwargs)
+
+        # Return Run
+        return asn
+
+    # Public Test Methods
+    @auth.requires_authorization(pass_user=True)
+    def create_test(self, dictionary, user=""):
+        tst = self.TestFactory.from_new(dictionary, str(self.uuid), user="")
+        self._add_tests(str(tst.uuid))
+        return tst
+    @auth.requires_authorization()
+    def list_tests(self):
+        return self._list_tests()
+
+    # Public Submission Methods
+    @auth.requires_authorization(pass_user=True)
+    def create_submission(self, dictionary, user=""):
+        sub = self.SubmissionFactory.from_new(dictionary, str(self.uuid), user="")
+        self._add_submissions(str(sub.uuid))
+    @auth.requires_authorization()
+    def list_submissions(self):
+        return self._list_submissions()
+
+    # Private Test Methods
+    def _add_tests(self, test_uuids):
+        return self.tests.add_vals(test_uuids)
+    def _rem_tests(self, test_uuids):
+        return self.tests.del_vals(test_uuids)
+    def _list_tests(self):
+        return self.tests.get_set()
+
+    # Private Submission Methods
+    def _add_submissions(self, submission_uuids):
+        return self.submissions.add_vals(submission_uuids)
+    def _rem_submissions(self, submission_uuids):
+        return self.submissions.del_vals(submission_uuids)
+    def _list_submissions(self):
+        return self.submissions.get_set()
 
 
-## Assignment Test Object ##
+## Test Object ##
 class TestBase(backend.TSHashBase):
-    """
-    COGS Test Class
-
-    """
+    """COGS Test Class"""
 
     schema = set(_TS_SCHEMA + _TEST_SCHEMA)
 
+    # Override from_new
+    @classmethod
+    def from_new(cls, dictionary, asn_uuid, user="", **kwargs):
+        """New Constructor"""
 
-## Assignment Submission Object ##
+        # Copy Data
+        data = copy.copy(dictionary)
+
+        # Add Data
+        data['assignment'] = asn_uuid
+        data['owner'] = user
+
+        # Create Test
+        tst = super(TestBase, cls).from_new(data)
+
+        # Return Run
+        return tst
+
+
+## Test List Object ##
+class TestListBase(backend.SetBase):
+    """COGS Test List Class"""
+    pass
+
+
+## Submission Object ##
 class SubmissionBase(backend.TSHashBase):
-    """
-    COGS Submission Class
-
-    """
+    """COGS Submission Class"""
 
     schema = set(_TS_SCHEMA + _SUBMISSION_SCHEMA)
 
@@ -260,9 +310,15 @@ class SubmissionBase(backend.TSHashBase):
                                               db=self.db, srv=self.srv)
 
     # Run Methods
-    @auth.requires_authorization
+    @auth.requires_authorization()
     def execute_run(self, tst, sub):
         return self.RunFactory.from_new(tst, sub)
+
+
+## Test List Object ##
+class SubmissionListBase(backend.SetBase):
+    """COGS Submission List Class"""
+    pass
 
 
 ## Test Run Object ##
@@ -276,7 +332,7 @@ class RunBase(backend.TSHashBase):
 
     # Override from_new
     @classmethod
-    def from_new(cls, tst, sub):
+    def from_new(cls, tst, sub, **kwargs):
         """New Constructor"""
 
         # Create New Object
@@ -289,7 +345,7 @@ class RunBase(backend.TSHashBase):
         data['output'] = ""
 
         # Create Run
-        run = super(RunBase, cls).from_new(data)
+        run = super(RunBase, cls).from_new(data, **kwargs)
 
         # Get Files
         tst_fls = tst.get_files()
@@ -321,7 +377,7 @@ class FileBase(backend.TSHashBase):
 
     # Override from_new
     @classmethod
-    def from_new(cls, d, file_obj=None, dst=None):
+    def from_new(cls, d, file_obj=None, dst=None, **kwargs):
         """New Constructor"""
 
         # Create New Object
@@ -342,7 +398,7 @@ class FileBase(backend.TSHashBase):
         data['encoding'] = str(typ[1])
 
         # Create File
-        fle = super(FileBase, cls).from_new(data)
+        fle = super(FileBase, cls).from_new(data, **kwargs)
 
         # Set Path
         if dst is None:

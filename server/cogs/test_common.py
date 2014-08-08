@@ -26,11 +26,9 @@ USER_TESTDICT        = {'username': "testuser",
 
 GROUP_TESTDICT        = {'name': "testgroup"}
 
-ASSIGNMENT_TESTDICT  = {'owner': "01c47915-4777-11d8-bc70-0090272ff725",
-                        'name': "Test_Assignment"}
+ASSIGNMENT_TESTDICT  = {'name': "Test_Assignment"}
 
-TEST_TESTDICT        = {'owner': "01c47915-4777-11d8-bc70-0090272ff725",
-                        'name': "Test_Assignment",
+TEST_TESTDICT        = {'name': "Test_Assignment",
                         'type': "script",
                         'maxscore': "10"}
 

@@ -145,13 +145,6 @@ class ServerTestCase(TypesTestCase):
     def tearDown(self):
         super(ServerTestCase, self).tearDown()
 
-    def test_assignments(self):
-        self.subHashDirectHelper(self.srv.create_assignment,
-                                 self.srv.get_assignment,
-                                 self.srv.list_assignments,
-                                 test_common.ASSIGNMENT_TESTDICT,
-                                 user=self.admin)
-
     def test_users(self):
         self.subHashDirectHelper(self.srv.create_user,
                                  self.srv.get_user,
@@ -168,8 +161,15 @@ class ServerTestCase(TypesTestCase):
                                  extra_objs=[structs.auth._SPECIAL_GROUP_ADMIN],
                                  user=self.admin)
 
+    def test_assignments(self):
+        self.subHashDirectHelper(self.srv.create_assignment,
+                                 self.srv.get_assignment,
+                                 self.srv.list_assignments,
+                                 test_common.ASSIGNMENT_TESTDICT,
+                                 user=self.admin)
 
-class UserTestCase(ServerTestCase):
+
+class UserTestCase(TypesTestCase):
 
     def setUp(self):
         super(UserTestCase, self).setUp()

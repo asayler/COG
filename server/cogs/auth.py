@@ -107,50 +107,60 @@ class AuthorizationMgmtMixin(object):
 
 ###  Decorators ###
 
-def requires_authorization(func):
+def requires_authorization(pass_user=False, pass_owner=False):
 
-    def _wrapper(self, *args, **kwargs):
+    def _decorator(func):
 
-        # Extract Inputs
-        user_uuid = kwargs.pop('user', None)
-        owner_uuid = kwargs.pop('owner', None)
-        prefix = getattr(self, 'full_key', None)
-        allowed = False
+        def _wrapper(self, *args, **kwargs):
 
-        # Check if owner
-        if owner_uuid:
-            if user_uuid.lower() == owner_uuid.lower():
-                allowed = True
+            # Extract Inputs
+            if pass_user:
+                user_uuid = kwargs.get('user', None)
+            else:
+                user_uuid = kwargs.pop('user', None)
+            if pass_owner:
+                owner_uuid = kwargs.get('owner', None)
+            else:
+                owner_uuid = kwargs.pop('owner', None)
+            prefix = getattr(self, 'full_key', None)
+            allowed = False
 
-        # Setup Group List
-        if not allowed:
-            sf = backend.Factory(GroupListBase, prefix=prefix, db=self.db)
-            group_uuids = sf.from_raw("{:s}_{:s}".format(func.__name__, 'groups')).get_set()
-
-        # Check if User is in ADMIN Group
-        if not allowed:
-            if _SPECIAL_GROUP_ADMIN in self.srv._list_groups():
-                admins = self.srv._get_group(_SPECIAL_GROUP_ADMIN)
-                if user_uuid in admins._list_users():
+            # Check if owner
+            if owner_uuid:
+                if user_uuid.lower() == owner_uuid.lower():
                     allowed = True
 
-        # Check if ANY is an Allowed Group
-        if not allowed:
-            if _SPECIAL_GROUP_ANY in group_uuids:
-                allowed = True
+            # Setup Group List
+            if not allowed:
+                sf = backend.Factory(GroupListBase, prefix=prefix, db=self.db)
+                group_uuids = sf.from_raw("{:s}_{:s}".format(func.__name__, 'groups')).get_set()
 
-        # Check if User is in an Allowed Group
-        if not allowed:
-            for group_uuid in group_uuids:
-                group = self.srv._get_group(group_uuid)
-                if user_uuid in group._list_users():
+            # Check if User is in ADMIN Group
+            if not allowed:
+                if _SPECIAL_GROUP_ADMIN in self.srv._list_groups():
+                    admins = self.srv._get_group(_SPECIAL_GROUP_ADMIN)
+                    if user_uuid in admins._list_users():
+                        allowed = True
+
+            # Check if ANY is an Allowed Group
+            if not allowed:
+                if _SPECIAL_GROUP_ANY in group_uuids:
                     allowed = True
-                    break
 
-        # Call Wrapped Function
-        if allowed:
-            return func(self, *args, **kwargs)
-        else:
-            raise UserNotAuthorizedError(user_uuid, func)
+            # Check if User is in an Allowed Group
+            if not allowed:
+                for group_uuid in group_uuids:
+                    group = self.srv._get_group(group_uuid)
+                    if user_uuid in group._list_users():
+                        allowed = True
+                        break
 
-    return _wrapper
+            # Call Wrapped Function
+            if allowed:
+                return func(self, *args, **kwargs)
+            else:
+                raise UserNotAuthorizedError(user_uuid, func)
+
+        return _wrapper
+
+    return _decorator
