@@ -15,10 +15,17 @@ import test_common
 class TypesTestCase(test_common.CogsTestCase):
 
     def setUp(self):
+
+        # Call Parent
         super(TypesTestCase, self).setUp()
+
+        # Setup Server
         self.srv = structs.Server(db=self.db)
-        self.admin = str(self.srv._create_user(test_common.USER_TESTDICT).uuid)
-        self.admins = self.srv.add_admins([self.admin])
+
+        # Setup Admin
+        self.admin = self.srv._create_user(test_common.USER_TESTDICT)
+        self.admin_uuid = str(self.admin.uuid).lower()
+        self.srv.add_admins([self.admin_uuid])
 
     def tearDown(self):
         super(TypesTestCase, self).tearDown()
@@ -161,7 +168,7 @@ class ServerTestCase(TypesTestCase):
                                  self.srv.get_user,
                                  self.srv.list_users,
                                  test_common.USER_TESTDICT,
-                                 extra_objs=[self.admin],
+                                 extra_objs=[self.admin_uuid],
                                  user=self.admin)
 
     def test_groups(self):

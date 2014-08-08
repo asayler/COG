@@ -115,19 +115,28 @@ def requires_authorization(pass_user=False, pass_owner=False):
 
             # Extract Inputs
             if pass_user:
-                user_uuid = kwargs.get('user', None)
+                user = kwargs.get('user', None)
             else:
-                user_uuid = kwargs.pop('user', None)
+                user = kwargs.pop('user', None)
             if pass_owner:
-                owner_uuid = kwargs.get('owner', None)
+                owner = kwargs.get('owner', None)
             else:
-                owner_uuid = kwargs.pop('owner', None)
+                owner = kwargs.pop('owner', None)
+
+            if user:
+                user_uuid = str(user.uuid).lower()
+            else:
+                user_uuid = None
+            if owner:
+                owner_uuid = str(owner.uuid).lower()
+            else:
+                owner_uuid = None
             prefix = getattr(self, 'full_key', None)
             allowed = False
 
             # Check if owner
             if owner_uuid:
-                if user_uuid.lower() == owner_uuid.lower():
+                if user_uuid == owner_uuid:
                     allowed = True
 
             # Setup Group List

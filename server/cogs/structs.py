@@ -76,8 +76,8 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
 
     # File Methods
     @auth.requires_authorization(pass_user=True)
-    def create_file(self, d, file_obj, user=""):
-        return self.FileFactory.from_new(d, file_obj, user="")
+    def create_file(self, d, file_obj, user=None):
+        return self.FileFactory.from_new(d, file_obj, user=None)
     @auth.requires_authorization()
     def get_file(self, uuid_hex):
         return self.FileFactory.from_existing(uuid_hex)
@@ -87,8 +87,8 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
 
     # Assignment Methods
     @auth.requires_authorization(pass_user=True)
-    def create_assignment(self, d, user=""):
-        return self.AssignmentFactory.from_new(d, user="")
+    def create_assignment(self, d, user=None):
+        return self.AssignmentFactory.from_new(d, user=None)
     @auth.requires_authorization()
     def get_assignment(self, uuid_hex):
         return self.AssignmentFactory.from_existing(uuid_hex)
@@ -235,8 +235,8 @@ class AssignmentBase(AuthOwnedTSHashBase):
 
     # Public Test Methods
     @auth.requires_authorization(pass_user=True)
-    def create_test(self, dictionary, user=""):
-        tst = self.srv.TestFactory.from_new(dictionary, str(self.uuid), user="")
+    def create_test(self, dictionary, user=None):
+        tst = self.srv.TestFactory.from_new(dictionary, str(self.uuid), user=None)
         self._add_tests(str(tst.uuid))
         return tst
     @auth.requires_authorization()
@@ -245,8 +245,8 @@ class AssignmentBase(AuthOwnedTSHashBase):
 
     # Public Submission Methods
     @auth.requires_authorization(pass_user=True)
-    def create_submission(self, dictionary, user=""):
-        sub = self.srv.SubmissionFactory.from_new(dictionary, str(self.uuid), user="")
+    def create_submission(self, dictionary, user=None):
+        sub = self.srv.SubmissionFactory.from_new(dictionary, str(self.uuid), user=None)
         self._add_submissions(str(sub.uuid))
     @auth.requires_authorization()
     def list_submissions(self):

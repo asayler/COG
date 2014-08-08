@@ -243,12 +243,15 @@ class OwnedTSHashBase(TSHashBase):
     """
 
     @classmethod
-    def from_new(cls, dictionary, key=None, user=""):
+    def from_new(cls, dictionary, key=None, user=None):
         """New Constructor"""
 
         # Set Owner
         data = copy.copy(dictionary)
-        data['owner'] = user
+        if user:
+            data['owner'] = str(user.uuid).lower()
+        else:
+            data['owner'] = ""
 
         # Call Parent
         obj = super(OwnedTSHashBase, cls).from_new(data, key=key)
