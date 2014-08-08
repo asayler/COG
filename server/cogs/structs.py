@@ -137,7 +137,7 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
 ### COGS Base Objects ###
 
 ## Authorized TSHashBase ##
-class AuthTSHashBase(backend.TSHashBase):
+class AuthTSHashBase(auth.AuthorizationMgmtMixin, backend.TSHashBase):
 
     @auth.requires_authorization()
     def update(self, data):
@@ -149,7 +149,7 @@ class AuthTSHashBase(backend.TSHashBase):
 
 
 ## Authorized OwnedTSHashBase ##
-class AuthOwnedTSHashBase(backend.OwnedTSHashBase):
+class AuthOwnedTSHashBase(auth.AuthorizationMgmtMixin, backend.OwnedTSHashBase):
 
     @auth.requires_authorization()
     def update(self, data):
