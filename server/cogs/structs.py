@@ -200,10 +200,6 @@ class AssignmentBase(backend.OwnedTSHashBase):
         # Call Parent Construtor
         super(AssignmentBase, self).__init__(key)
 
-        # Setup Factories
-        self.TestFactory = backend.UUIDFactory(TestBase, db=self.db, srv=self.srv)
-        self.SubmissionFactory = backend.UUIDFactory(SubmissionBase, db=self.db, srv=self.srv)
-
         # Setup Lists
         TestListFactory = backend.Factory(TestListBase, prefix=self.full_key,
                                           db=self.db, srv=self.srv)
@@ -215,7 +211,7 @@ class AssignmentBase(backend.OwnedTSHashBase):
     # Public Test Methods
     @auth.requires_authorization(pass_user=True)
     def create_test(self, dictionary, user=""):
-        tst = self.TestFactory.from_new(dictionary, str(self.uuid), user="")
+        tst = self.srv.TestFactory.from_new(dictionary, str(self.uuid), user="")
         self._add_tests(str(tst.uuid))
         return tst
     @auth.requires_authorization()
@@ -225,7 +221,7 @@ class AssignmentBase(backend.OwnedTSHashBase):
     # Public Submission Methods
     @auth.requires_authorization(pass_user=True)
     def create_submission(self, dictionary, user=""):
-        sub = self.SubmissionFactory.from_new(dictionary, str(self.uuid), user="")
+        sub = self.srv.SubmissionFactory.from_new(dictionary, str(self.uuid), user="")
         self._add_submissions(str(sub.uuid))
     @auth.requires_authorization()
     def list_submissions(self):
@@ -266,17 +262,10 @@ class SubmissionBase(backend.OwnedTSHashBase):
 
     schema = set(_TS_SCHEMA + _SUBMISSION_SCHEMA)
 
-    # Override Constructor
-    def __init__(self, key=None):
-        """Base Constructor"""
-        super(SubmissionBase, self).__init__(key)
-        self.RunFactory = backend.UUIDFactory(RunBase, prefix=self.full_key,
-                                              db=self.db, srv=self.srv)
-
     # Run Methods
     @auth.requires_authorization()
     def execute_run(self, tst, sub):
-        return self.RunFactory.from_new(tst, sub)
+        return self.srv.RunFactory.from_new(tst, sub)
 
 
 ## Test List Object ##
@@ -287,10 +276,7 @@ class SubmissionListBase(backend.SetBase):
 
 ## Test Run Object ##
 class RunBase(backend.OwnedTSHashBase):
-    """
-    COGS Run Class
-
-    """
+    """COGS Run Class"""
 
     schema = set(_TS_SCHEMA + _RUN_SCHEMA)
 
