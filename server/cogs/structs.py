@@ -99,7 +99,6 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
     def list_assignments(self):
         return self.AssignmentFactory.list_siblings()
 
-
     # Test Methods
     @auth.requires_authorization()
     def get_test(self, uuid_hex):
@@ -204,6 +203,12 @@ class GroupBase(AuthTSHashBase):
         sf = backend.Factory(UserListBase, prefix=self.full_key, db=self.db, srv=self.srv)
         self.members = sf.from_raw('members')
 
+    # Override Delete
+    def _delete(self):
+        if self.members.exists():
+            self.members.delete()
+        super(GroupBase, self)._delete()
+
     # Members Methods
     @auth.requires_authorization()
     def add_users(self, user_uuids):
@@ -247,6 +252,14 @@ class AssignmentBase(AuthOwnedTSHashBase):
         SubmissionListFactory = backend.Factory(SubmissionListBase, prefix=self.full_key,
                                                 db=self.db, srv=self.srv)
         self.submissions = SubmissionListFactory.from_raw('submissions')
+
+    # Override Delete
+    def _delete(self):
+        if self.tests.exists():
+            self.tests.delete()
+        if self.submissions.exists():
+            self.submissions.delete()
+        super(AssignmentBase, self)._delete()
 
     # Public Test Methods
     @auth.requires_authorization(pass_user=True)
