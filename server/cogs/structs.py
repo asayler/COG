@@ -76,8 +76,8 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
 
     # File Methods
     @auth.requires_authorization(pass_user=True)
-    def create_file(self, d, file_obj, user=None):
-        return self.FileFactory.from_new(d, file_obj, user=None)
+    def create_file(self, data, file_obj=None, dst=None, user=None):
+        return self.FileFactory.from_new(data, file_obj=file_obj, dst=dst, user=user)
     @auth.requires_authorization()
     def get_file(self, uuid_hex):
         return self.FileFactory.from_existing(uuid_hex)
@@ -87,8 +87,8 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
 
     # Assignment Methods
     @auth.requires_authorization(pass_user=True)
-    def create_assignment(self, d, user=None):
-        return self.AssignmentFactory.from_new(d, user=None)
+    def create_assignment(self, data, user=None):
+        return self.AssignmentFactory.from_new(data, user=user)
     @auth.requires_authorization()
     def get_assignment(self, uuid_hex):
         return self.AssignmentFactory.from_existing(uuid_hex)
@@ -114,8 +114,8 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
         return self.SubmissionFactory.list_siblings()
 
     # Private User Methods
-    def _create_user(self, d):
-        return self.UserFactory.from_new(d)
+    def _create_user(self, data):
+        return self.UserFactory.from_new(data)
     def _get_user(self, uuid_hex):
         return self.UserFactory.from_existing(uuid_hex)
     def _get_users(self):
@@ -124,8 +124,8 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
         return self.UserFactory.list_siblings()
 
     # Private Group Methods
-    def _create_group(self, d):
-        return self.GroupFactory.from_new(d)
+    def _create_group(self, data):
+        return self.GroupFactory.from_new(data)
     def _get_group(self, uuid_hex):
         return self.GroupFactory.from_existing(uuid_hex)
     def _get_groups(self):
@@ -236,7 +236,7 @@ class AssignmentBase(AuthOwnedTSHashBase):
     # Public Test Methods
     @auth.requires_authorization(pass_user=True)
     def create_test(self, dictionary, user=None):
-        tst = self.srv.TestFactory.from_new(dictionary, str(self.uuid), user=None)
+        tst = self.srv.TestFactory.from_new(dictionary, str(self.uuid), user=user)
         self._add_tests(str(tst.uuid))
         return tst
     @auth.requires_authorization()
@@ -246,7 +246,7 @@ class AssignmentBase(AuthOwnedTSHashBase):
     # Public Submission Methods
     @auth.requires_authorization(pass_user=True)
     def create_submission(self, dictionary, user=None):
-        sub = self.srv.SubmissionFactory.from_new(dictionary, str(self.uuid), user=None)
+        sub = self.srv.SubmissionFactory.from_new(dictionary, str(self.uuid), user=user)
         self._add_submissions(str(sub.uuid))
     @auth.requires_authorization()
     def list_submissions(self):
