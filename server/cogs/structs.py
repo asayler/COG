@@ -91,13 +91,13 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
     # Assignment Methods
     @auth.requires_authorization(pass_user=True)
     def create_assignment(self, data, user=None):
-        return self.AssignmentFactory.from_new(data, user=user)
+        return self._create_assignment(data, user=user)
     @auth.requires_authorization()
     def get_assignment(self, uuid_hex):
-        return self.AssignmentFactory.from_existing(uuid_hex)
+        return self._get_assignment(uuid_hex)
     @auth.requires_authorization()
     def list_assignments(self):
-        return self.AssignmentFactory.list_siblings()
+        return self._list_assignments()
 
     # Test Methods
     @auth.requires_authorization()
@@ -134,6 +134,14 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
         return self.GroupFactory.get_siblings()
     def _list_groups(self):
         return self.GroupFactory.list_siblings()
+
+    # Private Assignment Methods
+    def _create_assignment(self, data, user=None):
+        return self.AssignmentFactory.from_new(data, user=user)
+    def _get_assignment(self, uuid_hex):
+        return self.AssignmentFactory.from_existing(uuid_hex)
+    def _list_assignments(self):
+        return self.AssignmentFactory.list_siblings()
 
 
 ### COGS Base Objects ###
@@ -264,8 +272,8 @@ class AssignmentBase(AuthOwnedTSHashBase):
     # Public Test Methods
     @auth.requires_authorization(pass_user=True)
     def create_test(self, dictionary, user=None):
-        tst = self.srv.TestFactory.from_new(dictionary, str(self.uuid), user=user)
-        self._add_tests(str(tst.uuid))
+        tst = self.srv.TestFactory.from_new(dictionary, asn=self, user=user)
+        self._add_tests([str(tst.uuid)])
         return tst
     @auth.requires_authorization()
     def list_tests(self):
@@ -274,8 +282,8 @@ class AssignmentBase(AuthOwnedTSHashBase):
     # Public Submission Methods
     @auth.requires_authorization(pass_user=True)
     def create_submission(self, dictionary, user=None):
-        sub = self.srv.SubmissionFactory.from_new(dictionary, str(self.uuid), user=user)
-        self._add_submissions(str(sub.uuid))
+        sub = self.srv.SubmissionFactory.from_new(dictionary, asn=selfs, user=user)
+        self._add_submissions([str(sub.uuid)])
     @auth.requires_authorization()
     def list_submissions(self):
         return self._list_submissions()
@@ -300,7 +308,34 @@ class AssignmentBase(AuthOwnedTSHashBase):
 ## Test Object ##
 class TestBase(AuthOwnedTSHashBase):
     """COGS Test Class"""
+
     schema = set(_TS_SCHEMA + _TEST_SCHEMA)
+
+    @classmethod
+    def from_new(cls, data, asn=None, **kwargs):
+
+        # Set Assignment
+        data = copy.copy(data)
+        if asn:
+            data['assignment'] = str(asn.uuid).lower()
+        else:
+            data['assignment'] = ""
+
+        # Call Parent
+        obj = super(TestBase, cls).from_new(data, **kwargs)
+
+        # Return Test
+        return obj
+
+    def _delete(self):
+        tst_uuid = str(self.uuid)
+        asn_uuid = self['assignment']
+        if asn_uuid:
+            asn = self.srv._get_assignment(asn_uuid)
+            if not asn._rem_tests([tst_uuid]):
+                msg = "Could not remove Test {:s} for Assignment {:s}".format(tst_uuid, asn_uuid)
+                raise backend.ObjectError(msg)
+        super(TestBase, self)._delete()
 
 
 ## Test List Object ##

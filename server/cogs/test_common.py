@@ -14,25 +14,25 @@ _REDIS_CONF_TEST = {'redis_host': "localhost",
                     'redis_port': 6379,
                     'redis_db': 5}
 
-DUMMY_SCHEMA         = ['key1', 'key2', 'key3']
-DUMMY_TESTDICT       = {'key1': "val1",
-                        'key2': "val2",
-                        'key3': "val3"}
+DUMMY_SCHEMA   = ['key1', 'key2', 'key3']
+DUMMY_TESTDICT = {'key1': "val1",
+                  'key2': "val2",
+                  'key3': "val3"}
 
-USER_TESTDICT        = {'username': "testuser",
-                        'first': "Test",
-                        'last': "User",
-                        'auth': "moodle"}
+USER_TESTDICT = {'username': "testuser",
+                 'first': "Test",
+                 'last': "User",
+                 'auth': "moodle"}
 
-GROUP_TESTDICT        = {'name': "testgroup"}
+GROUP_TESTDICT = {'name': "testgroup"}
 
-ASSIGNMENT_TESTDICT  = {'name': "Test_Assignment"}
+ASSIGNMENT_TESTDICT = {'name': "Test_Assignment"}
 
 FILE_TESTDICT  = {'key': "Test_File"}
 
-TEST_TESTDICT        = {'name': "Test_Assignment",
-                        'type': "script",
-                        'maxscore': "10"}
+TEST_TESTDICT = {'name': "Test_Assignment",
+                 'type': "script",
+                 'maxscore': "10"}
 
 
 class CogsTestError(Exception):
