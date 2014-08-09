@@ -365,7 +365,7 @@ class TestBase(AuthOwnedTSHashBase):
         if asn_uuid:
             asn = self.srv._get_assignment(asn_uuid)
             if not asn._rem_tests([tst_uuid]):
-                msg = "Could not remove Test {:s} for Assignment {:s}".format(tst_uuid, asn_uuid)
+                msg = "Could not remove Test {:s} from Assignment {:s}".format(tst_uuid, asn_uuid)
                 raise backend.ObjectError(msg)
 
         # Remove file list
@@ -446,10 +446,10 @@ class SubmissionBase(AuthOwnedTSHashBase):
         if asn_uuid:
             asn = self.srv._get_assignment(asn_uuid)
             if not asn._rem_submissions([sub_uuid]):
-                msg = "Could not remove Submission {:s} for Assignment {:s}".format(sub_uuid, asn_uuid)
+                msg = "Could not remove Submission {:s} from Assignment {:s}".format(sub_uuid, asn_uuid)
                 raise backend.ObjectError(msg)
 
-        # Remove run object
+        # Remove run objects
         for run_uuid in self._list_runs():
             run = self.srv._get_runs(run_uuid)
             run._delete()
@@ -542,6 +542,7 @@ class RunBase(AuthOwnedTSHashBase):
         data = {}
 
         # Setup Dict
+        data['submission'] = str(sub.uuid)
         data['test'] = str(tst.uuid)
         data['status'] = ""
         data['score'] = ""
@@ -568,6 +569,35 @@ class RunBase(AuthOwnedTSHashBase):
         # Return Run
         return run
 
+    # Override Delete
+    def _delete(self):
+
+        # Remove from submission
+        run_uuid = str(self.uuid)
+        sub_uuid = self['submission']
+        if sub_uuid:
+            sub = self.srv._get_submission(sub_uuid)
+            if not sub._rem_run([run_uuid]):
+                msg = "Could not remove Run {:s} from Submission {:s}".format(run_uuid, sub_uuid)
+                raise backend.ObjectError(msg)
+
+        # Remove run objects
+        for run_uuid in self._list_runs():
+            run = self.srv._get_runs(run_uuid)
+            run._delete()
+        assert(not self._list_runs())
+
+        # Remove run list
+        if self.runs.exists():
+            self.runs.delete()
+
+        # Remove file list
+        if self.files.exists():
+            self.files.delete()
+
+        # Call Parent
+        super(SubmissionBase, self)._delete()
+
 
 ## Run List Object ##
 class RunListBase(backend.SetBase):
@@ -577,10 +607,7 @@ class RunListBase(backend.SetBase):
 
 ## File Object ##
 class FileBase(AuthOwnedTSHashBase):
-    """
-    COGS File Class
-
-    """
+    """COGS File Class"""
 
     schema = set(_TS_SCHEMA + _FILE_SCHEMA)
 
