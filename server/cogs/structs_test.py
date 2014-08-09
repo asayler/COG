@@ -29,6 +29,12 @@ class TypesTestCase(test_common.CogsTestCase):
         self.srv.add_admins([self.admin_uuid])
 
     def tearDown(self):
+
+        # Remove Admins
+        self.srv.rem_admins([self.admin_uuid])
+        self.admin._delete()
+
+        # Call parent
         super(TypesTestCase, self).tearDown()
 
     def subHashDirectHelper(self, hash_create, hash_get, hash_list, input_dict,
