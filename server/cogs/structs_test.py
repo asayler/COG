@@ -121,17 +121,19 @@ class TypesTestCase(test_common.CogsTestCase):
 
     def hashCreateHelper(self, hash_create, input_dict, extra_kwargs={}, user=None):
 
-        # Test Empty Dict
-        d = {}
-        self.assertRaises(KeyError, hash_create, d, user=user, **extra_kwargs)
+        if input_dict:
+            # Test Empty Dict
+            d = {}
+            self.assertRaises(KeyError, hash_create, d, user=user, **extra_kwargs)
+
+        if input_dict:
+            # Test Sub Dict
+            d = copy.copy(input_dict)
+            d.pop(d.keys()[0])
+            self.assertRaises(KeyError, hash_create, d, user=user, **extra_kwargs)
 
         # Test Bad Dict
         d = {'badkey': "test"}
-        self.assertRaises(KeyError, hash_create, d, user=user, **extra_kwargs)
-
-        # Test Sub Dict
-        d = copy.copy(input_dict)
-        d.pop(d.keys()[0])
         self.assertRaises(KeyError, hash_create, d, user=user, **extra_kwargs)
 
         # Test Super Dict
@@ -477,6 +479,65 @@ class TestTestCase(TypesTestCase):
         self.subSetReferenceHelper(tst.add_files, tst.rem_files, tst.list_files,
                                    self.files, user=self.admin)
         tst.delete(user=self.admin)
+
+
+class SubmissionTestCase(TypesTestCase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(SubmissionTestCase, self).setUp()
+
+        # Create Assignment
+        self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, user=self.admin)
+
+        # Create Files
+        src_file = open("./Makefile", 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=src_file, filename="Makefile")
+        self.files = set([])
+        for i in range(10):
+            data = copy.copy(test_common.FILE_TESTDICT)
+            for k in data:
+                data[k] = "test_{:s}_{:02d}".format(k, i)
+            self.files.add(str(self.srv.create_file(data, file_obj=file_obj, user=self.admin).uuid))
+        file_obj.close()
+
+    def tearDown(self):
+
+        # Delete Files
+        for fle_uuid in self.files:
+            fle = self.srv.get_file(fle_uuid, user=self.admin)
+            fle.delete(user=self.admin)
+
+        # Call Parent
+        super(SubmissionTestCase, self).tearDown()
+
+    def test_create_submission(self):
+        self.hashCreateHelper(self.asn.create_submission,
+                              test_common.SUBMISSION_TESTDICT,
+                              user=self.admin)
+
+    def test_get_submission(self):
+        self.hashGetHelper(self.asn.create_submission,
+                           self.srv.get_submission,
+                           test_common.SUBMISSION_TESTDICT,
+                           user=self.admin)
+
+    def test_update_submission(self):
+        self.hashUpdateHelper(self.asn.create_submission,
+                              test_common.SUBMISSION_TESTDICT,
+                              user=self.admin)
+
+    def test_delete_submission(self):
+        self.hashDeleteHelper(self.asn.create_submission,
+                              test_common.SUBMISSION_TESTDICT,
+                              user=self.admin)
+
+    def test_files(self):
+        sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, user=self.admin)
+        self.subSetReferenceHelper(sub.add_files, sub.rem_files, sub.list_files,
+                                   self.files, user=self.admin)
+        sub.delete(user=self.admin)
 
 
 # Main
