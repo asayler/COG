@@ -26,13 +26,15 @@ USER_TESTDICT = {'username': "testuser",
 
 GROUP_TESTDICT = {'name': "testgroup"}
 
-ASSIGNMENT_TESTDICT = {'name': "Test_Assignment"}
-
 FILE_TESTDICT  = {'key': "Test_File"}
+
+ASSIGNMENT_TESTDICT = {'name': "Test_Assignment"}
 
 TEST_TESTDICT = {'name': "Test_Assignment",
                  'type': "script",
                  'maxscore': "10"}
+
+SUBMISSION_TESTDICT = {}
 
 
 class CogsTestError(Exception):

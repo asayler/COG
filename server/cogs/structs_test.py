@@ -225,6 +225,7 @@ class ServerTestCase(TypesTestCase):
                                  test_common.FILE_TESTDICT,
                                  extra_kwargs={'file_obj': file_obj},
                                  user=self.admin)
+        file_obj.close()
 
     def test_assignments(self):
         self.subHashDirectHelper(self.srv.create_assignment,
@@ -240,6 +241,7 @@ class ServerTestCase(TypesTestCase):
                                  asn.list_tests,
                                  test_common.TEST_TESTDICT,
                                  user=self.admin)
+        asn.delete(user=self.admin)
 
     def test_srv_tests(self):
         asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, user=self.admin)
@@ -248,6 +250,25 @@ class ServerTestCase(TypesTestCase):
                                  self.srv.list_tests,
                                  test_common.TEST_TESTDICT,
                                  user=self.admin)
+        asn.delete(user=self.admin)
+
+    def test_asn_submissions(self):
+        asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, user=self.admin)
+        self.subHashDirectHelper(asn.create_submission,
+                                 self.srv.get_submission,
+                                 asn.list_submissions,
+                                 test_common.SUBMISSION_TESTDICT,
+                                 user=self.admin)
+        asn.delete(user=self.admin)
+
+    def test_srv_submissions(self):
+        asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, user=self.admin)
+        self.subHashDirectHelper(asn.create_submission,
+                                 self.srv.get_submission,
+                                 self.srv.list_submissions,
+                                 test_common.SUBMISSION_TESTDICT,
+                                 user=self.admin)
+        asn.delete(user=self.admin)
 
 
 class UserTestCase(TypesTestCase):
@@ -283,7 +304,11 @@ class UserTestCase(TypesTestCase):
 class GroupTestCase(TypesTestCase):
 
     def setUp(self):
+
+        # Call Parent
         super(GroupTestCase, self).setUp()
+
+        # Setup Users
         self.users = set([])
         for i in range(10):
             d = copy.copy(test_common.USER_TESTDICT)
@@ -292,6 +317,13 @@ class GroupTestCase(TypesTestCase):
             self.users.add(str(self.srv.create_user(d, user=self.admin).uuid))
 
     def tearDown(self):
+
+        # Remove Users
+        for user_uuid in self.users:
+            user = self.srv.get_user(user_uuid, user=self.admin)
+            user.delete(user=self.admin)
+
+        # Call Parent
         super(GroupTestCase, self).tearDown()
 
     def test_create_group(self):
@@ -329,6 +361,7 @@ class FileTestCase(TypesTestCase):
         self.file_obj = werkzeug.datastructures.FileStorage(stream=src_file, filename="Makefile")
 
     def tearDown(self):
+        self.file_obj.close()
         super(FileTestCase, self).tearDown()
 
     def test_create_file(self):
@@ -406,7 +439,7 @@ class TestTestCase(TypesTestCase):
             for k in data:
                 data[k] = "test_{:s}_{:02d}".format(k, i)
             self.files.add(str(self.srv.create_file(data, file_obj=file_obj, user=self.admin).uuid))
-
+        file_obj.close()
 
     def tearDown(self):
 
@@ -443,6 +476,7 @@ class TestTestCase(TypesTestCase):
         tst = self.asn.create_test(test_common.TEST_TESTDICT, user=self.admin)
         self.subSetReferenceHelper(tst.add_files, tst.rem_files, tst.list_files,
                                    self.files, user=self.admin)
+        tst.delete(user=self.admin)
 
 
 # Main

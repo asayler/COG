@@ -102,18 +102,18 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
     # Test Methods
     @auth.requires_authorization()
     def get_test(self, uuid_hex):
-        return self.TestFactory.from_existing(uuid_hex)
+        return self._get_test(uuid_hex)
     @auth.requires_authorization()
     def list_tests(self):
-        return self.TestFactory.list_siblings()
+        return self._list_tests()
 
     # Submission Methods
     @auth.requires_authorization()
     def get_submission(self, uuid_hex):
-        return self.SubmissionFactory.from_existing(uuid_hex)
+        return self._get_submission(uuid_hex)
     @auth.requires_authorization()
     def list_submissions(self):
-        return self.SubmissionFactory.list_siblings()
+        return self._list_submissions()
 
     # Private User Methods
     def _create_user(self, data):
@@ -146,6 +146,18 @@ class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
         return self.AssignmentFactory.from_existing(uuid_hex)
     def _list_assignments(self):
         return self.AssignmentFactory.list_siblings()
+
+    # Private Test Methods
+    def _get_test(self, uuid_hex):
+        return self.TestFactory.from_existing(uuid_hex)
+    def _list_tests(self):
+        return self.TestFactory.list_siblings()
+
+    # Private Submission Methods
+    def _get_submission(self, uuid_hex):
+        return self.SubmissionFactory.from_existing(uuid_hex)
+    def _list_submissions(self):
+        return self.SubmissionFactory.list_siblings()
 
 
 ### COGS Base Objects ###
@@ -270,8 +282,8 @@ class AssignmentBase(AuthOwnedTSHashBase):
 
         # Remove Test Objects
         for tst_uuid in self._list_tests():
-            tst = self.srv.get_test(tst_uuid)
-            tst.delete()
+            tst = self.srv._get_test(tst_uuid)
+            tst._delete()
         assert(not self._list_tests())
 
         # Remove Test List
@@ -280,8 +292,8 @@ class AssignmentBase(AuthOwnedTSHashBase):
 
         # Remove Submission Objects
         for sub_uuid in self._list_submissions():
-            sub = self.srv.get_submission(sub_uuid)
-            sub.delete()
+            sub = self.srv._get_submission(sub_uuid)
+            sub._delete()
         assert(not self._list_submissions())
 
         # Remove Submission List
@@ -303,8 +315,9 @@ class AssignmentBase(AuthOwnedTSHashBase):
     # Public Submission Methods
     @auth.requires_authorization(pass_user=True)
     def create_submission(self, dictionary, user=None):
-        sub = self.srv.SubmissionFactory.from_new(dictionary, asn=selfs, user=user)
+        sub = self.srv.SubmissionFactory.from_new(dictionary, asn=self, user=user)
         self._add_submissions([str(sub.uuid)])
+        return sub
     @auth.requires_authorization()
     def list_submissions(self):
         return self._list_submissions()
@@ -340,11 +353,12 @@ class TestBase(AuthOwnedTSHashBase):
         super(TestBase, self).__init__(uuid_obj)
 
         # Setup Lists
-        FileFactory = backend.Factory(FileListBase, prefix=self.full_key, db=self.db, srv=self.srv)
-        self.files = FileFactory.from_raw('files')
+        FileListFactory = backend.Factory(FileListBase, prefix=self.full_key, db=self.db, srv=self.srv)
+        self.files = FileListFactory.from_raw('files')
 
     # Override Delete
     def _delete(self):
+
         # Remove from assignment
         tst_uuid = str(self.uuid)
         asn_uuid = self['assignment']
@@ -410,10 +424,101 @@ class SubmissionBase(AuthOwnedTSHashBase):
 
     schema = set(_TS_SCHEMA + _SUBMISSION_SCHEMA)
 
-    # Run Methods
+    # Override Constructor
+    def __init__(self, uuid_obj):
+        """Base Constructor"""
+
+        # Call Parent Construtor
+        super(SubmissionBase, self).__init__(uuid_obj)
+
+        # Setup Lists
+        FileListFactory = backend.Factory(FileListBase, prefix=self.full_key, db=self.db, srv=self.srv)
+        self.files = FileListFactory.from_raw('files')
+        RunListFactory = backend.Factory(RunListBase, prefix=self.full_key, db=self.db, srv=self.srv)
+        self.runs = RunListFactory.from_raw('runs')
+
+    # Override Delete
+    def _delete(self):
+
+        # Remove from assignment
+        sub_uuid = str(self.uuid)
+        asn_uuid = self['assignment']
+        if asn_uuid:
+            asn = self.srv._get_assignment(asn_uuid)
+            if not asn._rem_submissions([sub_uuid]):
+                msg = "Could not remove Submission {:s} for Assignment {:s}".format(sub_uuid, asn_uuid)
+                raise backend.ObjectError(msg)
+
+        # Remove run object
+        for run_uuid in self._list_runs():
+            run = self.srv._get_runs(run_uuid)
+            run._delete()
+        assert(not self._list_runs())
+
+        # Remove run list
+        if self.runs.exists():
+            self.runs.delete()
+
+        # Remove file list
+        if self.files.exists():
+            self.files.delete()
+
+        # Call Parent
+        super(SubmissionBase, self)._delete()
+
+    # Override from_new
+    @classmethod
+    def from_new(cls, data, asn=None, **kwargs):
+
+        # Set Assignment
+        data = copy.copy(data)
+        if asn:
+            data['assignment'] = str(asn.uuid).lower()
+        else:
+            data['assignment'] = ""
+
+        # Call Parent
+        obj = super(SubmissionBase, cls).from_new(data, **kwargs)
+
+        # Return Submission
+        return obj
+
+    # Files Methods
     @auth.requires_authorization()
-    def execute_run(self, tst, sub):
-        return self.srv.RunFactory.from_new(tst, sub)
+    def add_files(self, file_uuids):
+        return self._add_files(file_uuids)
+    @auth.requires_authorization()
+    def rem_files(self, file_uuids):
+        return self._rem_files(file_uuids)
+    @auth.requires_authorization()
+    def list_files(self):
+        return self._list_files()
+
+    # Run Methods
+    @auth.requires_authorization(pass_user=True)
+    def execute_run(self, tst, user=None):
+        run = self.srv.RunFactory.from_new(tst, self, user=user)
+        self._add_runs([str(run.uuid)])
+        return run
+    @auth.requires_authorization()
+    def list_runs(self):
+        return self._list_runs()
+
+    # Private Files Methods
+    def _add_files(self, file_uuids):
+        return self.files.add_vals(file_uuids)
+    def _rem_files(self, file_uuids):
+        return self.files.del_vals(file_uuids)
+    def _list_files(self):
+        return self.files.get_set()
+
+    # Private Runs Methods
+    def _add_runs(self, run_uuids):
+        return self.runs.add_vals(run_uuids)
+    def _rem_runs(self, run_uuids):
+        return self.runs.del_vals(run_uuids)
+    def _list_runs(self):
+        return self.runs.get_set()
 
 
 ## Submission List Object ##
@@ -437,7 +542,7 @@ class RunBase(AuthOwnedTSHashBase):
         data = {}
 
         # Setup Dict
-        data['test'] = repr(tst)
+        data['test'] = str(tst.uuid)
         data['status'] = ""
         data['score'] = ""
         data['output'] = ""
@@ -446,8 +551,8 @@ class RunBase(AuthOwnedTSHashBase):
         run = super(RunBase, cls).from_new(data, **kwargs)
 
         # Get Files
-        tst_fls = tst.get_files()
-        sub_fls = sub.get_files()
+        tst_fls = tst._get_files()
+        sub_fls = sub._get_files()
 
         # Grade Run
         env = environment.Env(run, tst_fls, sub_fls)
@@ -462,6 +567,12 @@ class RunBase(AuthOwnedTSHashBase):
 
         # Return Run
         return run
+
+
+## Run List Object ##
+class RunListBase(backend.SetBase):
+    """COGS Run List Class"""
+    pass
 
 
 ## File Object ##
