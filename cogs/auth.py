@@ -31,6 +31,10 @@ class UserNotAuthorizedError(AuthorizationError):
 
 ### Classes ###
 
+class UserTokensBase(backend.HashBase):
+
+    pass
+
 class GroupListBase(backend.SetBase):
     """
     COGS Group List Class
