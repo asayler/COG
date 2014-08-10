@@ -15,6 +15,9 @@ PYLINT_CONF = pylint.rc
 
 UNITTEST_PATTERN = '*_test.py'
 
+PYTHONPATH = $(shell readlink -f ./)
+EXPORT_PATH = export PYTHONPATH="$(PYTHONPATH)"
+
 COGS = cogs
 MOODLE = moodle
 
@@ -29,14 +32,15 @@ git:
 
 reqs: $(REQUIRMENTS)
 	$(PIP) install -r "$<"
+	$(MAKE) -C $(COGS) $@
 	$(MAKE) -C $(MOODLE) $@
 
 lint: $(PYLINT_CONF)
-	$(PYLINT) --rcfile="$<" $(COGS)
-	$(PYLINT) --rcfile="$<" $(MOODLE)
+	$(EXPORT_PATH) && $(PYLINT) --rcfile="$<" $(COGS)
+	$(EXPORT_PATH) && $(PYLINT) --rcfile="$<" $(MOODLE)
 
 test:
-	$(PYTHON) -m unittest discover -v -p $(UNITTEST_PATTERN)
+	$(EXPORT_PATH) && $(PYTHON) -m unittest discover -v -p $(UNITTEST_PATTERN)
 
 clean:
 	$(RM) *.pyc
