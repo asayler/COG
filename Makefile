@@ -4,6 +4,8 @@
 
 ECHO = @echo
 
+GIT = git
+
 PYTHON = python
 PIP = pip
 PYLINT = pylint
@@ -19,6 +21,10 @@ COGS = cogs
 
 all:
 	$(ECHO) "This is a python project; nothing to build!"
+
+git:
+	$(GIT) submodule init
+	$(GIT) submodule update
 
 reqs: $(REQUIRMENTS)
 	$(PIP) install -r "$<"
