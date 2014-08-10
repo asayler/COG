@@ -9,6 +9,8 @@ import os
 import hashlib
 
 import backend_redis as backend
+import auth_moodle
+
 
 _SPECIAL_GROUP_ADMIN = '99999999-9999-9999-9999-999999999999'
 _SPECIAL_GROUP_ANY = '00000000-0000-0000-0000-000000000000'
@@ -58,6 +60,49 @@ class GroupListBase(backend.SetBase):
 
 class UserMgmtMixin(object):
 
+    def auth_token(self, token):
+
+        user_uuid = self.verify_token(token)
+        if user_uuid:
+            user = self.srv._get_user(user_uuid)
+            return user
+        else:
+            return False
+
+    def auth_user(self, username, password):
+
+        user_uuid = self.get_useruuid(username)
+        if user_uuid:
+            user = self.srv._get_user(user_uuid)
+            auth = _auth_user(username, password, user['auth'])
+            if auth:
+                return user
+            else:
+                return False
+        else:
+            return None
+
+    def _auth_user(self, username, password, auth_mod):
+        if auth_mod == 'moodle':
+            moodle_user = auth_moodle.auth_user(username, password)
+            if moodle_user:
+                return True
+            else:
+                return False
+        else:
+            raise Exception("Unknown auth_mod: {:s}".format(auth_mod))
+
+    def create_user(self, username, password, auth_mod):
+        if auth_mod == 'moodle':
+            moodle_user = auth_moodle.auth_user(username, password)
+            if moodle_user:
+                return True
+            else:
+                return False
+        else:
+            raise Exception("Unknown auth_mod: {:s}".format(auth_mod))
+
+
     def set_useruuid(self, username, user_uuid):
 
         # Process Inputs
@@ -80,7 +125,10 @@ class UserMgmtMixin(object):
         usernames = UserNamesFactory.from_raw('usernames')
 
         user_uuid = usernames.get_dict().get(str(username).lower(), None)
-        return str(user_uuid).lower()
+        if user_uuid:
+            return str(user_uuid).lower()
+        else:
+            return False
 
     def generate_token(self, user_uuid):
 
@@ -112,7 +160,10 @@ class UserMgmtMixin(object):
 
         # Check Token
         user_uuid = tokens.get_dict().get(str(token).lower(), None)
-        return str(user_uuid).lower()
+        if user_uuid:
+            return str(user_uuid).lower()
+        else:
+            return False
 
 
 class AuthorizationAdminMixin(object):

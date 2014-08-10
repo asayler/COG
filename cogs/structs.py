@@ -30,7 +30,7 @@ _FILES_DIR = "./files/"
 ### COGS Core Objects ###
 
 ## Top-Level Server Object ##
-class Server(auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
+class Server(auth.UserMgmtMixin, auth.AuthorizationAdminMixin, auth.AuthorizationMgmtMixin, object):
     """COGS Server Class"""
 
     # Override Constructor
@@ -202,6 +202,7 @@ class AuthOwnedTSHashBase(auth.AuthorizationMgmtMixin, backend.OwnedTSHashBase):
 class UserBase(AuthTSHashBase):
     """COGS User Class"""
     schema = set(_TS_SCHEMA + _USER_SCHEMA)
+
 
 
 ## User List Object ##

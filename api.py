@@ -24,6 +24,8 @@ _SUBMISSIONS_KEY = "submissions"
 _FILES_KEY = "files"
 _RUNS_KEY = "runs"
 
+_DEFAULT_AUTHMOD = 'moodle'
+
 _REDIS_CONF= {'redis_host': "localhost",
               'redis_port': 6379,
               'redis_db': 3}
@@ -40,8 +42,26 @@ srv = cogs.structs.Server(db)
 
 @auth.verify_password
 def verify_login(username, password):
+
     print("username = {:s}".format(username))
     print("password = {:s}".format(password))
+
+    if username:
+        user = srv.auth_user(username, password)
+        if user:
+            return True
+        elif user == False:
+            return False
+        else:
+            print("Unknown User")
+            return True
+    else:
+        user = srv.auth_token(password)
+        if user:
+            return True
+        else:
+            print("Bad Token")
+            return False
     return True
 
 ### Endpoints ###

@@ -22,7 +22,7 @@ class AuthMoodle(object):
 
     def auth_user(self, username, password):
         moodle = moodle.ws.WS(self.host)
-        if moodle.authenticate(usernmae, password, self.service):
+        if moodle.authenticate(username, password, self.service):
             return moodle.getWSUser()
         else:
             return None
