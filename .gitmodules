@@ -1,0 +1,3 @@
+[submodule "moodle"]
+	path = moodle
+	url = git@github.com:asayler/moodle-ws-python.git
