@@ -5,6 +5,7 @@
 # Summer 2014
 # Univerity of Colorado
 
+import base64
 import copy
 import json
 import unittest
@@ -23,6 +24,14 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
 
     def tearDown(self):
         super(CogsApiTestCase, self).tearDown()
+
+    def open_auth(self, method, url, username, password):
+        auth_str = "{:s}:{:s}".format(username, password)
+        b64_auth_str = base64.b64encode(auth_str)
+        key = "Authorization"
+        val = "Basic {:s}".format(b64_auth_str)
+        headers = {key: val}
+        return self.app.open(url, method=method, headers=headers)
 
 
 class CogsApiAssignmentHelpers(CogsApiTestCase):
@@ -135,7 +144,7 @@ class CogsApiRootTestCase(CogsApiTestCase):
         super(CogsApiRootTestCase, self).tearDown()
 
     def test_root_get(self):
-        res = self.app.get('/')
+        res = self.open_auth('GET', '/', "user", "password")
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data, api._MSG_ROOT)
 

@@ -5,8 +5,10 @@
 # Univerity of Colorado
 
 
-import backend_redis as backend
+import os
+import hashlib
 
+import backend_redis as backend
 
 _SPECIAL_GROUP_ADMIN = '99999999-9999-9999-9999-999999999999'
 _SPECIAL_GROUP_ANY = '00000000-0000-0000-0000-000000000000'
@@ -33,6 +35,14 @@ class UserNotAuthorizedError(AuthorizationError):
 
 class UserTokensBase(backend.HashBase):
 
+    SCHEMA = None
+
+    pass
+
+class UserNamesBase(backend.HashBase):
+
+    SCHEMA = None
+
     pass
 
 class GroupListBase(backend.SetBase):
@@ -45,6 +55,65 @@ class GroupListBase(backend.SetBase):
 
 
 ### Mixins ###
+
+class UserMgmtMixin(object):
+
+    def set_useruuid(self, username, user_uuid):
+
+        # Process Inputs
+        prefix = getattr(self, 'full_key', None)
+
+        # Setup Usernames List
+        UserNamesFactory = backend.Factory(UserNamesBase, prefix=prefix, db=self.db)
+        usernames = UserNamesFactory.from_raw('usernames')
+
+        usernames[str(username).lower()] = str(usr_uuid).lower()
+        return usernames[str(username).lower()]
+
+    def get_useruuid(self, username):
+
+        # Process Inputs
+        prefix = getattr(self, 'full_key', None)
+
+        # Setup Usernames List
+        UserNamesFactory = backend.Factory(UserNamesBase, prefix=prefix, db=self.db)
+        usernames = UserNamesFactory.from_raw('usernames')
+
+        user_uuid = usernames.get_dict().get(str(username).lower(), None)
+        return str(user_uuid).lower()
+
+    def generate_token(self, user_uuid):
+
+        # Process Inputs
+        prefix = getattr(self, 'full_key', None)
+
+        # Setup Token List
+        UserTokensFactory = backend.Factory(UserTokensBase, prefix=prefix, db=self.db)
+        tokens = UserTokensFactory.from_raw('tokens')
+
+        # Generate Token
+        rnd = os.urandom(32)
+        sha = hashlib.sha256()
+        sha.update(rnd)
+        token = str(sha.hexdigest()).lower()
+
+        # Set Token
+        tokens[str(user_uuid).lower()] = token
+        return token
+
+    def verify_token(self, token):
+
+        # Process Inputs
+        prefix = getattr(self, 'full_key', None)
+
+        # Setup Group List
+        UserTokensFactory = backend.Factory(UserTokensBase, prefix=prefix, db=self.db)
+        tokens = UserTokensFactory.from_raw('tokens')
+
+        # Check Token
+        user_uuid = tokens.get_dict().get(str(token).lower(), None)
+        return str(user_uuid).lower()
+
 
 class AuthorizationAdminMixin(object):
     """
@@ -78,8 +147,8 @@ class AuthorizationMgmtMixin(object):
         prefix = getattr(self, 'full_key', None)
 
         # Setup Group List
-        sf = backend.Factory(GroupListBase, prefix=prefix, db=self.db)
-        groups = sf.from_raw("{:s}_{:s}".format(func.__name__, 'groups'))
+        GroupListFactory = backend.Factory(GroupListBase, prefix=prefix, db=self.db)
+        groups = GroupListFactory.from_raw("{:s}_{:s}".format(func.__name__, 'groups'))
 
         # Add UUIDs to Group List
         return groups.add_vals(groups_uuids)
@@ -90,8 +159,8 @@ class AuthorizationMgmtMixin(object):
         prefix = getattr(self, 'full_key', None)
 
         # Setup Group List
-        sf = backend.Factory(GroupListBase, prefix=prefix, db=self.db)
-        groups = sf.from_raw("{:s}_{:s}".format(func.__name__, 'groups'))
+        GroupListFactory = backend.Factory(GroupListBase, prefix=prefix, db=self.db)
+        groups = GroupListFactory.from_raw("{:s}_{:s}".format(func.__name__, 'groups'))
 
         # Remove UUIDs from Group List
         return groups.del_vals(groups_uuids)
@@ -102,8 +171,8 @@ class AuthorizationMgmtMixin(object):
         prefix = getattr(self, 'full_key', None)
 
         # Setup Group List
-        sf = backend.Factory(GroupListBase, prefix=prefix, db=self.db)
-        groups = sf.from_raw("{:s}_{:s}".format(func.__name__, 'groups'))
+        GroupListFactory = backend.Factory(GroupListBase, prefix=prefix, db=self.db)
+        groups = GroupListFactory.from_raw("{:s}_{:s}".format(func.__name__, 'groups'))
 
         # Return Group List
         return groups.get_set()

@@ -8,13 +8,15 @@
 import time
 
 import flask
+import flask.ext.httpauth
+
 import redis
 
 import cogs.structs
 
 ### Constants ###
 
-_MSG_ROOT = "Welcome to the CU CS Online Grading System API"
+_MSG_ROOT = "Welcome to the CU CS Online Grading System API\n"
 
 _ASSIGNMENTS_KEY = "assignments"
 _TESTS_KEY = "tests"
@@ -29,30 +31,39 @@ _REDIS_CONF= {'redis_host': "localhost",
 ### Global Setup ###
 
 app = flask.Flask(__name__)
+auth = flask.ext.httpauth.HTTPBasicAuth()
 redis_conf = _REDIS_CONF
 db = redis.StrictRedis(host=redis_conf['redis_host'],
                        port=redis_conf['redis_port'],
                        db=redis_conf['redis_db'])
+srv = cogs.structs.Server(db)
 
+@auth.verify_password
+def verify_login(username, password):
+    print("username = {:s}".format(username))
+    print("password = {:s}".format(password))
+    return True
 
 ### Endpoints ###
 
 ## Root Endpoints ##
 
+
 @app.route("/",
            methods=['GET'])
+@auth.login_required
 def get_root():
     res = _MSG_ROOT
     return res
+
+## Access Control Endpoints ##
+
 
 ## Assignment Endpoints ##
 
 @app.route("/assignments/",
            methods=['GET', 'POST'])
 def process_assignments():
-
-    # Create Server
-    srv = cogs.structs.Server(db)
 
     # Process
     if flask.request.method == 'GET':
@@ -81,9 +92,6 @@ def process_assignments():
 @app.route("/assignments/<uuid_hex>/",
            methods=['GET', 'PUT', 'DELETE'])
 def process_assignment(uuid_hex):
-
-    # Create Server
-    s = cogs.structs.Server(db)
 
     # Get Assignment
     try:
@@ -130,9 +138,6 @@ def process_assignment(uuid_hex):
            methods=['GET', 'POST'])
 def process_tests(asn_uuid):
 
-    # Create Server
-    srv = cogs.structs.Server(db)
-
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
@@ -170,9 +175,6 @@ def process_tests(asn_uuid):
 @app.route("/assignments/<asn_uuid>/tests/<tst_uuid>/",
            methods=['GET', 'PUT', 'DELETE'])
 def process_test(asn_uuid, tst_uuid):
-
-    # Create Server
-    srv = cogs.structs.Server(db)
 
     # Get Assignment
     try:
@@ -228,9 +230,6 @@ def process_test(asn_uuid, tst_uuid):
            methods=['GET', 'POST'])
 def process_test_files(asn_uuid, tst_uuid):
 
-    # Create Server
-    srv = cogs.structs.Server(db)
-
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
@@ -285,9 +284,6 @@ def process_test_files(asn_uuid, tst_uuid):
            methods=['GET', 'DELETE'])
 def process_test_file(asn_uuid, tst_uuid, fle_uuid):
 
-    # Create Server
-    srv = cogs.structs.Server(db)
-
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
@@ -339,9 +335,6 @@ def process_test_file(asn_uuid, tst_uuid, fle_uuid):
            methods=['GET', 'POST'])
 def process_submissions(asn_uuid):
 
-    # Create Server
-    srv = cogs.structs.Server(db)
-
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
@@ -379,9 +372,6 @@ def process_submissions(asn_uuid):
 @app.route("/assignments/<asn_uuid>/submissions/<sub_uuid>/",
            methods=['GET', 'PUT', 'DELETE'])
 def process_submission(asn_uuid, sub_uuid):
-
-    # Create Server
-    srv = cogs.structs.Server(db)
 
     # Get Assignment
     try:
@@ -437,9 +427,6 @@ def process_submission(asn_uuid, sub_uuid):
            methods=['GET', 'POST'])
 def process_submission_files(asn_uuid, sub_uuid):
 
-    # Create Server
-    srv = cogs.structs.Server(db)
-
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
@@ -494,9 +481,6 @@ def process_submission_files(asn_uuid, sub_uuid):
            methods=['GET', 'DELETE'])
 def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
 
-    # Create Server
-    srv = cogs.structs.Server(db)
-
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
@@ -548,9 +532,6 @@ def process_submission_file(asn_uuid, sub_uuid, fle_uuid):
            methods=['GET', 'POST'])
 def process_runs(asn_uuid, sub_uuid):
 
-    # Create Server
-    srv = cogs.structs.Server(db)
-
     # Get Assignment
     try:
         asn = srv.get_assignment(asn_uuid)
@@ -601,9 +582,6 @@ def process_runs(asn_uuid, sub_uuid):
 @app.route("/assignments/<asn_uuid>/submissions/<sub_uuid>/runs/<run_uuid>/",
            methods=['GET', 'DELETE'])
 def process_run(asn_uuid, sub_uuid, run_uuid):
-
-    # Create Server
-    srv = cogs.structs.Server(db)
 
     # Get Assignment
     try:
