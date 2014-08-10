@@ -16,8 +16,9 @@ PYLINT_CONF = pylint.rc
 UNITTEST_PATTERN = '*_test.py'
 
 COGS = cogs
+MOODLE = moodle
 
-.PHONY: all reqs test clean
+.PHONY: all git reqs test clean
 
 all:
 	$(ECHO) "This is a python project; nothing to build!"
@@ -28,9 +29,11 @@ git:
 
 reqs: $(REQUIRMENTS)
 	$(PIP) install -r "$<"
+	$(MAKE) -C $(MOODLE) $@
 
 lint: $(PYLINT_CONF)
 	$(PYLINT) --rcfile="$<" $(COGS)
+	$(PYLINT) --rcfile="$<" $(MOODLE)
 
 test:
 	$(PYTHON) -m unittest discover -v -p $(UNITTEST_PATTERN)
@@ -39,3 +42,4 @@ clean:
 	$(RM) *.pyc
 	$(RM) *~
 	$(MAKE) -C $(COGS) $@
+	$(MAKE) -C $(MOODLE) $@
