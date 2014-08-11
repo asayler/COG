@@ -16,7 +16,7 @@ from backend_redis import BackendError, FactoryError, ObjectError, ObjectDNE
 
 
 _TS_SCHEMA = ['created_time', 'modified_time']
-_USER_SCHEMA = ['username', 'first', 'last', 'auth']
+_USER_SCHEMA = ['username', 'first', 'last', 'auth', 'token']
 _GROUP_SCHEMA = ['name']
 _ASSIGNMENT_SCHEMA = ['owner', 'name']
 _TEST_SCHEMA = ['owner', 'assignment', 'name', 'type', 'maxscore']
@@ -60,8 +60,8 @@ class Server(auth.UserMgmtMixin, auth.AuthorizationAdminMixin, auth.Authorizatio
     def list_users(self):
         return self._list_users()
     @auth.requires_authorization()
-    def create_user(self, data):
-        return self._create_user(data)
+    def create_user(self, *args, **kwargs):
+        return self._create_user(*args, **kwargs)
     @auth.requires_authorization()
     def get_user(self, user_uuid):
         return self._get_user(user_uuid)
@@ -116,8 +116,8 @@ class Server(auth.UserMgmtMixin, auth.AuthorizationAdminMixin, auth.Authorizatio
         return self._list_submissions()
 
     # Private User Methods
-    def _create_user(self, data):
-        return self.UserFactory.from_new(data)
+    def _create_user(self, *args, **kwargs):
+        return self.UserFactory.from_new(*args, **kwargs)
     def _get_user(self, uuid_hex):
         return self.UserFactory.from_existing(uuid_hex)
     def _list_users(self):
@@ -201,8 +201,69 @@ class AuthOwnedTSHashBase(auth.AuthorizationMgmtMixin, backend.OwnedTSHashBase):
 ## User Account Object ##
 class UserBase(AuthTSHashBase):
     """COGS User Class"""
-    schema = set(_TS_SCHEMA + _USER_SCHEMA)
 
+    schema = None
+
+    # Override from_new
+    @classmethod
+    def from_new(cls, data, username=None, password=None, authmod=None, **kwargs):
+
+        # Check input
+        if not username:
+            raise TypeError("username required")
+        if not password:
+            raise TypeError("password required")
+
+        # Dup Data
+        data = copy.copy(data)
+
+        # Set Authmod
+        if not authmod:
+            authmod = auth.DEFAULT_AUTHMOD
+
+        # Confirm user does not exist
+        if cls.srv.auth_user(username, password) is not None:
+            msg = "Username {:s} already exists {:s}".format(username)
+            raise backend.ObjectError(msg)
+
+        # Auth User
+        user_data = cls.srv.auth_user_mod(username, password, authmod)
+        if not user_data:
+            raise auth.BadCredentialsError(username)
+        else:
+            data.update(user_data)
+
+        # Seup Remaining Data
+        data['auth'] = authmod
+        data['token'] = ""
+
+        # Set Schema
+        extra_schema = cls.srv.get_extra_user_schema(authmod)
+        obj_schema = set(_TS_SCHEMA + _USER_SCHEMA + extra_schema)
+
+        # Call Parent
+        obj = super(UserBase, cls).from_new(data, obj_schema=obj_schema, **kwargs)
+
+        # Setup User Auth
+        token = cls.srv.init_user(obj)
+        obj['token'] = token
+
+        # Return Submission
+        return obj
+
+    # Override from_existing
+    @classmethod
+    def from_existing(cls, **kwargs):
+
+        # Call Parent
+        obj = super(UserBase, cls).from_existing(**kwargs)
+
+        # Set Schema
+        extra_schema = cls.srv.get_extra_user_schema(obj['auth'])
+        obj.schema = set(_TS_SCHEMA + _USER_SCHEMA + extra_schema)
+
+        # Return Submission
+        return obj
 
 
 ## User List Object ##

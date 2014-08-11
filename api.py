@@ -46,6 +46,7 @@ def verify_login(username, password):
     print("username = {:s}".format(username))
     print("password = {:s}".format(password))
 
+    # Username:Password Case
     if username:
         user = srv.auth_user(username, password)
         if user:
@@ -53,8 +54,10 @@ def verify_login(username, password):
         elif user == False:
             return False
         else:
+            # Unknown User
             print("Unknown User")
             return True
+    # Token Case
     else:
         user = srv.auth_token(password)
         if user:
@@ -62,7 +65,6 @@ def verify_login(username, password):
         else:
             print("Bad Token")
             return False
-    return True
 
 ### Endpoints ###
 

@@ -19,10 +19,7 @@ DUMMY_TESTDICT = {'key1': "val1",
                   'key2': "val2",
                   'key3': "val3"}
 
-USER_TESTDICT = {'username': "testuser",
-                 'first': "Test",
-                 'last': "User",
-                 'auth': "moodle"}
+USER_TESTDICT = {}
 
 GROUP_TESTDICT = {'name': "testgroup"}
 

@@ -7,10 +7,13 @@
 
 import os
 import hashlib
+import uuid
 
 import backend_redis as backend
 import auth_moodle
+import auth_test
 
+DEFAULT_AUTHMOD = 'moodle'
 
 _SPECIAL_GROUP_ADMIN = '99999999-9999-9999-9999-999999999999'
 _SPECIAL_GROUP_ANY = '00000000-0000-0000-0000-000000000000'
@@ -31,6 +34,13 @@ class UserNotAuthorizedError(AuthorizationError):
     def __init__(self, user_uuid, func, *args, **kwargs):
         msg = "User '{:s}' is not authorized to access '{:s}'".format(user_uuid, func.__name__)
         super(UserNotAuthorizedError, self).__init__(msg, *args, **kwargs)
+
+class BadCredentialsError(AuthorizationError):
+    """Bad Credentials Exception"""
+
+    def __init__(self, username, *args, **kwargs):
+        msg = "Could not authenticate user {:s}".format(username)
+        super(BadCredentialsError, self).__init__(msg, *args, **kwargs)
 
 
 ### Classes ###
@@ -62,48 +72,71 @@ class UserMgmtMixin(object):
 
     def auth_token(self, token):
 
-        user_uuid = self.verify_token(token)
+        user_uuid = self._verify_token(token)
         if user_uuid:
-            user = self.srv._get_user(user_uuid)
-            return user
+            return user_uuid
         else:
             return False
 
     def auth_user(self, username, password):
 
-        user_uuid = self.get_useruuid(username)
+        user_uuid = self._get_useruuid(username)
         if user_uuid:
             user = self.srv._get_user(user_uuid)
-            auth = _auth_user(username, password, user['auth'])
+            auth = self.auth_user_mod(username, password, user['auth'])
             if auth:
-                return user
+                return user_uuid
             else:
                 return False
         else:
             return None
 
-    def _auth_user(self, username, password, auth_mod):
+    def auth_user_mod(self, username, password, auth_mod):
+
         if auth_mod == 'moodle':
-            moodle_user = auth_moodle.auth_user(username, password)
+            authenticator = auth_moodle.Authenticator()
+            moodle_user = authenticator.auth_user(username, password)
             if moodle_user:
-                return True
+                user_data = {}
+                user_data['username'] = str(moodle_user.username)
+                user_data['first'] = str(moodle_user.first)
+                user_data['last'] = str(moodle_user.last)
+                user_data['moodle_id'] = str(moodle_user.userid)
+                user_data['moodle_token'] = str(moodle_user.token)
+                return user_data
+            else:
+                return False
+        elif auth_mod == 'test':
+            authenticator = auth_test.Authenticator()
+            test_user = authenticator.auth_user(username, password)
+            if test_user:
+                user_data = {}
+                user_data['username'] = username
+                user_data['first'] = 'Test'
+                user_data['last'] = 'User'
+                return user_data
             else:
                 return False
         else:
             raise Exception("Unknown auth_mod: {:s}".format(auth_mod))
 
-    def create_user(self, username, password, auth_mod):
+    def get_extra_user_schema(self, auth_mod):
+
         if auth_mod == 'moodle':
-            moodle_user = auth_moodle.auth_user(username, password)
-            if moodle_user:
-                return True
-            else:
-                return False
+            return auth_moodle.EXTRA_USER_SCHEMA
+        elif auth_mod == 'test':
+            return auth_test.EXTRA_USER_SCHEMA
         else:
             raise Exception("Unknown auth_mod: {:s}".format(auth_mod))
 
+    def init_user(self, user):
 
-    def set_useruuid(self, username, user_uuid):
+        user_uuid = uuid.UUID(user.obj_key)
+        self._set_useruuid(user['username'], str(user_uuid))
+        token = self._generate_token(str(user_uuid))
+        return token
+
+    def _set_useruuid(self, username, user_uuid):
 
         # Process Inputs
         prefix = getattr(self, 'full_key', None)
@@ -112,10 +145,10 @@ class UserMgmtMixin(object):
         UserNamesFactory = backend.Factory(UserNamesBase, prefix=prefix, db=self.db)
         usernames = UserNamesFactory.from_raw('usernames')
 
-        usernames[str(username).lower()] = str(usr_uuid).lower()
+        usernames[str(username).lower()] = str(user_uuid).lower()
         return usernames[str(username).lower()]
 
-    def get_useruuid(self, username):
+    def _get_useruuid(self, username):
 
         # Process Inputs
         prefix = getattr(self, 'full_key', None)
@@ -130,7 +163,7 @@ class UserMgmtMixin(object):
         else:
             return False
 
-    def generate_token(self, user_uuid):
+    def _generate_token(self, user_uuid):
 
         # Process Inputs
         prefix = getattr(self, 'full_key', None)
@@ -149,7 +182,7 @@ class UserMgmtMixin(object):
         tokens[str(user_uuid).lower()] = token
         return token
 
-    def verify_token(self, token):
+    def _verify_token(self, token):
 
         # Process Inputs
         prefix = getattr(self, 'full_key', None)

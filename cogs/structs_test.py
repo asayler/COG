@@ -8,10 +8,14 @@
 import copy
 import unittest
 import werkzeug
+import os
 
 import structs
 import test_common
 
+COGS_ADMIN_AUTH_MOD = os.environ.get('COGS_ADMIN_AUTH_MOD', 'test')
+COGS_ADMIN_USERNAME = os.environ.get('COGS_ADMIN_USERNAME', 'adminuser')
+COGS_ADMIN_PASSWORD = os.environ.get('COGS_ADMIN_PASSWORD', 'adminpass')
 
 class TypesTestCase(test_common.CogsTestCase):
 
@@ -24,7 +28,10 @@ class TypesTestCase(test_common.CogsTestCase):
         self.srv = structs.Server(db=self.db)
 
         # Setup Admin
-        self.admin = self.srv._create_user(test_common.USER_TESTDICT)
+        self.admin = self.srv._create_user(test_common.USER_TESTDICT,
+                                           username=COGS_ADMIN_USERNAME,
+                                           password=COGS_ADMIN_PASSWORD,
+                                           authmod=COGS_ADMIN_AUTH_MOD)
         self.admin_uuid = str(self.admin.uuid).lower()
         self.srv.add_admins([self.admin_uuid])
 
@@ -38,7 +45,7 @@ class TypesTestCase(test_common.CogsTestCase):
         super(TypesTestCase, self).tearDown()
 
     def subHashDirectHelper(self, hash_create, hash_get, hash_list, input_dict,
-                            extra_kwargs={}, extra_objs=None, user=None):
+                            base_kwargs={}, extra_kwargs={}, extra_objs=None, user=None):
 
         if extra_objs:
             uuids_in = set(extra_objs)
@@ -52,7 +59,10 @@ class TypesTestCase(test_common.CogsTestCase):
         # Generate 10 Objects
         objects = []
         for i in range(10):
-            obj = hash_create(input_dict, user=user, **extra_kwargs)
+            kwargs = copy.copy(extra_kwargs)
+            for kwarg in base_kwargs:
+                kwargs[kwarg] = "{:s}_{:02d}".format(base_kwargs[kwarg], i)
+            obj = hash_create(input_dict, user=user, **kwargs)
             self.assertSubset(input_dict, obj.get_dict())
             objects.append(obj)
             uuids_in.add(str(obj.uuid))
@@ -207,6 +217,9 @@ class ServerTestCase(TypesTestCase):
                                  self.srv.get_user,
                                  self.srv.list_users,
                                  test_common.USER_TESTDICT,
+                                 base_kwargs={'username': 'username',
+                                              'password': 'password'},
+                                 extra_kwargs={'authmod': 'test'},
                                  extra_objs=[self.admin_uuid],
                                  user=self.admin)
 
@@ -284,22 +297,34 @@ class UserTestCase(TypesTestCase):
     def test_create_user(self):
         self.hashCreateHelper(self.srv.create_user,
                               test_common.USER_TESTDICT,
+                              extra_kwargs={'username': 'testuser',
+                                            'password': 'testpass',
+                                            'authmod': 'test'},
                               user=self.admin)
 
     def test_get_user(self):
         self.hashGetHelper(self.srv.create_user,
                            self.srv.get_user,
                            test_common.USER_TESTDICT,
+                              extra_kwargs={'username': 'testuser',
+                                            'password': 'testpass',
+                                            'authmod': 'test'},
                            user=self.admin)
 
     def test_update_user(self):
         self.hashUpdateHelper(self.srv.create_user,
                               test_common.USER_TESTDICT,
+                              extra_kwargs={'username': 'testuser',
+                                            'password': 'testpass',
+                                            'authmod': 'test'},
                               user=self.admin)
 
     def test_delete_user(self):
         self.hashDeleteHelper(self.srv.create_user,
                               test_common.USER_TESTDICT,
+                              extra_kwargs={'username': 'testuser',
+                                            'password': 'testpass',
+                                            'authmod': 'test'},
                               user=self.admin)
 
 
@@ -313,10 +338,12 @@ class GroupTestCase(TypesTestCase):
         # Setup Users
         self.users = set([])
         for i in range(10):
-            d = copy.copy(test_common.USER_TESTDICT)
-            for k in d:
-                d[k] = "test_{:s}_{:02d}".format(k, i)
-            self.users.add(str(self.srv.create_user(d, user=self.admin).uuid))
+            username = "user_{:02d}".format(i)
+            password = "password_{:02d}"
+            user = self.srv.create_user(test_common.USER_TESTDICT,
+                                        username=username, password=password,
+                                        authmod='test', user=self.admin)
+            self.users.add(str(user.uuid))
 
     def tearDown(self):
 
