@@ -4,6 +4,7 @@
 # Summer 2014
 # Univerity of Colorado
 
+import copy
 import os
 import hashlib
 import uuid
@@ -426,8 +427,11 @@ class Auth(UserMgmtMixin, AdminMgmtMixin, object):
         self.prefix = prefix
 
         # Setup Factories
-        self.UserFactory = backend.UUIDFactory(UserBase, prefix=self.prefix, db=self.db, auth=self)
-        self.GroupFactory = backend.UUIDFactory(GroupBase, prefix=self.prefix, db=self.db, auth=self)
+        passthrough = {'auth': self}
+        self.UserFactory = backend.UUIDFactory(UserBase, prefix=self.prefix,
+                                               passthrough=passthrough, db=self.db)
+        self.GroupFactory = backend.UUIDFactory(GroupBase, prefix=self.prefix,
+                                                passthrough=passthrough, db=self.db)
 
         # Setup Admins
         self.init_admins()
