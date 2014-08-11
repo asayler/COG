@@ -132,12 +132,17 @@ class UserMgmtMixin(object):
         else:
             raise Exception("Unknown auth_mod: {:s}".format(auth_mod))
 
-    def init_user(self, user):
+    def init_user_auth(self, user):
 
         user_uuid = uuid.UUID(user.obj_key)
         self._set_useruuid(user['username'], str(user_uuid))
         token = self._generate_token(str(user_uuid))
         return token
+
+    def remove_user_auth(self, user):
+
+        self._rem_useruuid(user['username'])
+        self._rem_token(user['token'])
 
     def _set_useruuid(self, username, user_uuid):
 
@@ -165,6 +170,18 @@ class UserMgmtMixin(object):
             return user_uuid.lower()
         else:
             return False
+
+    def _rem_useruuid(self, username):
+
+        # Process Inputs
+        prefix = getattr(self, 'full_key', None)
+
+        # Setup Usernames List
+        UsernamesFactory = backend.Factory(UsernamesBase, prefix=prefix, db=self.db)
+        usernames = UsernamesFactory.from_raw(_USERNAMEMAP_KEY)
+
+        # Delete Mapping
+        del(usernames[username.lower()])
 
     def _generate_token(self, user_uuid):
 
@@ -200,6 +217,18 @@ class UserMgmtMixin(object):
             return user_uuid.lower()
         else:
             return False
+
+    def _rem_token(self, token):
+
+        # Process Inputs
+        prefix = getattr(self, 'full_key', None)
+
+        # Setup Group List
+        TokensFactory = backend.Factory(TokensBase, prefix=prefix, db=self.db)
+        tokens = TokensFactory.from_raw(_TOKENMAP_KEY)
+
+        # Delete Mapping
+        del(tokens[token.lower()])
 
 
 class AuthorizationAdminMixin(object):

@@ -167,7 +167,15 @@ class HashBase(ObjectBase):
                 raise KeyError("Key {:s} not valid in {:s}".format(k, self))
 
         ret = self.db.hset(self.full_key, k, v)
+        return ret
 
+    def __delitem__(self, key):
+
+        if self.schema is not None:
+            if key not in self.schema:
+                raise KeyError("Key {:s} not valid in {:s}".format(k, self))
+
+        ret = self.db.hdel(self.full_key, key)
         return ret
 
     def get_dict(self):

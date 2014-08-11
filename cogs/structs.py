@@ -245,7 +245,7 @@ class UserBase(AuthTSHashBase):
         obj = super(UserBase, cls).from_new(data, obj_schema=obj_schema, **kwargs)
 
         # Setup User Auth
-        token = cls.srv.init_user(obj)
+        token = cls.srv.init_user_auth(obj)
         obj['token'] = token
 
         # Return Submission
@@ -264,6 +264,15 @@ class UserBase(AuthTSHashBase):
 
         # Return Submission
         return obj
+
+    # Override Delete
+    def _delete(self):
+
+        # Deallocate User Auth
+        self.srv.remove_user_auth(self)
+
+        # Call Parent
+        super(UserBase, self)._delete()
 
 
 ## User List Object ##
