@@ -31,7 +31,7 @@ git:
 	$(GIT) submodule update
 
 reqs: $(REQUIRMENTS)
-	$(PIP) install -r "$<"
+	$(PIP) install -r "$<" -U
 	$(MAKE) -C $(COGS) $@
 	$(MAKE) -C $(MOODLE) $@
 

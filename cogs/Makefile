@@ -23,7 +23,7 @@ all:
 	$(ECHO) "This is a python project; nothing to build!"
 
 reqs: $(REQUIRMENTS)
-	$(PIP) install -r "$<"
+	$(PIP) install -r "$<" -U
 
 test:
 	$(EXPORT_PATH) && $(PYTHON) -m unittest discover -v -p $(UNITTEST_PATTERN)
