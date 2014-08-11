@@ -59,7 +59,7 @@ class ObjectBase(backend.ObjectBase):
 
 class Factory(backend.Factory):
 
-    def __init__(self, base_cls, prefix=None, db=None, srv=None):
+    def __init__(self, base_cls, db=None, **kwargs):
 
         # Setup DB
         if not db:
@@ -68,7 +68,7 @@ class Factory(backend.Factory):
                                    db=_REDIS_CONF_DEFAULT['redis_db'])
 
         # Call Parent
-        super(Factory, self).__init__(base_cls, prefix=prefix, db=db, srv=srv)
+        super(Factory, self).__init__(base_cls, db=db, **kwargs)
 
     def list_family(self):
         """List Factory Objects"""
