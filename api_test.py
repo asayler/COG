@@ -18,14 +18,33 @@ import cogs.test_common
 class CogsApiTestCase(cogs.test_common.CogsTestCase):
 
     def setUp(self):
+
+        # Call Parent
         super(CogsApiTestCase, self).setUp()
+
+        # Set API active DB to Test DB
         api.db = self.db
+        api.srv = api.cogs.structs.Server(api.db)
+        assert(api.db == self.db)
+        assert(api.srv.db == self.db)
+
+        # Create Test Client
         self.app = api.app.test_client()
+
+        # Setup Admin
+        self.admin = api.srv._create_user(cogs.test_common.USER_TESTDICT,
+                                          username=cogs.test_common.COGS_ADMIN_USERNAME,
+                                          password=cogs.test_common.COGS_ADMIN_PASSWORD,
+                                          authmod=cogs.test_common.COGS_ADMIN_AUTH_MOD)
+        self.admin_uuid = str(self.admin.uuid).lower()
+        api.srv.add_admins([self.admin_uuid])
 
     def tearDown(self):
         super(CogsApiTestCase, self).tearDown()
 
-    def open_auth(self, method, url, username, password):
+    def open_auth(self, method, url, username, password=None):
+        if not password:
+            password = ""
         auth_str = "{:s}:{:s}".format(username, password)
         b64_auth_str = base64.b64encode(auth_str)
         key = "Authorization"
@@ -144,7 +163,7 @@ class CogsApiRootTestCase(CogsApiTestCase):
         super(CogsApiRootTestCase, self).tearDown()
 
     def test_root_get(self):
-        res = self.open_auth('GET', '/', "user", "password")
+        res = self.open_auth('GET', '/', self.admin['token'], None)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data, api._MSG_ROOT)
 

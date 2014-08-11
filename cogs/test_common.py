@@ -5,6 +5,7 @@
 # Summer 2014
 # Univerity of Colorado
 
+import os
 import unittest
 
 import redis
@@ -18,20 +19,18 @@ DUMMY_SCHEMA   = ['key1', 'key2', 'key3']
 DUMMY_TESTDICT = {'key1': "val1",
                   'key2': "val2",
                   'key3': "val3"}
-
 USER_TESTDICT = {}
-
 GROUP_TESTDICT = {'name': "testgroup"}
-
 FILE_TESTDICT  = {'key': "Test_File"}
-
 ASSIGNMENT_TESTDICT = {'name': "Test_Assignment"}
-
 TEST_TESTDICT = {'name': "Test_Assignment",
                  'type': "script",
                  'maxscore': "10"}
-
 SUBMISSION_TESTDICT = {}
+
+COGS_ADMIN_AUTH_MOD = os.environ.get('COGS_ADMIN_AUTH_MOD', 'test')
+COGS_ADMIN_USERNAME = os.environ.get('COGS_ADMIN_USERNAME', 'adminuser')
+COGS_ADMIN_PASSWORD = os.environ.get('COGS_ADMIN_PASSWORD', 'adminpass')
 
 
 class CogsTestError(Exception):

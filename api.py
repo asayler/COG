@@ -12,6 +12,7 @@ import flask.ext.httpauth
 
 import redis
 
+import cogs.auth
 import cogs.structs
 
 ### Constants ###
@@ -43,27 +44,26 @@ srv = cogs.structs.Server(db)
 @auth.verify_password
 def verify_login(username, password):
 
-    print("username = {:s}".format(username))
-    print("password = {:s}".format(password))
-
     # Username:Password Case
-    if username:
+    if password:
         user = srv.auth_user(username, password)
         if user:
             return True
         elif user == False:
             return False
         else:
-            # Unknown User
-            print("Unknown User")
-            return True
+            try:
+                srv._create_user({}, username=username, password=password)
+            except cogs.auth.BadCredentialsError:
+                return False
+            else:
+                return True
     # Token Case
     else:
-        user = srv.auth_token(password)
+        user = srv.auth_token(username)
         if user:
             return True
         else:
-            print("Bad Token")
             return False
 
 ### Endpoints ###

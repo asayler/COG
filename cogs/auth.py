@@ -20,6 +20,9 @@ _SPECIAL_GROUP_ANY = '00000000-0000-0000-0000-000000000000'
 
 _GROUP_ADMIN_DICT = {'name': "ADMIN"}
 
+_USERNAMEMAP_KEY = 'username_to_uuid'
+_TOKENMAP_KEY = 'token_to_uuid'
+
 ### Exceptions ###
 
 class AuthorizationError(Exception):
@@ -45,13 +48,13 @@ class BadCredentialsError(AuthorizationError):
 
 ### Classes ###
 
-class UserTokensBase(backend.HashBase):
+class TokensBase(backend.HashBase):
 
     SCHEMA = None
 
     pass
 
-class UserNamesBase(backend.HashBase):
+class UsernamesBase(backend.HashBase):
 
     SCHEMA = None
 
@@ -142,11 +145,11 @@ class UserMgmtMixin(object):
         prefix = getattr(self, 'full_key', None)
 
         # Setup Usernames List
-        UserNamesFactory = backend.Factory(UserNamesBase, prefix=prefix, db=self.db)
-        usernames = UserNamesFactory.from_raw('usernames')
+        UsernamesFactory = backend.Factory(UsernamesBase, prefix=prefix, db=self.db)
+        usernames = UsernamesFactory.from_raw(_USERNAMEMAP_KEY)
 
-        usernames[str(username).lower()] = str(user_uuid).lower()
-        return usernames[str(username).lower()]
+        usernames[username.lower()] = user_uuid.lower()
+        return usernames[username.lower()]
 
     def _get_useruuid(self, username):
 
@@ -154,12 +157,12 @@ class UserMgmtMixin(object):
         prefix = getattr(self, 'full_key', None)
 
         # Setup Usernames List
-        UserNamesFactory = backend.Factory(UserNamesBase, prefix=prefix, db=self.db)
-        usernames = UserNamesFactory.from_raw('usernames')
+        UsernamesFactory = backend.Factory(UsernamesBase, prefix=prefix, db=self.db)
+        usernames = UsernamesFactory.from_raw(_USERNAMEMAP_KEY)
 
-        user_uuid = usernames.get_dict().get(str(username).lower(), None)
+        user_uuid = usernames.get_dict().get(username.lower(), None)
         if user_uuid:
-            return str(user_uuid).lower()
+            return user_uuid.lower()
         else:
             return False
 
@@ -169,8 +172,8 @@ class UserMgmtMixin(object):
         prefix = getattr(self, 'full_key', None)
 
         # Setup Token List
-        UserTokensFactory = backend.Factory(UserTokensBase, prefix=prefix, db=self.db)
-        tokens = UserTokensFactory.from_raw('tokens')
+        TokensFactory = backend.Factory(TokensBase, prefix=prefix, db=self.db)
+        tokens = TokensFactory.from_raw(_TOKENMAP_KEY)
 
         # Generate Token
         rnd = os.urandom(32)
@@ -179,7 +182,7 @@ class UserMgmtMixin(object):
         token = str(sha.hexdigest()).lower()
 
         # Set Token
-        tokens[str(user_uuid).lower()] = token
+        tokens[token] = user_uuid.lower()
         return token
 
     def _verify_token(self, token):
@@ -188,13 +191,13 @@ class UserMgmtMixin(object):
         prefix = getattr(self, 'full_key', None)
 
         # Setup Group List
-        UserTokensFactory = backend.Factory(UserTokensBase, prefix=prefix, db=self.db)
-        tokens = UserTokensFactory.from_raw('tokens')
+        TokensFactory = backend.Factory(TokensBase, prefix=prefix, db=self.db)
+        tokens = TokensFactory.from_raw(_TOKENMAP_KEY)
 
         # Check Token
-        user_uuid = tokens.get_dict().get(str(token).lower(), None)
+        user_uuid = tokens.get_dict().get(token.lower(), None)
         if user_uuid:
-            return str(user_uuid).lower()
+            return user_uuid.lower()
         else:
             return False
 

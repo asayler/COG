@@ -13,10 +13,6 @@ import os
 import structs
 import test_common
 
-COGS_ADMIN_AUTH_MOD = os.environ.get('COGS_ADMIN_AUTH_MOD', 'test')
-COGS_ADMIN_USERNAME = os.environ.get('COGS_ADMIN_USERNAME', 'adminuser')
-COGS_ADMIN_PASSWORD = os.environ.get('COGS_ADMIN_PASSWORD', 'adminpass')
-
 class TypesTestCase(test_common.CogsTestCase):
 
     def setUp(self):
@@ -29,9 +25,9 @@ class TypesTestCase(test_common.CogsTestCase):
 
         # Setup Admin
         self.admin = self.srv._create_user(test_common.USER_TESTDICT,
-                                           username=COGS_ADMIN_USERNAME,
-                                           password=COGS_ADMIN_PASSWORD,
-                                           authmod=COGS_ADMIN_AUTH_MOD)
+                                           username=test_common.COGS_ADMIN_USERNAME,
+                                           password=test_common.COGS_ADMIN_PASSWORD,
+                                           authmod=test_common.COGS_ADMIN_AUTH_MOD)
         self.admin_uuid = str(self.admin.uuid).lower()
         self.srv.add_admins([self.admin_uuid])
 
