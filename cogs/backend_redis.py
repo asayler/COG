@@ -124,7 +124,7 @@ class HashBase(ObjectBase):
     schema = None
 
     @classmethod
-    def from_new(cls, d, key=None):
+    def from_new(cls, d, key=None, obj_schema=None):
         """New Constructor"""
 
         # Check Input
@@ -133,6 +133,8 @@ class HashBase(ObjectBase):
 
         # Call Parent
         obj = super(HashBase, cls).from_new(key)
+        if obj_schema:
+            obj.schema = obj_schema
 
         # Check dict
         if obj.schema:
@@ -197,7 +199,7 @@ class TSHashBase(HashBase):
     """
 
     @classmethod
-    def from_new(cls, dictionary, key=None):
+    def from_new(cls, dictionary, **kwargs):
         """New Constructor"""
 
         # Set Times
@@ -207,7 +209,7 @@ class TSHashBase(HashBase):
         data['modified_time'] = t
 
         # Call Parent
-        obj = super(TSHashBase, cls).from_new(data, key=key)
+        obj = super(TSHashBase, cls).from_new(data, **kwargs)
 
         # Return Object
         return obj
@@ -248,7 +250,7 @@ class OwnedTSHashBase(TSHashBase):
     """
 
     @classmethod
-    def from_new(cls, dictionary, key=None, user=None):
+    def from_new(cls, dictionary, user=None, **kwargs):
         """New Constructor"""
 
         # Set Owner
@@ -259,7 +261,7 @@ class OwnedTSHashBase(TSHashBase):
             data['owner'] = ""
 
         # Call Parent
-        obj = super(OwnedTSHashBase, cls).from_new(data, key=key)
+        obj = super(OwnedTSHashBase, cls).from_new(data, **kwargs)
 
         # Return Run
         return obj

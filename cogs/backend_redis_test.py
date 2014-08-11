@@ -446,7 +446,7 @@ class RedisTSHashTestCase(BackendRedisTestCase):
         # Test Empty Dict w/ Key
         d = {}
         k = "testkey_1"
-        h = self.TSHashFactory.from_new(d, k)
+        h = self.TSHashFactory.from_new(d, key=k)
         self.assertSubset(d, h.get_dict())
         self.assertEqual(h['created_time'], h['modified_time'])
 
@@ -457,7 +457,7 @@ class RedisTSHashTestCase(BackendRedisTestCase):
         # Test Non-Empty Dict w Key
         k = "testkey_2"
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
-        h = self.TSHashFactory.from_new(d, k)
+        h = self.TSHashFactory.from_new(d, key=k)
         self.assertSubset(d, h.get_dict())
         self.assertEqual(h['created_time'], h['modified_time'])
 
@@ -468,7 +468,7 @@ class RedisTSHashTestCase(BackendRedisTestCase):
 
         # Create and Get Object
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
-        h = self.TSHashFactory.from_new(d, k)
+        h = self.TSHashFactory.from_new(d, key=k)
         self.assertSubset(d, h.get_dict())
         ct0 = float(h['created_time'])
         mt0 = float(h['modified_time'])
@@ -499,7 +499,7 @@ class RedisTSHashTestCase(BackendRedisTestCase):
 
         # Create Object
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
-        h = self.TSHashFactory.from_new(d, k)
+        h = self.TSHashFactory.from_new(d, key=k)
         self.assertSubset(d, h.get_dict())
         ct0 = float(h['created_time'])
         mt0 = float(h['modified_time'])
