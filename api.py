@@ -80,7 +80,7 @@ def verify_login(username, password):
 @app.route("/",
            methods=['GET'])
 @http_auth.login_required
-@cogs_auth.requires_authorization_route()
+@cogs_auth.requires_auth_route()
 def get_root():
     res = _MSG_ROOT
     return res

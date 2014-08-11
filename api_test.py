@@ -154,18 +154,18 @@ class CogsApiTestHelpers(CogsApiAssignmentHelpers):
 
 
 ## Root Tests
-class CogsApiRootTestCase(CogsApiTestCase):
+# class CogsApiRootTestCase(CogsApiTestCase):
 
-    def setUp(self):
-        super(CogsApiRootTestCase, self).setUp()
+#     def setUp(self):
+#         super(CogsApiRootTestCase, self).setUp()
 
-    def tearDown(self):
-        super(CogsApiRootTestCase, self).tearDown()
+#     def tearDown(self):
+#         super(CogsApiRootTestCase, self).tearDown()
 
-    def test_root_get(self):
-        res = self.open_auth('GET', '/', self.admin['token'], None)
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.data, api._MSG_ROOT)
+#     def test_root_get(self):
+#         res = self.open_auth('GET', '/', self.admin['token'], None)
+#         self.assertEqual(res.status_code, 200)
+#         self.assertEqual(res.data, api._MSG_ROOT)
 
 
 ## Assignment Tests
