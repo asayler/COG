@@ -13,7 +13,7 @@ import uuid
 import redis
 
 import backend
-from backend import BackendError, FactoryError, ObjectError, ObjectDNE
+from backend import BackendError, FactoryError, ObjectError, ObjectDNE, TS_SCHEMA
 
 
 _REDIS_CONF_DEFAULT = {'redis_host': "localhost",
@@ -199,6 +199,10 @@ class HashBase(ObjectBase):
         ret = self.db.hmset(self.full_key, d)
         if not ret:
             raise ObjectError("Set Failed")
+
+    def update(self, data):
+        """Alias for set_dict"""
+        return self.set_dict(data)
 
 
 class TSHashBase(HashBase):

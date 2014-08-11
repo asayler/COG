@@ -6,6 +6,7 @@
 
 import abc
 
+TS_SCHEMA = ['created_time', 'modified_time']
 
 _ENCODING = 'utf-8'
 _FIELD_SEP = ':'

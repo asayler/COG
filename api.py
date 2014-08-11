@@ -34,14 +34,15 @@ _REDIS_CONF= {'redis_host': "localhost",
 ### Global Setup ###
 
 app = flask.Flask(__name__)
-auth = flask.ext.httpauth.HTTPBasicAuth()
+http_auth = flask.ext.httpauth.HTTPBasicAuth()
 redis_conf = _REDIS_CONF
 db = redis.StrictRedis(host=redis_conf['redis_host'],
                        port=redis_conf['redis_port'],
                        db=redis_conf['redis_db'])
 srv = cogs.structs.Server(db)
+cogs_auth = cogs.auth.Auth(db)
 
-@auth.verify_password
+@http_auth.verify_password
 def verify_login(username, password):
 
     flask.g.user = None
@@ -78,7 +79,8 @@ def verify_login(username, password):
 
 @app.route("/",
            methods=['GET'])
-@auth.login_required
+@http_auth.login_required
+@cogs_auth.requires_authorization_route()
 def get_root():
     res = _MSG_ROOT
     return res
