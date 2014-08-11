@@ -54,91 +54,93 @@ class AuthTestCase(test_common_backend.SubMixin, BaseTestCase):
                                  test_common.GROUP_TESTDICT,
                                  extra_objs=[auth._SPECIAL_GROUP_ADMIN])
 
-# class UserTestCase(BaseTestCase):
 
-#     def setUp(self):
-#         super(UserTestCase, self).setUp()
+class UserTestCase(test_common_backend.UUIDHashMixin, BaseTestCase):
 
-#     def tearDown(self):
-#         super(UserTestCase, self).tearDown()
+    def setUp(self):
+        super(UserTestCase, self).setUp()
 
-#     def test_create_user(self):
-#         self.hashCreateHelper(self.auth.create_user,
-#                               test_common.USER_TESTDICT,
-#                               extra_kwargs={'username': 'testuser',
-#                                             'password': 'testpass',
-#                                             'authmod': 'test'})
+    def tearDown(self):
+        super(UserTestCase, self).tearDown()
 
-#     def test_get_user(self):
-#         self.hashGetHelper(self.auth.create_user,
-#                            self.auth.get_user,
-#                            test_common.USER_TESTDICT,
-#                               extra_kwargs={'username': 'testuser',
-#                                             'password': 'testpass',
-#                                             'authmod': 'test'})
+    def test_create_user(self):
+        self.hashCreateHelper(self.auth.create_user,
+                              test_common.USER_TESTDICT,
+                              extra_kwargs={'username': 'testuser',
+                                            'password': 'testpass',
+                                            'authmod': 'test'})
 
-#     def test_update_user(self):
-#         self.hashUpdateHelper(self.auth.create_user,
-#                               test_common.USER_TESTDICT,
-#                               extra_kwargs={'username': 'testuser',
-#                                             'password': 'testpass',
-#                                             'authmod': 'test'})
+    def test_get_user(self):
+        self.hashGetHelper(self.auth.create_user,
+                           self.auth.get_user,
+                           test_common.USER_TESTDICT,
+                              extra_kwargs={'username': 'testuser',
+                                            'password': 'testpass',
+                                            'authmod': 'test'})
 
-#     def test_delete_user(self):
-#         self.hashDeleteHelper(self.auth.create_user,
-#                               test_common.USER_TESTDICT,
-#                               extra_kwargs={'username': 'testuser',
-#                                             'password': 'testpass',
-#                                             'authmod': 'test'})
+    def test_update_user(self):
+        self.hashUpdateHelper(self.auth.create_user,
+                              test_common.USER_TESTDICT,
+                              extra_kwargs={'username': 'testuser',
+                                            'password': 'testpass',
+                                            'authmod': 'test'})
 
-# class GroupTestCase(TypesTestCase):
+    def test_delete_user(self):
+        self.hashDeleteHelper(self.auth.create_user,
+                              test_common.USER_TESTDICT,
+                              extra_kwargs={'username': 'testuser',
+                                            'password': 'testpass',
+                                            'authmod': 'test'})
 
-#     def setUp(self):
 
-#         # Call Parent
-#         super(GroupTestCase, self).setUp()
+class GroupTestCase(test_common_backend.SubMixin, test_common_backend.UUIDHashMixin, BaseTestCase):
 
-#         # Setup Users
-#         self.users = set([])
-#         for i in range(10):
-#             username = "user_{:02d}".format(i)
-#             password = "password_{:02d}"
-#             user = self.auth.create_user(test_common.USER_TESTDICT,
-#                                         username=username, password=password,
-#                                         authmod='test')
-#             self.users.add(str(user.uuid))
+    def setUp(self):
 
-#     def tearDown(self):
+        # Call Parent
+        super(GroupTestCase, self).setUp()
 
-#         # Remove Users
-#         for user_uuid in self.users:
-#             user = self.auth.get_user(user_uuid)
-#             user.delete()
+        # Setup Users
+        self.users = set([])
+        for i in range(10):
+            username = "user_{:02d}".format(i)
+            password = "password_{:02d}"
+            user = self.auth.create_user(test_common.USER_TESTDICT,
+                                        username=username, password=password,
+                                        authmod='test')
+            self.users.add(str(user.uuid))
 
-#         # Call Parent
-#         super(GroupTestCase, self).tearDown()
+    def tearDown(self):
 
-#     def test_create_group(self):
-#         self.hashCreateHelper(self.auth.create_group,
-#                               test_common.GROUP_TESTDICT)
+        # Remove Users
+        for user_uuid in self.users:
+            user = self.auth.get_user(user_uuid)
+            user.delete()
 
-#     def test_get_group(self):
-#         self.hashGetHelper(self.auth.create_group,
-#                            self.auth.get_group,
-#                            test_common.GROUP_TESTDICT)
+        # Call Parent
+        super(GroupTestCase, self).tearDown()
 
-#     def test_delete_group(self):
-#         self.hashDeleteHelper(self.auth.create_group,
-#                               test_common.GROUP_TESTDICT)
+    def test_create_group(self):
+        self.hashCreateHelper(self.auth.create_group,
+                              test_common.GROUP_TESTDICT)
 
-#     def test_update_group(self):
-#         self.hashUpdateHelper(self.auth.create_group,
-#                               test_common.GROUP_TESTDICT)
+    def test_get_group(self):
+        self.hashGetHelper(self.auth.create_group,
+                           self.auth.get_group,
+                           test_common.GROUP_TESTDICT)
 
-#     def test_members(self):
-#         grp = self.auth.create_group(test_common.GROUP_TESTDICT)
-#         self.subSetReferenceHelper(grp.add_users, grp.rem_users, grp.list_users,
-#                                    self.users)
+    def test_delete_group(self):
+        self.hashDeleteHelper(self.auth.create_group,
+                              test_common.GROUP_TESTDICT)
+
+    def test_update_group(self):
+        self.hashUpdateHelper(self.auth.create_group,
+                              test_common.GROUP_TESTDICT)
+
+    def test_members(self):
+        grp = self.auth.create_group(test_common.GROUP_TESTDICT)
+        self.subSetReferenceHelper(grp.add_users, grp.rem_users, grp.list_users,
+                                   self.users)
 
 # Main
 if __name__ == '__main__':
