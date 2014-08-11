@@ -44,24 +44,29 @@ srv = cogs.structs.Server(db)
 @auth.verify_password
 def verify_login(username, password):
 
+    flask.g.user = None
+
     # Username:Password Case
     if password:
         user = srv.auth_user(username, password)
         if user:
+            flask.g.user = user
             return True
-        elif user == False:
+        elif user_uuid == False:
             return False
         else:
             try:
-                srv._create_user({}, username=username, password=password)
+                user = srv._create_user({}, username=username, password=password)
             except cogs.auth.BadCredentialsError:
                 return False
             else:
+                flask.g.user = user
                 return True
     # Token Case
     else:
         user = srv.auth_token(username)
         if user:
+            flask.g.user = user
             return True
         else:
             return False
