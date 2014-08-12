@@ -316,9 +316,6 @@ class RunTestCase(test_common_backend.SubMixin,
 
     def test_create_run(self):
         run = self.sub.execute_run(self.tst)
-        print(run.get_dict())
-        time.sleep(1)
-        print(run.get_dict())
 
 
 # Main
