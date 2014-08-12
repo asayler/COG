@@ -109,16 +109,16 @@ class AuthTestCase(test_common_backend.SubMixin, BaseTestCase):
 
 
 
-class UserTestCase(test_common_backend.UUIDHashMixin, BaseTestCase):
+class TestUserTestCase(test_common_backend.UUIDHashMixin, BaseTestCase):
 
     def setUp(self):
+        super(TestUserTestCase, self).setUp()
         self.username = 'testuser'
         self.password = 'testpass'
         self.authmod = 'test'
-        super(UserTestCase, self).setUp()
 
     def tearDown(self):
-        super(UserTestCase, self).tearDown()
+        super(TestUserTestCase, self).tearDown()
 
     def test_create_user(self):
         self.hashCreateHelper(self.auth.create_user,
@@ -149,17 +149,16 @@ class UserTestCase(test_common_backend.UUIDHashMixin, BaseTestCase):
                                             'password': self.password,
                                             'authmod': self.authmod})
 
-
-class AuthmodUserTestCase(UserTestCase):
+class MoodleUserTestCase(TestUserTestCase):
 
     def setUp(self):
+        super(MoodleUserTestCase, self).setUp()
         self.username = _COGS_MOODLE_USERNAME
         self.password = _COGS_MOODLE_PASSWORD
         self.authmod = 'moodle'
-        super(UserTestCase, self).setUp()
 
     def tearDown(self):
-        super(UserTestCase, self).tearDown()
+        super(MoodleUserTestCase, self).tearDown()
 
     def test_create_user(self):
         self.hashCreateHelper(self.auth.create_user,
