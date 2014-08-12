@@ -369,8 +369,9 @@ class RunBase(backend.OwnedTSHashBase):
         run = super(RunBase, cls).from_new(data, **kwargs)
 
         # Add Task to Pool
-        res = cls.srv.workers.apply_async(testrun.test, args=(asn, sub, tst, run))
-        print(res.get())
+        testrun.test(asn, sub, tst, run)
+        #res = cls.srv.workers.apply_async(testrun.test, args=(asn, sub, tst, run))
+        #print(res.get())
 
         # Return Run
         return run
@@ -380,7 +381,7 @@ class RunBase(backend.OwnedTSHashBase):
 
         # TODO Prevent delete while still running
         if not force:
-            while self['status'].startswith('complete'):
+            while not self['status'].startswith('complete'):
                 print("Waiting for run to complete...")
                 time.sleep(1)
 
