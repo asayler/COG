@@ -33,9 +33,28 @@ class BaseTestCase(test_common.CogsTestCase):
 class AuthTestCase(test_common_backend.SubMixin, BaseTestCase):
 
     def setUp(self):
+
+        # Call Parent
         super(AuthTestCase, self).setUp()
 
+        # Add Users
+        self.users = set([])
+        for i in range(10):
+            username = "user_{:02d}".format(i)
+            password = "password_{:02d}"
+            user = self.auth.create_user(test_common.USER_TESTDICT,
+                                        username=username, password=password,
+                                        authmod='test')
+            self.users.add(str(user.uuid))
+
     def tearDown(self):
+
+        # Remove Users
+        for user_uuid in self.users:
+            user = self.auth.get_user(user_uuid)
+            user.delete()
+
+        # Call Parent
         super(AuthTestCase, self).tearDown()
 
     def test_users(self):
@@ -45,7 +64,8 @@ class AuthTestCase(test_common_backend.SubMixin, BaseTestCase):
                                  test_common.USER_TESTDICT,
                                  base_kwargs={'username': 'username',
                                               'password': 'password'},
-                                 extra_kwargs={'authmod': 'test'})
+                                 extra_kwargs={'authmod': 'test'},
+                                 extra_objs=self.users)
 
     def test_groups(self):
         self.subHashDirectHelper(self.auth.create_group,
@@ -53,6 +73,12 @@ class AuthTestCase(test_common_backend.SubMixin, BaseTestCase):
                                  self.auth.list_groups,
                                  test_common.GROUP_TESTDICT,
                                  extra_objs=[auth.SPECIAL_GROUP_ADMIN])
+
+    def test_admins(self):
+        self.subSetReferenceHelper(self.auth.add_admins,
+                                   self.auth.rem_admins,
+                                   self.auth.list_admins,
+                                   self.users)
 
 
 class UserTestCase(test_common_backend.UUIDHashMixin, BaseTestCase):
