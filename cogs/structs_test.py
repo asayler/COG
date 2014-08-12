@@ -15,12 +15,12 @@ import test_common
 import test_common_backend
 
 
-class TypesTestCase(test_common.CogsTestCase):
+class StructsTestCase(test_common.CogsTestCase):
 
     def setUp(self):
 
         # Call Parent
-        super(TypesTestCase, self).setUp()
+        super(StructsTestCase, self).setUp()
 
         # Setup Server
         self.srv = structs.Server(db=self.db)
@@ -28,10 +28,11 @@ class TypesTestCase(test_common.CogsTestCase):
     def tearDown(self):
 
         # Call parent
-        super(TypesTestCase, self).tearDown()
+        super(StructsTestCase, self).tearDown()
 
 
-class ServerTestCase(test_common_backend.SubMixin, TypesTestCase):
+class ServerTestCase(test_common_backend.SubMixin,
+                     StructsTestCase):
 
     def setUp(self):
         super(ServerTestCase, self).setUp()
@@ -88,7 +89,8 @@ class ServerTestCase(test_common_backend.SubMixin, TypesTestCase):
         asn.delete()
 
 
-class FileTestCase(test_common_backend.UUIDHashMixin, TypesTestCase):
+class FileTestCase(test_common_backend.UUIDHashMixin,
+                   StructsTestCase):
 
     def setUp(self):
         super(FileTestCase, self).setUp()
@@ -121,7 +123,8 @@ class FileTestCase(test_common_backend.UUIDHashMixin, TypesTestCase):
                               extra_kwargs={'file_obj': self.file_obj})
 
 
-class AssignmentTestCase(test_common_backend.UUIDHashMixin, TypesTestCase):
+class AssignmentTestCase(test_common_backend.UUIDHashMixin,
+                         StructsTestCase):
 
     def setUp(self):
         super(AssignmentTestCase, self).setUp()
@@ -147,7 +150,9 @@ class AssignmentTestCase(test_common_backend.UUIDHashMixin, TypesTestCase):
                               test_common.ASSIGNMENT_TESTDICT)
 
 
-class TestTestCase(test_common_backend.SubMixin, test_common_backend.UUIDHashMixin, TypesTestCase):
+class TestTestCase(test_common_backend.SubMixin,
+                   test_common_backend.UUIDHashMixin,
+                   StructsTestCase):
 
     def setUp(self):
 
@@ -201,7 +206,9 @@ class TestTestCase(test_common_backend.SubMixin, test_common_backend.UUIDHashMix
         tst.delete()
 
 
-class SubmissionTestCase(test_common_backend.SubMixin, test_common_backend.UUIDHashMixin, TypesTestCase):
+class SubmissionTestCase(test_common_backend.SubMixin,
+                         test_common_backend.UUIDHashMixin,
+                         StructsTestCase):
 
     def setUp(self):
 
