@@ -8,15 +8,19 @@ import copy
 import os
 import werkzeug
 import mimetypes
+import multiprocessing
 
 import backend_redis as backend
 from backend_redis import BackendError, FactoryError, ObjectError, ObjectDNE
+import run
 
 
-_ASSIGNMENT_SCHEMA = ['owner', 'name']
-_TEST_SCHEMA = ['owner', 'assignment', 'name', 'type', 'maxscore']
+_NUM_WORKERS = 10
+
+_ASSIGNMENT_SCHEMA = ['owner', 'name', 'env']
+_TEST_SCHEMA = ['owner', 'assignment', 'name', 'maxscore', 'tester']
 _SUBMISSION_SCHEMA = ['owner', 'assignment']
-_RUN_SCHEMA = ['owner', 'submission', 'test', 'status', 'score', 'output']
+_RUN_SCHEMA = ['owner', 'submission', 'test', 'status', 'score', 'retcode', 'output']
 _FILE_SCHEMA = ['owner', 'key', 'name', 'type', 'encoding', 'path']
 
 _FILES_DIR = "./files/"
@@ -43,6 +47,14 @@ class Server(object):
         self.AssignmentFactory = backend.UUIDFactory(AssignmentBase, db=self.db, srv=self)
         self.SubmissionFactory = backend.UUIDFactory(SubmissionBase, db=self.db, srv=self)
         self.TestFactory = backend.UUIDFactory(TestBase, db=self.db, srv=self)
+
+        # Setup Worker Pool
+        self.workers = multiprocessing.Pool(_NUM_WORKERS)
+
+    # Cleanup Up Server
+    def close(self):
+        self.workers.close()
+        self.workers.join()
 
     # File Methods
     def create_file(self, data, file_obj=None, dst=None, user=None):
@@ -330,39 +342,33 @@ class RunBase(backend.OwnedTSHashBase):
     def from_new(cls, tst, sub, **kwargs):
         """New Constructor"""
 
+        # Get Assignment
+        assert(sub['assignment'] == tst['assignment'])
+        asn = cls.srv.get_assignment(sub['assignment'])
+
         # Create New Object
         data = {}
 
         # Setup Dict
         data['submission'] = str(sub.uuid)
         data['test'] = str(tst.uuid)
-        data['status'] = ""
+        data['status'] = "queued"
         data['score'] = ""
         data['output'] = ""
 
         # Create Run
         run = super(RunBase, cls).from_new(data, **kwargs)
 
-        # Get Files
-        tst_fls = tst._get_files()
-        sub_fls = sub._get_files()
-
-        # Grade Run
-        env = environment.Env(run, tst_fls, sub_fls)
-        tester = tester_script.Tester(env)
-        ret, score, output = tester.test()
-        env.close()
-
-        # Set Results
-        run['status'] = str(ret)
-        run['score'] = str(score)
-        run['output'] = str(output)
+        # Add Task to Pool
+        cls.srv.workers.apply_async(run.test, args=(asn, sub, tst, run))
 
         # Return Run
         return run
 
     # Override Delete
     def delete(self):
+
+        # TODO Prevent delete while still running
 
         # Remove from submission
         run_uuid = str(self.uuid)

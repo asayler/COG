@@ -27,6 +27,9 @@ class StructsTestCase(test_common.CogsTestCase):
 
     def tearDown(self):
 
+        # Cleanup Server
+        self.srv.close()
+
         # Call parent
         super(StructsTestCase, self).tearDown()
 

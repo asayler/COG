@@ -12,14 +12,20 @@ _LOC_DIR = "/tmp/cogs/"
 
 class Env(object):
 
-    def __init__(self, run, tst_files, sub_files):
+    def __init__(self, asn, sub, tst, run):
 
-        # Save Files
+        # Get Files
+        sub_file_uuids = sub.list_files()
+        sub_files = [asn.srv.get_file(file_uuid) for file_uuid in sub_file_uuids]
+        tst_file_uuids = tst.list_files()
+        tst_files = [asn.srv.get_file(file_uuid) for file_uuid in tst_file_uuids]
+
+        # Save File Paths
         self.tst_files = []
         self.sub_files = []
 
         # Setup Working Directory
-        self.wd = os.path.abspath("{:s}/{:s}/".format(_LOC_DIR, repr(run)))
+        self.wd = os.path.abspath("{:s}/{:s}/".format(_LOC_DIR, str(run)))
         os.makedirs(self.wd)
 
         # Copy Submission Files

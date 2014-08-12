@@ -23,10 +23,10 @@ DUMMY_TESTDICT = {'key1': "val1",
 USER_TESTDICT = {}
 GROUP_TESTDICT = {'name': "testgroup"}
 FILE_TESTDICT  = {'key': "Test_File"}
-ASSIGNMENT_TESTDICT = {'name': "Test_Assignment"}
+ASSIGNMENT_TESTDICT = {'name': "Test_Assignment", 'env': "local"}
 TEST_TESTDICT = {'name': "Test_Assignment",
-                 'type': "script",
-                 'maxscore': "10"}
+                 'maxscore': "10",
+                 'tester': "script"}
 SUBMISSION_TESTDICT = {}
 
 COGS_ADMIN_AUTH_MOD = os.environ.get('COGS_ADMIN_AUTH_MOD', 'test')
