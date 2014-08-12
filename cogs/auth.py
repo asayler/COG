@@ -68,7 +68,7 @@ class UserNotAuthorizedError(AuthorizationError):
     """User Not Authorized Exception"""
 
     def __init__(self, user_uuid, method, path, *args, **kwargs):
-        msg = "User {:s} is not authorized to {:s} {:s}".format(user_uuid, method, path_)
+        msg = "User {:s} is not authorized to {:s} {:s}".format(user_uuid, method, path)
         super(UserNotAuthorizedError, self).__init__(msg, *args, **kwargs)
 
 
@@ -104,10 +104,6 @@ class Auth(object):
                                           passthrough=passthrough, db=self.db)
         self.token_map = TokenMapFactory.from_raw()
 
-        # Setup Admins
-        if SPECIAL_GROUP_ADMIN not in self.GroupFactory.list_siblings():
-            self.admins = self.GroupFactory.from_custom(SPECIAL_GROUP_ADMIN, _GROUP_ADMIN_DICT)
-
     # User Methods
     def create_user(self, *args, **kwargs):
         return self.UserFactory.from_new(*args, **kwargs)
@@ -126,11 +122,23 @@ class Auth(object):
 
     # Admin Methods
     def add_admins(self, user_uuids):
-        return self.admins.add_users(user_uuids)
+        if SPECIAL_GROUP_ADMIN not in self.GroupFactory.list_siblings():
+            admins = self.GroupFactory.from_custom(SPECIAL_GROUP_ADMIN, _GROUP_ADMIN_DICT)
+        else:
+            admins = self.GroupFactory.from_existing(SPECIAL_GROUP_ADMIN)
+        return admins.add_users(user_uuids)
     def rem_admins(self, user_uuids):
-        return self.admins.rem_users(user_uuids)
+        if SPECIAL_GROUP_ADMIN not in self.GroupFactory.list_siblings():
+            admins = self.GroupFactory.from_custom(SPECIAL_GROUP_ADMIN, _GROUP_ADMIN_DICT)
+        else:
+            admins = self.GroupFactory.from_existing(SPECIAL_GROUP_ADMIN)
+        return admins.rem_users(user_uuids)
     def list_admins(self):
-        return self.admins.list_users()
+        if SPECIAL_GROUP_ADMIN not in self.GroupFactory.list_siblings():
+            admins = self.GroupFactory.from_custom(SPECIAL_GROUP_ADMIN, _GROUP_ADMIN_DICT)
+        else:
+            admins = self.GroupFactory.from_existing(SPECIAL_GROUP_ADMIN)
+        return admins.list_users()
 
     # Allowed Group Methods
     def add_allowed_groups(self, method, path, group_uuids):
@@ -226,7 +234,7 @@ class Auth(object):
 
                 # Check if User is in ADMIN Group
                 if not allowed:
-                    if user_uuid in self.admins.list_users():
+                    if user_uuid in self.list_admins():
                         allowed = True
 
                 # Setup Group List
@@ -248,7 +256,7 @@ class Auth(object):
 
                 # Call Wrapped Function
                 if allowed:
-                    return func(self, *args, **kwargs)
+                    return func(*args, **kwargs)
                 else:
                     raise UserNotAuthorizedError(user_uuid, method, path)
 
@@ -278,7 +286,7 @@ class UserBase(backend.TSHashBase):
 
         # Set Authmod
         if not authmod:
-            authmod = auth.DEFAULT_AUTHMOD
+            authmod = DEFAULT_AUTHMOD
 
         # Confirm user does not exist
         if cls.auth.auth_userpass(username, password) is not None:

@@ -6,6 +6,7 @@
 # Univerity of Colorado
 
 import time
+import os
 
 import flask
 import flask.ext.httpauth
@@ -27,9 +28,13 @@ _RUNS_KEY = "runs"
 
 _DEFAULT_AUTHMOD = 'moodle'
 
-_REDIS_CONF= {'redis_host': "localhost",
-              'redis_port': 6379,
-              'redis_db': 3}
+COGS_REDIS_HOST = os.environ.get('COGS_REDIS_HOST', "localhost")
+COGS_REDIS_PORT = int(os.environ.get('COGS_REDIS_PORT', 6379))
+COGS_REDIS_DB = int(os.environ.get('COGS_REDIS_DB', 3))
+
+_REDIS_CONF= {'redis_host': COGS_REDIS_HOST,
+              'redis_port': COGS_REDIS_PORT,
+              'redis_db': COGS_REDIS_DB}
 
 ### Global Setup ###
 
@@ -40,7 +45,7 @@ db = redis.StrictRedis(host=redis_conf['redis_host'],
                        port=redis_conf['redis_port'],
                        db=redis_conf['redis_db'])
 srv = cogs.structs.Server(db)
-cogs_auth = cogs.auth.Auth(db)
+auth = cogs.auth.Auth(db)
 
 @http_auth.verify_password
 def verify_login(username, password):
@@ -49,15 +54,15 @@ def verify_login(username, password):
 
     # Username:Password Case
     if password:
-        user = srv.auth_user(username, password)
+        user = auth.auth_userpass(username, password)
         if user:
             flask.g.user = user
             return True
-        elif user_uuid == False:
+        elif user == False:
             return False
         else:
             try:
-                user = srv._create_user({}, username=username, password=password)
+                user = auth.create_user({}, username=username, password=password)
             except cogs.auth.BadCredentialsError:
                 return False
             else:
@@ -65,7 +70,7 @@ def verify_login(username, password):
                 return True
     # Token Case
     else:
-        user = srv.auth_token(username)
+        user = auth.auth_token(username)
         if user:
             flask.g.user = user
             return True
@@ -76,12 +81,12 @@ def verify_login(username, password):
 
 ## Root Endpoints ##
 
-
 @app.route("/",
            methods=['GET'])
 @http_auth.login_required
-@cogs_auth.requires_auth_route()
+@auth.requires_auth_route()
 def get_root():
+
     res = _MSG_ROOT
     return res
 
@@ -660,10 +665,18 @@ def process_run(asn_uuid, sub_uuid, run_uuid):
 
 ### Exceptions
 
+@app.errorhandler(cogs.auth.UserNotAuthorizedError)
+def not_authorized(error):
+    err = { 'status': 401,
+            'message': str(error) }
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
+
 @app.errorhandler(400)
 def bad_request(error=False):
     err = { 'status': 400,
-                'message': "Malformed request" }
+            'message': "Malformed request" }
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res

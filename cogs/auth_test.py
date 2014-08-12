@@ -54,8 +54,7 @@ class AuthTestCase(test_common_backend.SubMixin, BaseTestCase):
         self.subHashDirectHelper(self.auth.create_group,
                                  self.auth.get_group,
                                  self.auth.list_groups,
-                                 test_common.GROUP_TESTDICT,
-                                 extra_objs=[auth.SPECIAL_GROUP_ADMIN])
+                                 test_common.GROUP_TESTDICT)
 
     def test_admins(self):
 

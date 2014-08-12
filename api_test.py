@@ -5,14 +5,20 @@
 # Summer 2014
 # Univerity of Colorado
 
+
 import base64
 import copy
 import json
 import unittest
 import uuid
+import os
 
-import api
+os.environ['COGS_REDIS_HOST'] = "localhost"
+os.environ['COGS_REDIS_PORT'] = str(6379)
+os.environ['COGS_REDIS_DB'] = str(5)
+
 import cogs.test_common
+import api
 
 
 class CogsApiTestCase(cogs.test_common.CogsTestCase):
@@ -23,21 +29,21 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
         super(CogsApiTestCase, self).setUp()
 
         # Set API active DB to Test DB
-        api.db = self.db
-        api.srv = api.cogs.structs.Server(api.db)
-        assert(api.db == self.db)
-        assert(api.srv.db == self.db)
+        assert(api.db.connection_pool.connection_kwargs == self.db.connection_pool.connection_kwargs)
+
+        # Set App to Testing Mode
+        api.app.testing = True
 
         # Create Test Client
         self.app = api.app.test_client()
 
         # Setup Admin
-        self.admin = api.srv._create_user(cogs.test_common.USER_TESTDICT,
+        self.admin = api.auth.create_user(cogs.test_common.USER_TESTDICT,
                                           username=cogs.test_common.COGS_ADMIN_USERNAME,
                                           password=cogs.test_common.COGS_ADMIN_PASSWORD,
                                           authmod=cogs.test_common.COGS_ADMIN_AUTH_MOD)
         self.admin_uuid = str(self.admin.uuid).lower()
-        api.srv.add_admins([self.admin_uuid])
+        api.auth.add_admins([self.admin_uuid])
 
     def tearDown(self):
         super(CogsApiTestCase, self).tearDown()
@@ -153,19 +159,19 @@ class CogsApiTestHelpers(CogsApiAssignmentHelpers):
         self.assertEqual(res.status_code, 200)
 
 
-## Root Tests
-# class CogsApiRootTestCase(CogsApiTestCase):
+## Root Tests ##
+class CogsApiRootTestCase(CogsApiTestCase):
 
-#     def setUp(self):
-#         super(CogsApiRootTestCase, self).setUp()
+    def setUp(self):
+        super(CogsApiRootTestCase, self).setUp()
 
-#     def tearDown(self):
-#         super(CogsApiRootTestCase, self).tearDown()
+    def tearDown(self):
+        super(CogsApiRootTestCase, self).tearDown()
 
-#     def test_root_get(self):
-#         res = self.open_auth('GET', '/', self.admin['token'], None)
-#         self.assertEqual(res.status_code, 200)
-#         self.assertEqual(res.data, api._MSG_ROOT)
+    def test_root_get(self):
+        res = self.open_auth('GET', '/', self.admin['token'], None)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data, api._MSG_ROOT)
 
 
 ## Assignment Tests
