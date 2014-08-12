@@ -66,7 +66,7 @@ class ObjectBase(backend.ObjectBase):
     def exists(self):
         """Check if object exists"""
 
-        super(ObjectBase, self).delete()
+        super(ObjectBase, self).exists()
         return self.db.exists(self.full_key)
 
 
