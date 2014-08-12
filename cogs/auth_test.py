@@ -52,7 +52,7 @@ class AuthTestCase(test_common_backend.SubMixin, BaseTestCase):
                                  self.auth.get_group,
                                  self.auth.list_groups,
                                  test_common.GROUP_TESTDICT,
-                                 extra_objs=[auth._SPECIAL_GROUP_ADMIN])
+                                 extra_objs=[auth.SPECIAL_GROUP_ADMIN])
 
 
 class UserTestCase(test_common_backend.UUIDHashMixin, BaseTestCase):
