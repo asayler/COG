@@ -68,7 +68,7 @@ class ObjectBase(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, key=None):
+    def __init__(self, key=None, db=None, srv=None):
         """Base Constructor"""
 
         # Call Parent
@@ -100,6 +100,23 @@ class ObjectBase(object):
         else:
             raise ObjectError("Either pre_key or full_key required")
 
+    def __getstate__(self):
+
+        # Create State
+        state = {}
+
+        # Set State
+        state['typ_str'] = self.typ_str
+        state['typ_key'] = self.typ_key
+        state['obj_key'] = self.obj_key
+        state['pre_key'] = self.pre_key
+        state['full_key'] = self.full_key
+        state['db'] = None
+        state['srv'] = None
+
+        # Return State
+        return state
+
     def __unicode__(self):
         """Return Unicode Representation"""
         return unicode(self.typ_key)
@@ -125,19 +142,19 @@ class ObjectBase(object):
         return self.obj_key
 
     @abstractclassmethod
-    def from_new(cls, key=None):
+    def from_new(cls, *args, **kwargs):
         """New Constructor"""
-        return cls(key)
+        return cls(*args, **kwargs)
 
     @abstractclassmethod
-    def from_existing(cls, key=None):
+    def from_existing(cls, *args, **kwargs):
         """Existing Constructor"""
-        return cls(key)
+        return cls(*args, **kwargs)
 
     @classmethod
-    def from_raw(cls, key=None):
+    def from_raw(cls, *args, **kwargs):
         """Raw Constructor"""
-        return cls(key)
+        return cls(*args, **kwargs)
 
     @abc.abstractmethod
     def delete(self):
@@ -168,10 +185,13 @@ class Factory(object):
             raise FactoryError("cls name must end with '{:s}'".format(_SUF_BASE))
 
         # Setup Class Name
-        self.cls_name = base_name[0:base_name.rfind(_SUF_BASE)]
+        #self.cls_name = base_name[0:base_name.rfind(_SUF_BASE)]
+        self.cls_name = base_name
 
         # Setup DB
         self.db = db
+        self.srv = srv
+        self.passthrough = passthrough
 
         # Setup Base Key
         if prefix:
@@ -182,16 +202,16 @@ class Factory(object):
         # Setup Class
         p_db = db
         p_srv = srv
-        class Cls(base_cls):
-            pre_key = self.pre_key
-            db = p_db
-            srv = p_srv
-        for p in passthrough:
-            setattr(Cls, p, passthrough[p])
+        # class Cls(base_cls):
+        #     pre_key = self.pre_key
+        #     db = p_db
+        #     srv = p_srv
+        # for p in passthrough:
+        #     setattr(Cls, p, passthrough[p])
 
         # Set Class Attributes and Return
-        Cls.__name__ = self.cls_name
-        self.cls = Cls
+        # Cls.__name__ = self.cls_name
+        self.cls = base_cls
 
     @abc.abstractmethod
     def list_family(self):
@@ -233,6 +253,9 @@ class Factory(object):
     def from_raw(self, *args, **kwargs):
         return self.cls.from_raw(*args, **kwargs)
 
+    def _add_args(self, func, *args, **kwargs):
+        kwargs['db'] = self.db
+        kwargs['srv'] = self.srv
 
 class UUIDFactory(Factory):
 

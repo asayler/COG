@@ -26,20 +26,32 @@ _REDIS_CONF_DEFAULT = {'redis_host': "localhost",
 
 class ObjectBase(backend.ObjectBase):
 
+    def __getstate__(self):
+
+        # Call Parent
+        state = super(ObjectBase, self).__getstate__()
+
+        # Set Sate
+        state['db'] = None
+        state['srv'] = None
+
+        # Return State
+        return state
+
     @classmethod
-    def from_new(cls, key=None):
+    def from_new(cls, *args, **kwargs):
         """New Constructor"""
 
-        obj = super(ObjectBase, cls).from_new(key)
+        obj = super(ObjectBase, cls).from_new(*args, **kwargs)
         if obj.db.exists(obj.full_key):
             raise ObjectError("Key already exists in DB")
         return obj
 
     @classmethod
-    def from_existing(cls, key=None):
+    def from_existing(cls, *args, **kwargs):
         """Existing Constructor"""
 
-        obj = super(ObjectBase, cls).from_existing(key)
+        obj = super(ObjectBase, cls).from_existing(*args, **kwargs)
         if not obj.db.exists(obj.full_key):
             raise ObjectDNE(obj)
         return obj
