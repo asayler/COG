@@ -6,13 +6,14 @@
 
 import copy
 import os
+import time
 import werkzeug
 import mimetypes
 import multiprocessing
 
 import backend_redis as backend
 from backend_redis import BackendError, FactoryError, ObjectError, ObjectDNE
-import run
+import testrun
 
 
 _NUM_WORKERS = 10
@@ -47,6 +48,7 @@ class Server(object):
         self.AssignmentFactory = backend.UUIDFactory(AssignmentBase, db=self.db, srv=self)
         self.SubmissionFactory = backend.UUIDFactory(SubmissionBase, db=self.db, srv=self)
         self.TestFactory = backend.UUIDFactory(TestBase, db=self.db, srv=self)
+        self.RunFactory = backend.UUIDFactory(RunBase, db=self.db, srv=self)
 
         # Setup Worker Pool
         self.workers = multiprocessing.Pool(_NUM_WORKERS)
@@ -83,6 +85,12 @@ class Server(object):
         return self.SubmissionFactory.from_existing(uuid_hex)
     def list_submissions(self):
         return self.SubmissionFactory.list_siblings()
+
+    # Run Methods
+    def get_run(self, uuid_hex):
+        return self.RunFactory.from_existing(uuid_hex)
+    def list_runs(self):
+        return self.RunFactory.list_siblings()
 
 
 ### COGS Base Objects ###
@@ -268,7 +276,7 @@ class SubmissionBase(backend.OwnedTSHashBase):
 
         # Remove run objects
         for run_uuid in self.list_runs():
-            run = self.srv.get_runs(run_uuid)
+            run = self.srv.get_run(run_uuid)
             run.delete()
         assert(not self.list_runs())
 
@@ -354,47 +362,39 @@ class RunBase(backend.OwnedTSHashBase):
         data['test'] = str(tst.uuid)
         data['status'] = "queued"
         data['score'] = ""
+        data['retcode'] = ""
         data['output'] = ""
 
         # Create Run
         run = super(RunBase, cls).from_new(data, **kwargs)
 
         # Add Task to Pool
-        cls.srv.workers.apply_async(run.test, args=(asn, sub, tst, run))
+        res = cls.srv.workers.apply_async(testrun.test, args=(asn, sub, tst, run))
+        print(res.get())
 
         # Return Run
         return run
 
     # Override Delete
-    def delete(self):
+    def delete(self, force=False):
 
         # TODO Prevent delete while still running
+        if not force:
+            while self['status'].startswith('complete'):
+                print("Waiting for run to complete...")
+                time.sleep(1)
 
         # Remove from submission
         run_uuid = str(self.uuid)
         sub_uuid = self['submission']
         if sub_uuid:
             sub = self.srv.get_submission(sub_uuid)
-            if not sub._rem_run([run_uuid]):
+            if not sub._rem_runs([run_uuid]):
                 msg = "Could not remove Run {:s} from Submission {:s}".format(run_uuid, sub_uuid)
                 raise backend.ObjectError(msg)
 
-        # Remove run objects
-        for run_uuid in self.list_runs():
-            run = self.srv.get_runs(run_uuid)
-            run.delete()
-        assert(not self.list_runs())
-
-        # Remove run list
-        if self.runs.exists():
-            self.runs.delete()
-
-        # Remove file list
-        if self.files.exists():
-            self.files.delete()
-
         # Call Parent
-        super(SubmissionBase, self).delete()
+        super(RunBase, self).delete()
 
 
 ## Run List Object ##

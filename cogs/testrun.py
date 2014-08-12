@@ -25,7 +25,7 @@ def test(asn, sub, tst, run):
     try:
         ret, score, output = tester.test()
     except:
-        run['status'] = 'error'
+        run['status'] = 'complete-error'
         raise
     else:
         run['status'] = 'complete'

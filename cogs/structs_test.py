@@ -9,6 +9,7 @@ import copy
 import unittest
 import werkzeug
 import os
+import time
 
 import structs
 import test_common
@@ -263,6 +264,61 @@ class SubmissionTestCase(test_common_backend.SubMixin,
         sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT)
         self.subSetReferenceHelper(sub.add_files, sub.rem_files, sub.list_files, self.files)
         sub.delete()
+
+
+class RunTestCase(test_common_backend.SubMixin,
+                  test_common_backend.UUIDHashMixin,
+                  StructsTestCase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCase, self).setUp()
+
+        # Create Test File
+        tst_file = open("{:s}/script_1.py".format(test_common.COGS_TEST_FILE_PATH), 'rb')
+        tst_file_obj = werkzeug.datastructures.FileStorage(stream=tst_file, filename="script.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'script'
+        self.tst_file = self.srv.create_file(data, file_obj=tst_file_obj)
+        tst_file_obj.close()
+
+        # Create Sub File
+        sub_file = open("{:s}/pgm_good.py".format(test_common.COGS_TEST_FILE_PATH), 'rb')
+        sub_file_obj = werkzeug.datastructures.FileStorage(stream=sub_file, filename="pgm.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'submission'
+        self.sub_file = self.srv.create_file(data, file_obj=sub_file_obj)
+        sub_file_obj.close()
+
+        # Create Assignment
+        self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT)
+
+        # Create Test
+        self.tst = self.asn.create_test(test_common.TEST_TESTDICT)
+        self.tst.add_files([str(self.tst_file.uuid)])
+
+        # Create Submission
+        self.sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT)
+        self.sub.add_files([str(self.sub_file.uuid)])
+
+    def tearDown(self):
+
+        # Cleanup Structs
+        self.sub.delete()
+        self.tst.delete()
+        self.asn.delete()
+        self.sub_file.delete()
+        self.tst_file.delete()
+
+        # Call Parent
+        super(RunTestCase, self).tearDown()
+
+    def test_create_run(self):
+        run = self.sub.execute_run(self.tst)
+        print(run.get_dict())
+        time.sleep(1)
+        print(run.get_dict())
 
 
 # Main

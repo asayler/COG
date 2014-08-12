@@ -32,6 +32,9 @@ SUBMISSION_TESTDICT = {}
 COGS_ADMIN_AUTH_MOD = os.environ.get('COGS_ADMIN_AUTH_MOD', 'test')
 COGS_ADMIN_USERNAME = os.environ.get('COGS_ADMIN_USERNAME', 'adminuser')
 COGS_ADMIN_PASSWORD = os.environ.get('COGS_ADMIN_PASSWORD', 'adminpass')
+MOD_PATH = os.path.dirname(os.path.realpath(__file__))
+TEST_PATH = os.path.realpath("{:s}/../test_input".format(MOD_PATH))
+COGS_TEST_FILE_PATH = os.environ.get('COGS_TEST_FILE_PATH', TEST_PATH)
 
 
 class CogsTestError(Exception):
