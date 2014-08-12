@@ -9,6 +9,7 @@
 import copy
 import time
 import uuid
+import collections
 
 import redis
 
@@ -115,7 +116,7 @@ class UUIDFactory(Factory):
         return obj
 
 
-class HashBase(ObjectBase):
+class HashBase(collections.MutableMapping, ObjectBase):
     """
     Redis Hash Base Class
 
@@ -149,6 +150,18 @@ class HashBase(ObjectBase):
         # Return Object
         return obj
 
+    def __len__(self):
+        """Get Len of Hash"""
+
+        ret = self.db.hlen(self.full_key)
+        return ret
+
+    def __iter__(self):
+        """Iterate Keys"""
+
+        for key in self.db.hkeys(self.full_key):
+            yield key
+
     def __getitem__(self, k):
         """Get Dict Item"""
 
@@ -178,6 +191,12 @@ class HashBase(ObjectBase):
         ret = self.db.hdel(self.full_key, key)
         return ret
 
+    def keys(self):
+        """Get Dict Keys"""
+
+        ret = self.db.hkeys(self.full_key)
+        return ret
+
     def get_dict(self):
         """Get Full Dict"""
 
@@ -199,10 +218,6 @@ class HashBase(ObjectBase):
         ret = self.db.hmset(self.full_key, d)
         if not ret:
             raise ObjectError("Set Failed")
-
-    def update(self, data):
-        """Alias for set_dict"""
-        return self.set_dict(data)
 
 
 class TSHashBase(HashBase):
@@ -279,7 +294,7 @@ class OwnedTSHashBase(TSHashBase):
         return obj
 
 
-class SetBase(ObjectBase):
+class SetBase(collections.MutableSet, ObjectBase):
     """
     Redis Set Base Class
 
@@ -303,17 +318,40 @@ class SetBase(ObjectBase):
         # Return Object
         return obj
 
+    def __len__(self):
+        """Get Len of Set"""
+
+        return len(self.db.smembers(self.full_key))
+
+    def __iter__(self):
+        """Iterate Values"""
+
+        for val in self.db.smembers(self.full_key):
+            yield val
+
+    def __contains__(self, val):
+
+        return self.db.sismember(self.full_key, val)
+
+    def add(self, val):
+
+        return self.db.sadd(self.full_key, val)
+
+    def discard(self, val):
+
+        return self.db.srem(self.full_key, val)
+
     def get_set(self):
         """Get All Vals from Set"""
 
         return self.db.smembers(self.full_key)
 
-    def add_vals(self, v):
+    def add_vals(self, vals):
         """Add Vals to Set"""
 
-        return self.db.sadd(self.full_key, *v)
+        return self.db.sadd(self.full_key, *vals)
 
-    def del_vals(self, v):
+    def del_vals(self, vals):
         """Remove Vals from Set"""
 
-        return self.db.srem(self.full_key, *v)
+        return self.db.srem(self.full_key, *vals)
