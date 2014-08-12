@@ -147,7 +147,7 @@ class Auth(object):
     def auth_token(self, token):
         user_uuid = self.token_map.verify_token(token)
         if user_uuid:
-            user = self.srv._get_user(user_uuid)
+            user = self.get_user(user_uuid)
             return user
         else:
             return False

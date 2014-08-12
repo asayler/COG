@@ -65,8 +65,8 @@ class AuthTestCase(test_common_backend.SubMixin, BaseTestCase):
             username = "user_{:02d}".format(i)
             password = "password_{:02d}"
             user = self.auth.create_user(test_common.USER_TESTDICT,
-                                        username=username, password=password,
-                                        authmod='test')
+                                         username=username, password=password,
+                                         authmod='test')
             users.add(str(user.uuid))
 
         # Test Admin Methods
@@ -106,7 +106,59 @@ class AuthTestCase(test_common_backend.SubMixin, BaseTestCase):
             group = self.auth.get_group(group_uuid)
             group.delete()
 
+    def test_auth_token(self):
 
+        # Create Test User
+        username = "testuser"
+        password = "testpass"
+        user_in = self.auth.create_user(test_common.USER_TESTDICT,
+                                        username=username, password=password,
+                                        authmod='test')
+        token = user_in['token']
+
+        # Test Bad Token
+        self.assertIs(self.auth.auth_token('badtoken'), False)
+
+        # Test Good Token
+        user_out = self.auth.auth_token(token)
+        self.assertEqual(username, user_out['username'])
+        self.assertEqual(token, user_out['token'])
+        self.assertEqual(user_in.uuid, user_out.uuid)
+        self.assertEqual(user_in, user_out)
+
+        # Remove Test User
+        user_in.delete()
+
+        # Test Removed Token
+        self.assertIs(self.auth.auth_token(token), False)
+
+    def test_auth_userpass(self):
+
+        # Create Test User
+        username = _COGS_MOODLE_USERNAME
+        password = _COGS_MOODLE_PASSWORD
+        user_in = self.auth.create_user(test_common.USER_TESTDICT,
+                                        username=username, password=password,
+                                        authmod='moodle')
+
+        # Test Bad Username
+        self.assertIs(self.auth.auth_userpass('baduser', 'badpass'), None)
+
+        # Test Bad Password
+        self.assertIs(self.auth.auth_userpass(username, 'badpass'), False)
+
+        # Test Good Username/Password
+        user_out = self.auth.auth_userpass(username, password)
+        self.assertEqual(username, user_out['username'])
+        self.assertEqual(user_in['token'], user_out['token'])
+        self.assertEqual(user_in.uuid, user_out.uuid)
+        self.assertEqual(user_in, user_out)
+
+        # Remove Test User
+        user_in.delete()
+
+        # Test Removed Token
+        self.assertIs(self.auth.auth_userpass(username, password), None)
 
 
 class TestUserTestCase(test_common_backend.UUIDHashMixin, BaseTestCase):
@@ -148,6 +200,7 @@ class TestUserTestCase(test_common_backend.UUIDHashMixin, BaseTestCase):
                               extra_kwargs={'username': self.username,
                                             'password': self.password,
                                             'authmod': self.authmod})
+
 
 class MoodleUserTestCase(TestUserTestCase):
 
