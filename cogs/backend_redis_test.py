@@ -14,10 +14,6 @@ import os
 
 import redis
 
-os.environ['COGS_REDIS_HOST'] = "localhost"
-os.environ['COGS_REDIS_PORT'] = str(6379)
-os.environ['COGS_REDIS_DB'] = str(5)
-
 import test_common
 import backend_redis as backend
 

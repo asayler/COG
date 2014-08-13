@@ -35,13 +35,17 @@ MOD_PATH = os.path.dirname(os.path.realpath(__file__))
 TEST_PATH = os.path.realpath("{:s}/../test_input".format(MOD_PATH))
 COGS_TEST_FILE_PATH = os.environ.get('COGS_TEST_FILES_PATH', TEST_PATH)
 
-DEFAULT_REDIS_HOST = "localhost"
-DEFAULT_REDIS_PORT = 6379
-DEFAULT_REDIS_DB = 5
+TEST_REDIS_HOST = "localhost"
+TEST_REDIS_PORT = 6379
+TEST_REDIS_DB = 5
 
-REDIS_HOST = os.environ.get('COGS_REDIS_HOST', DEFAULT_REDIS_HOST)
-REDIS_PORT = int(os.environ.get('COGS_REDIS_PORT', DEFAULT_REDIS_PORT))
-REDIS_DB = int(os.environ.get('COGS_REDIS_DB', DEFAULT_REDIS_DB))
+REDIS_HOST = os.environ.get('COGS_TEST_REDIS_HOST', TEST_REDIS_HOST)
+REDIS_PORT = int(os.environ.get('COGS_TEST_REDIS_PORT', TEST_REDIS_PORT))
+REDIS_DB = int(os.environ.get('COGS_TEST_REDIS_DB', TEST_REDIS_DB))
+
+os.environ['COGS_REDIS_HOST'] = REDIS_HOST
+os.environ['COGS_REDIS_PORT'] = str(REDIS_PORT)
+os.environ['COGS_REDIS_DB'] = str(REDIS_DB)
 
 db = redis.StrictRedis(host=REDIS_HOST,
                        port=REDIS_PORT,
@@ -59,9 +63,10 @@ class CogsTestCase(unittest.TestCase):
     def setUp(self):
         if (db.dbsize() != 0):
             raise CogsTestError("Test Database Not Empty: {}".format(self.db.dbsize()))
+        self.db = db
 
     def tearDown(self):
-        db.flushdb()
+        self.db.flushdb()
 
     def assertSubset(self, sub, sup):
 
