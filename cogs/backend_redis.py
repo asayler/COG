@@ -26,17 +26,17 @@ _REDIS_CONF_DEFAULT = {'redis_host': "localhost",
 
 class Object(backend.Object):
 
-    def __getstate__(self):
+    # def __getstate__(self):
 
-        # Call Parent
-        state = super(Object, self).__getstate__()
+    #     # Call Parent
+    #     state = super(Object, self).__getstate__()
 
-        # Set Sate
-        state['db'] = None
-        state['srv'] = None
+    #     # Set Sate
+    #     state['db'] = None
+    #     state['srv'] = None
 
-        # Return State
-        return state
+    #     # Return State
+    #     return state
 
     @classmethod
     def from_new(cls, *args, **kwargs):

@@ -45,35 +45,39 @@ class RedisObjectTestCase(BackendRedisTestCase):
     def test_from_new(self):
 
         # Test w/o Key
-        self.assertRaises(backend.ObjectError, self.ObjFactory.from_new)
+        obj = self.ObjFactory.from_new()
+        self.assertTrue(obj)
+        self.assertEquals(obj.full_key, "object")
 
         # Test w/ Key
-        self.assertTrue(self.ObjFactory.from_new('newkey'))
+        obj = self.ObjFactory.from_new(key='newkey')
+        self.assertTrue(obj)
+        self.assertEquals(obj.full_key, "object+newkey")
 
         # Test w/ Duplicate Key
-        self.assertRaises(backend.ObjectError, self.ObjFactory.from_new, self.key)
+        self.assertRaises(backend.ObjectError, self.ObjFactory.from_new, key=self.key)
 
         # Test w/ Illegal Key ':'
-        self.assertRaises(backend.ObjectError, self.ObjFactory.from_new, 'test:1')
+        self.assertRaises(backend.ObjectError, self.ObjFactory.from_new, key='test:1')
 
-        # Test w/ Illegal Key '_'
-        self.assertRaises(backend.ObjectError, self.ObjFactory.from_new, 'test+1')
+        # Test w/ Illegal Key '+'
+        self.assertRaises(backend.ObjectError, self.ObjFactory.from_new, key='test+1')
 
     def test_from_existing(self):
 
         # Test Non-Existant Object
-        self.assertRaises(backend.ObjectDNE, self.ObjFactory.from_existing, 'badkey')
+        self.assertRaises(backend.ObjectDNE, self.ObjFactory.from_existing, key='badkey')
 
         # Test Existing Object
-        self.assertTrue(self.ObjFactory.from_existing(self.key))
+        self.assertTrue(self.ObjFactory.from_existing(key=self.key))
 
     def test_from_raw(self):
 
         # Test Non-Existant Object
-        self.assertTrue(self.ObjFactory.from_existing(self.key))
+        self.assertTrue(self.ObjFactory.from_existing(key=self.key))
 
         # Test Existing Object
-        self.assertTrue(self.ObjFactory.from_existing(self.key))
+        self.assertTrue(self.ObjFactory.from_existing(key=self.key))
 
     def test_str(self):
 

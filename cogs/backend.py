@@ -68,22 +68,8 @@ class Object(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, key=None, pre_key=None, db=None, srv=None):
+    def __init__(self, key=None, prefix=None, db=None, **kwargs):
         """ Constructor"""
-
-        # Call Parent
-        super(Object, self).__init__()
-
-
-        self.pre_key = pre_key
-
-        if db:
-            self.db = db
-        else:
-            raise Exception("Requires db")
-
-        if srv:
-            self.srv = srv
 
         # Input Check Key
         if key:
@@ -92,42 +78,52 @@ class Object(object):
             if _TYPE_SEP in str(key):
                 raise ObjectError("Key may not contain '{:s}'".format(_TYPE_SEP))
 
-        # Save Object Keys
-        self.typ_str = str(type(self).__name__)
-        self.typ_key = self.typ_str
+        # Call Parent
+        super(Object, self).__init__()
+
+        # Set Vars
+        for arg in kwargs:
+            setattr(self, arg, kwargs[arg])
+
+        if db:
+            self.db = db
+        else:
+            raise Exception("Requires db")
+
+        # Set Keys
+        if prefix:
+            self.pre_key = str(prefix).lower()
+        else:
+            self.pre_key = ""
         if key:
-            self.obj_key = str(key)
-            self.typ_key += "{:s}{:s}".format(_TYPE_SEP, self.obj_key)
+            self.obj_key = str(key).lower()
+            self.typ_key = "{:s}{:s}{:s}".format(type(self).__name__, _TYPE_SEP, self.obj_key).lower()
         else:
             self.obj_key = ""
+            self.typ_key = "{:s}".format(type(self).__name__).lower()
 
         # Compute Full Key
-        if self.pre_key and self.obj_key:
+        if self.pre_key:
             self.full_key = "{:s}{:s}{:s}".format(self.pre_key, _FIELD_SEP, self.typ_key).lower()
-        elif self.pre_key:
-            self.full_key = "{:s}".format(self.pre_key).lower()
-        elif self.obj_key:
-            self.full_key = "{:s}".format(self.typ_key).lower()
         else:
-            msg = "Either pre_key ({:s}) or obj_key ({:s}) required".format(self.pre_key, self.obj_key)
-            raise ObjectError(msg)
+            self.full_key = "{:s}".format(self.typ_key).lower()
 
-    def __getstate__(self):
+    # def __getstate__(self):
 
-        # Create State
-        state = {}
+    #     # Create State
+    #     state = {}
 
-        # Set State
-        state['typ_str'] = self.typ_str
-        state['typ_key'] = self.typ_key
-        state['obj_key'] = self.obj_key
-        state['pre_key'] = self.pre_key
-        state['full_key'] = self.full_key
-        state['db'] = None
-        state['srv'] = None
+    #     # Set State
+    #     state['typ_str'] = self.typ_str
+    #     state['typ_key'] = self.typ_key
+    #     state['obj_key'] = self.obj_key
+    #     state['pre_key'] = self.pre_key
+    #     state['full_key'] = self.full_key
+    #     state['db'] = None
+    #     state['srv'] = None
 
-        # Return State
-        return state
+    #     # Return State
+    #     return state
 
     def __unicode__(self):
         """Return Unicode Representation"""
