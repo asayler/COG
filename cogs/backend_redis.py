@@ -24,12 +24,12 @@ _REDIS_CONF_DEFAULT = {'redis_host': "localhost",
 
 ### Objects ###
 
-class ObjectBase(backend.ObjectBase):
+class Object(backend.Object):
 
     def __getstate__(self):
 
         # Call Parent
-        state = super(ObjectBase, self).__getstate__()
+        state = super(Object, self).__getstate__()
 
         # Set Sate
         state['db'] = None
@@ -42,7 +42,7 @@ class ObjectBase(backend.ObjectBase):
     def from_new(cls, *args, **kwargs):
         """New Constructor"""
 
-        obj = super(ObjectBase, cls).from_new(*args, **kwargs)
+        obj = super(Object, cls).from_new(*args, **kwargs)
         if obj.db.exists(obj.full_key):
             raise ObjectError("Key already exists in DB")
         return obj
@@ -51,7 +51,7 @@ class ObjectBase(backend.ObjectBase):
     def from_existing(cls, *args, **kwargs):
         """Existing Constructor"""
 
-        obj = super(ObjectBase, cls).from_existing(*args, **kwargs)
+        obj = super(Object, cls).from_existing(*args, **kwargs)
         if not obj.db.exists(obj.full_key):
             raise ObjectDNE(obj)
         return obj
@@ -59,14 +59,14 @@ class ObjectBase(backend.ObjectBase):
     def delete(self):
         """Delete Object"""
 
-        super(ObjectBase, self).delete()
+        super(Object, self).delete()
         if not self.db.delete(self.full_key):
             raise ObjectError("Delete Failed")
 
     def exists(self):
         """Check if object exists"""
 
-        super(ObjectBase, self).exists()
+        super(Object, self).exists()
         return self.db.exists(self.full_key)
 
 
@@ -128,35 +128,35 @@ class UUIDFactory(Factory):
         return obj
 
 
-class HashBase(collections.MutableMapping, ObjectBase):
+class Hash(collections.MutableMapping, Object):
     """
-    Redis Hash Base Class
+    Redis Hash  Class
 
     """
 
     schema = None
 
     @classmethod
-    def from_new(cls, d, key=None, obj_schema=None):
+    def from_new(cls, data, obj_schema=None, **kwargs):
         """New Constructor"""
 
         # Check Input
-        if not d:
+        if not data:
             raise ObjectError("Input dict must not be None or empty")
 
         # Call Parent
-        obj = super(HashBase, cls).from_new(key)
+        obj = super(Hash, cls).from_new(**kwargs)
         if obj_schema:
             obj.schema = obj_schema
 
         # Check dict
         if obj.schema:
-            s = set(d.keys())
+            s = set(data.keys())
             if (s != obj.schema):
                 raise KeyError("Keys {:s} do not match schema {:s}".format(s, obj.schema))
 
         # Add Object Data to DB
-        if not obj.db.hmset(obj.full_key, d):
+        if not obj.db.hmset(obj.full_key, data):
             raise ObjectError("Create Failed")
 
         # Return Object
@@ -232,23 +232,23 @@ class HashBase(collections.MutableMapping, ObjectBase):
             raise ObjectError("Set Failed")
 
 
-class TSHashBase(HashBase):
+class TSHash(Hash):
     """
-    Time-stamped Hash Base Class
+    Time-stamped Hash  Class
     """
 
     @classmethod
-    def from_new(cls, dictionary, **kwargs):
+    def from_new(cls, data, **kwargs):
         """New Constructor"""
 
         # Set Times
-        data = copy.copy(dictionary)
+        data = copy.copy(data)
         t = str(time.time())
         data['created_time'] = t
         data['modified_time'] = t
 
         # Call Parent
-        obj = super(TSHashBase, cls).from_new(data, **kwargs)
+        obj = super(TSHash, cls).from_new(data, **kwargs)
 
         # Return Object
         return obj
@@ -264,7 +264,7 @@ class TSHashBase(HashBase):
         data[k] = v
 
         # Call Parent
-        ret = super(TSHashBase, self).set_dict(data)
+        ret = super(TSHash, self).set_dict(data)
 
         # Return
         return ret
@@ -277,54 +277,54 @@ class TSHashBase(HashBase):
         data['modified_time'] = str(time.time())
 
         # Call Parent
-        ret = super(TSHashBase, self).set_dict(data)
+        ret = super(TSHash, self).set_dict(data)
 
         # Return
         return ret
 
 
-class OwnedTSHashBase(TSHashBase):
+class OwnedTSHash(TSHash):
     """
-    Owned and Time-stamped Hash Base Class
+    Owned and Time-stamped Hash  Class
     """
 
     @classmethod
-    def from_new(cls, dictionary, user=None, **kwargs):
+    def from_new(cls, data, user=None, **kwargs):
         """New Constructor"""
 
         # Set Owner
-        data = copy.copy(dictionary)
+        data = copy.copy(data)
         if user:
             data['owner'] = str(user.uuid).lower()
         else:
             data['owner'] = ""
 
         # Call Parent
-        obj = super(OwnedTSHashBase, cls).from_new(data, **kwargs)
+        obj = super(OwnedTSHash, cls).from_new(data, **kwargs)
 
         # Return Run
         return obj
 
 
-class SetBase(collections.MutableSet, ObjectBase):
+class Set(collections.MutableSet, Object):
     """
-    Redis Set Base Class
+    Redis Set  Class
 
     """
 
     @classmethod
-    def from_new(cls, v, key=None):
+    def from_new(cls, vals, **kwargs):
         """New Constructor"""
 
         # Check Input
-        if not v:
+        if not vals:
             raise ObjectError("Input set must not be None or empty")
 
         # Call Parent
-        obj = super(SetBase, cls).from_new(key)
+        obj = super(Set, cls).from_new(**kwargs)
 
         # Add lst to DB
-        if not obj.db.sadd(obj.full_key, *v):
+        if not obj.db.sadd(obj.full_key, *vals):
             raise ObjectError("Create Failed")
 
         # Return Object

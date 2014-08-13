@@ -37,7 +37,7 @@ class RedisObjectTestCase(BackendRedisTestCase):
 
         self.db.set(self.rid, self.val)
 
-        self.ObjFactory = backend.Factory(backend.ObjectBase, db=self.db)
+        self.ObjFactory = backend.Factory(backend.Object, db=self.db)
 
     def tearDown(self):
         super(RedisObjectTestCase, self).tearDown()
@@ -131,26 +131,26 @@ class RedisFactoryTestCase(BackendRedisTestCase):
     def test_init(self):
 
         # Test w/o Prefix or Key
-        of = backend.Factory(backend.ObjectBase, db=self.db)
+        of = backend.Factory(backend.Object, db=self.db)
         self.assertRaises(backend.ObjectError, of.from_new)
 
         # Test w/ Prefix but w/o Key
         p = "testprefix_{:03d}".format(random.randint(0, 999))
-        of = backend.Factory(backend.ObjectBase, prefix=p, db=self.db)
+        of = backend.Factory(backend.Object, prefix=p, db=self.db)
         o = of.from_new()
         self.assertTrue(o)
 
         # Test w/ Key but w/o Prefix
         k = "testkey_{:03d}".format(random.randint(0, 999))
-        of = backend.Factory(backend.ObjectBase, db=self.db)
-        o = of.from_new(k)
+        of = backend.Factory(backend.Object, db=self.db)
+        o = of.from_new(key=k)
         self.assertTrue(o)
 
         # Test w/ Prefix and Key
         p = "testprefix_{:03d}".format(random.randint(0, 999))
         k = "testkey_{:03d}".format(random.randint(0, 999))
-        of = backend.Factory(backend.ObjectBase, prefix=p, db=self.db)
-        o = of.from_new(k)
+        of = backend.Factory(backend.Object, prefix=p, db=self.db)
+        o = of.from_new(key=k)
         self.assertTrue(o)
 
     def test_list(self):
@@ -165,7 +165,7 @@ class RedisFactoryTestCase(BackendRedisTestCase):
             self.db.set("object+{:s}".format(p), val)
 
         # Test Parents w/o Prefix
-        hf = backend.Factory(backend.ObjectBase, db=self.db)
+        hf = backend.Factory(backend.Object, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(parents), fam)
         sib = hf.list_siblings()
@@ -180,7 +180,7 @@ class RedisFactoryTestCase(BackendRedisTestCase):
             self.db.set("{:s}:object+{:s}".format(pre, p), val)
 
         # Test Parents w/ Prefix
-        hf = backend.Factory(backend.ObjectBase, prefix=pre, db=self.db)
+        hf = backend.Factory(backend.Object, prefix=pre, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(parents), fam)
         sib = hf.list_siblings()
@@ -201,7 +201,7 @@ class RedisFactoryTestCase(BackendRedisTestCase):
             full_children.append(child)
 
         # Test Parents + Children w/o Prefix
-        hf = backend.Factory(backend.ObjectBase, db=self.db)
+        hf = backend.Factory(backend.Object, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(parents + full_children), fam)
         sib = hf.list_siblings()
@@ -211,7 +211,7 @@ class RedisFactoryTestCase(BackendRedisTestCase):
 
         # Test Children w/o Prefix
         chd_pre = "object+{:s}".format(parents[0])
-        hf = backend.Factory(backend.ObjectBase, prefix=chd_pre, db=self.db)
+        hf = backend.Factory(backend.Object, prefix=chd_pre, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(p1_children), fam)
         sib = hf.list_siblings()
@@ -232,7 +232,7 @@ class RedisFactoryTestCase(BackendRedisTestCase):
             full_children.append(child)
 
         # Test Parents + Children w/ Prefix
-        hf = backend.Factory(backend.ObjectBase, prefix=pre, db=self.db)
+        hf = backend.Factory(backend.Object, prefix=pre, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(parents + full_children), fam)
         sib = hf.list_siblings()
@@ -242,7 +242,7 @@ class RedisFactoryTestCase(BackendRedisTestCase):
 
         # Test Children w/ Prefix
         chd_pre = "{:s}:object+{:s}".format(pre, parents[0])
-        hf = backend.Factory(backend.ObjectBase, prefix=chd_pre, db=self.db)
+        hf = backend.Factory(backend.Object, prefix=chd_pre, db=self.db)
         fam = hf.list_family()
         self.assertEqual(set(p1_children), fam)
         sib = hf.list_siblings()
@@ -261,7 +261,7 @@ class RedisFactoryTestCase(BackendRedisTestCase):
             self.db.set("object+{:s}".format(p), val)
 
         # Test Parents w/o Prefix
-        hf = backend.Factory(backend.ObjectBase, db=self.db)
+        hf = backend.Factory(backend.Object, db=self.db)
         sibs = hf.get_siblings()
         self.assertEqual(set(parents), set([s.key() for s in sibs]))
 
@@ -277,13 +277,13 @@ class RedisUUIDFactoryTestCase(BackendRedisTestCase):
     def test_init(self):
 
         # Test w/o Prefix
-        of = backend.UUIDFactory(backend.ObjectBase, db=self.db)
+        of = backend.UUIDFactory(backend.Object, db=self.db)
         o = of.from_new()
         self.assertTrue(o)
 
         # Test w/ Prefix
         p = "testprefix_{:03d}".format(random.randint(0, 999))
-        of = backend.UUIDFactory(backend.ObjectBase, prefix=p, db=self.db)
+        of = backend.UUIDFactory(backend.Object, prefix=p, db=self.db)
         o = of.from_new()
         self.assertTrue(o)
 
@@ -293,7 +293,7 @@ class RedisHashTestCase(BackendRedisTestCase):
     def setUp(self):
         super(RedisHashTestCase, self).setUp()
 
-        self.HashFactory = backend.Factory(backend.HashBase, db=self.db)
+        self.HashFactory = backend.Factory(backend.Hash, db=self.db)
 
     def tearDown(self):
         super(RedisHashTestCase, self).tearDown()
@@ -309,7 +309,7 @@ class RedisHashTestCase(BackendRedisTestCase):
 
         # Test Empty Dict w/ Key
         d = {}
-        self.assertRaises(backend.ObjectError, self.HashFactory.from_new, d, k)
+        self.assertRaises(backend.ObjectError, self.HashFactory.from_new, d, key=k)
 
         # Test Non-Empty Dict w/o Key
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
@@ -317,7 +317,7 @@ class RedisHashTestCase(BackendRedisTestCase):
 
         # Test Non-Empty Dict w Key
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
-        h = self.HashFactory.from_new(d, k)
+        h = self.HashFactory.from_new(d, key=k)
         self.assertSubset(d, h.get_dict())
 
     def test_from_existing(self):
@@ -326,13 +326,13 @@ class RedisHashTestCase(BackendRedisTestCase):
         k = "testkey_{:03d}".format(random.randint(0, 999))
 
         # Test Non-Existant Object
-        self.assertRaises(backend.ObjectDNE, self.HashFactory.from_existing, k)
+        self.assertRaises(backend.ObjectDNE, self.HashFactory.from_existing, key=k)
 
         # Test Existing Object
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
-        h1 = self.HashFactory.from_new(d, k)
+        h1 = self.HashFactory.from_new(d, key=k)
         self.assertSubset(d, h1.get_dict())
-        h2 = self.HashFactory.from_existing(k)
+        h2 = self.HashFactory.from_existing(key=k)
         self.assertEqual(h1, h2)
         self.assertEqual(h1.get_dict(), h2.get_dict())
 
@@ -343,13 +343,13 @@ class RedisHashTestCase(BackendRedisTestCase):
 
         # Test Non-Existant Object
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
-        h1 = self.HashFactory.from_raw(k)
+        h1 = self.HashFactory.from_raw(key=k)
         self.assertFalse(h1.get_dict())
         h1.set_dict(d)
         self.assertSubset(d, h1.get_dict())
 
         # Test Existing Object
-        h2 = self.HashFactory.from_raw(k)
+        h2 = self.HashFactory.from_raw(key=k)
         self.assertSubset(d, h2.get_dict())
 
         # Compare Objects
@@ -363,7 +363,7 @@ class RedisHashTestCase(BackendRedisTestCase):
 
         # Create and Get Object
         d_in = copy.deepcopy(test_common.DUMMY_TESTDICT)
-        obj = self.HashFactory.from_new(d_in, k)
+        obj = self.HashFactory.from_new(d_in, key=k)
         d_out = obj.get_dict()
         self.assertSubset(d_in, d_out)
 
@@ -374,7 +374,7 @@ class RedisHashTestCase(BackendRedisTestCase):
 
         # Create and Get Object
         d1_in = copy.deepcopy(test_common.DUMMY_TESTDICT)
-        obj = self.HashFactory.from_new(d1_in, k)
+        obj = self.HashFactory.from_new(d1_in, key=k)
         d1_out = obj.get_dict()
         self.assertSubset(d1_in, d1_out)
 
@@ -398,7 +398,7 @@ class RedisHashTestCase(BackendRedisTestCase):
 
         # Create Object
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
-        obj = self.HashFactory.from_new(d, k)
+        obj = self.HashFactory.from_new(d, key=k)
 
         # Test Bad Key
         self.assertFalse(obj['test'])
@@ -418,7 +418,7 @@ class RedisHashTestCase(BackendRedisTestCase):
 
         # Create Object
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
-        obj = self.HashFactory.from_new(d, k)
+        obj = self.HashFactory.from_new(d, key=k)
 
         # Test Keys
         for key in d:
@@ -432,7 +432,7 @@ class RedisTSHashTestCase(BackendRedisTestCase):
     def setUp(self):
         super(RedisTSHashTestCase, self).setUp()
 
-        self.TSHashFactory = backend.Factory(backend.TSHashBase, db=self.db)
+        self.TSHashFactory = backend.Factory(backend.TSHash, db=self.db)
 
     def tearDown(self):
         super(RedisTSHashTestCase, self).tearDown()
@@ -524,7 +524,7 @@ class RedisUUIDHashTestCase(BackendRedisTestCase):
     def setUp(self):
         super(RedisUUIDHashTestCase, self).setUp()
 
-        self.UUIDHashFactory = backend.UUIDFactory(backend.HashBase, db=self.db)
+        self.UUIDHashFactory = backend.UUIDFactory(backend.Hash, db=self.db)
 
     def tearDown(self):
         super(RedisUUIDHashTestCase, self).tearDown()
@@ -561,7 +561,7 @@ class RedisSetTestCase(BackendRedisTestCase):
     def setUp(self):
         super(RedisSetTestCase, self).setUp()
 
-        self.SetFactory = backend.Factory(backend.SetBase, db=self.db)
+        self.SetFactory = backend.Factory(backend.Set, db=self.db)
 
     def tearDown(self):
         super(RedisSetTestCase, self).tearDown()
@@ -577,7 +577,7 @@ class RedisSetTestCase(BackendRedisTestCase):
 
         # Test Empty Dict w/ Key
         v = set([])
-        self.assertRaises(backend.ObjectError, self.SetFactory.from_new, v, k)
+        self.assertRaises(backend.ObjectError, self.SetFactory.from_new, v, key=k)
 
         # Test Non-Empty Dict w/o Key
         v = set(['a', 'b', 'c'])
@@ -585,7 +585,7 @@ class RedisSetTestCase(BackendRedisTestCase):
 
         # Test Non-Empty Dict w/ Key
         v = set(['a', 'b', 'c'])
-        s = self.SetFactory.from_new(v, k)
+        s = self.SetFactory.from_new(v, key=k)
         self.assertEqual(v, s.get_set())
 
     def test_from_existing(self):
@@ -594,13 +594,13 @@ class RedisSetTestCase(BackendRedisTestCase):
         k = "testkey_{:03d}".format(random.randint(0, 999))
 
         # Test Non-Existant Object
-        self.assertRaises(backend.ObjectDNE, self.SetFactory.from_existing, k)
+        self.assertRaises(backend.ObjectDNE, self.SetFactory.from_existing, key=k)
 
         # Test Existing Object
         v = set(['a', 'b', 'c'])
-        s1 = self.SetFactory.from_new(v, k)
+        s1 = self.SetFactory.from_new(v, key=k)
         self.assertEqual(v, s1.get_set())
-        s2 = self.SetFactory.from_existing(k)
+        s2 = self.SetFactory.from_existing(key=k)
         self.assertEqual(s1, s2)
         self.assertEqual(s1.get_set(), s2.get_set())
 
@@ -611,13 +611,13 @@ class RedisSetTestCase(BackendRedisTestCase):
 
         # Test Non-Existant Object
         v = set(['a', 'b', 'c'])
-        s1 = self.SetFactory.from_raw(k)
+        s1 = self.SetFactory.from_raw(key=k)
         self.assertFalse(s1.get_set())
         s1.add_vals(v)
         self.assertEqual(v, s1.get_set())
 
         # Test Existing Object
-        s2 = self.SetFactory.from_raw(k)
+        s2 = self.SetFactory.from_raw(key=k)
         self.assertEqual(v, s2.get_set())
 
         # Compare Objects
@@ -631,7 +631,7 @@ class RedisSetTestCase(BackendRedisTestCase):
 
         # Create and get set
         v = set(['a', 'b', 'c'])
-        s = self.SetFactory.from_new(v, k)
+        s = self.SetFactory.from_new(v, key=k)
         self.assertEqual(v, s.get_set())
 
     def test_add_vals(self):
@@ -641,7 +641,7 @@ class RedisSetTestCase(BackendRedisTestCase):
 
         # Create and get set
         v1 = set(['a', 'b', 'c'])
-        s = self.SetFactory.from_new(v1, k)
+        s = self.SetFactory.from_new(v1, key=k)
         self.assertEqual(v1, s.get_set())
 
         # Add New Vals
@@ -661,7 +661,7 @@ class RedisSetTestCase(BackendRedisTestCase):
 
         # Create and get set
         v1 = set(['a', 'b', 'c', 'd', 'e'])
-        s = self.SetFactory.from_new(v1, k)
+        s = self.SetFactory.from_new(v1, key=k)
         self.assertEqual(v1, s.get_set())
 
         # Remove Existing Vals
@@ -680,7 +680,7 @@ class RedisUUIDSetTestCase(BackendRedisTestCase):
     def setUp(self):
         super(RedisUUIDSetTestCase, self).setUp()
 
-        self.UUIDSetFactory = backend.UUIDFactory(backend.SetBase, db=self.db)
+        self.UUIDSetFactory = backend.UUIDFactory(backend.Set, db=self.db)
 
     def tearDown(self):
         super(RedisUUIDSetTestCase, self).tearDown()

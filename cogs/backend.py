@@ -64,15 +64,26 @@ class abstractclassmethod(classmethod):
 
 ### Abstract Objects ###
 
-class ObjectBase(object):
+class Object(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, key=None, db=None, srv=None):
-        """Base Constructor"""
+    def __init__(self, key=None, pre_key=None, db=None, srv=None):
+        """ Constructor"""
 
         # Call Parent
-        super(ObjectBase, self).__init__()
+        super(Object, self).__init__()
+
+
+        self.pre_key = pre_key
+
+        if db:
+            self.db = db
+        else:
+            raise Exception("Requires db")
+
+        if srv:
+            self.srv = srv
 
         # Input Check Key
         if key:
@@ -98,7 +109,8 @@ class ObjectBase(object):
         elif self.obj_key:
             self.full_key = "{:s}".format(self.typ_key).lower()
         else:
-            raise ObjectError("Either pre_key or full_key required")
+            msg = "Either pre_key ({:s}) or obj_key ({:s}) required".format(self.pre_key, self.obj_key)
+            raise ObjectError(msg)
 
     def __getstate__(self):
 
@@ -178,11 +190,11 @@ class Factory(object):
         super(Factory, self).__init__()
 
         # Check Input
-        if not issubclass(base_cls, ObjectBase):
-            raise FactoryError("cls must be subclass of ObjectBase")
+        if not issubclass(base_cls, Object):
+            raise FactoryError("cls must be subclass of Object")
         base_name = base_cls.__name__
-        if not base_name.endswith(_SUF_BASE):
-            raise FactoryError("cls name must end with '{:s}'".format(_SUF_BASE))
+        # if not base_name.endswith(_SUF_BASE):
+        #     raise FactoryError("cls name must end with '{:s}'".format(_SUF_BASE))
 
         # Setup Class Name
         #self.cls_name = base_name[0:base_name.rfind(_SUF_BASE)]
@@ -200,8 +212,8 @@ class Factory(object):
             self.pre_key = ""
 
         # Setup Class
-        p_db = db
-        p_srv = srv
+        # p_db = db
+        # p_srv = srv
         # class Cls(base_cls):
         #     pre_key = self.pre_key
         #     db = p_db
@@ -244,112 +256,18 @@ class Factory(object):
             objs.append(self.from_existing(sib))
         return objs
 
-    def from_new(self, *args, **kwargs):
-        return self.cls.from_new(*args, **kwargs)
-
-    def from_existing(self, *args, **kwargs):
-        return self.cls.from_existing(*args, **kwargs)
-
-    def from_raw(self, *args, **kwargs):
-        return self.cls.from_raw(*args, **kwargs)
 
     def _add_args(self, func, *args, **kwargs):
+        kwargs['pre_key'] = self.pre_key
         kwargs['db'] = self.db
         kwargs['srv'] = self.srv
+        return func(*args, **kwargs)
 
-class UUIDFactory(Factory):
-
-    @abc.abstractmethod
     def from_new(self, *args, **kwargs):
-        pass
+        return self._add_args(self.cls.from_new, *args, **kwargs)
 
-    @abc.abstractmethod
-    def from_custom(self, uuid_str, *args, **kwargs):
-        pass
+    def from_existing(self, *args, **kwargs):
+        return self._add_args(self.cls.from_existing, *args, **kwargs)
 
-    @abc.abstractmethod
-    def from_existing(self, uuid_str, *args, **kwargs):
-        pass
-
-    @abc.abstractmethod
-    def from_raw(self, uuid_str, *args, **kwargs):
-        pass
-
-
-class HashBase(ObjectBase):
-    """
-    Hash Base Class
-
-    """
-
-    schema = None
-
-    @abstractclassmethod
-    def from_new(cls, d, key=None):
-        """New Constructor"""
-        pass
-
-    @abc.abstractmethod
-    def __getitem__(self, k):
-        """Get Dict Item"""
-        pass
-
-    @abc.abstractmethod
-    def __setitem__(self, k, v):
-        """Set Dict Item"""
-        pass
-
-    @abc.abstractmethod
-    def get_dict(self):
-        """Get Full Dict"""
-        pass
-
-    @abc.abstractmethod
-    def set_dict(self, d):
-        """Set Full Dict"""
-        pass
-
-
-class TSHashBase(HashBase):
-    """
-    Time-stamped Hash Base Class
-    """
-
-    @abstractclassmethod
-    def from_new(cls, d, key=None):
-        """New Constructor"""
-        pass
-
-    @abc.abstractmethod
-    def __setitem__(self, k, v):
-        """Set Item"""
-        pass
-
-    @abc.abstractmethod
-    def set_dict(self, d):
-        """Set Dict"""
-        pass
-
-
-class SetBase(ObjectBase):
-    """
-    Set Base Class
-
-    """
-
-    @classmethod
-    def from_new(cls, v, key=None):
-        """New Constructor"""
-        pass
-
-    def get_set(self):
-        """Get All Vals from Set"""
-        pass
-
-    def add_vals(self, v):
-        """Add Vals to Set"""
-        pass
-
-    def del_vals(self, v):
-        """Remove Vals from Set"""
-        pass
+    def from_raw(self, *args, **kwargs):
+        return self._add_args(self.cls.from_raw, *args, **kwargs)
