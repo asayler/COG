@@ -254,7 +254,7 @@ class Factory(object):
 
 
     def _add_args(self, func, *args, **kwargs):
-        kwargs['pre_key'] = self.pre_key
+        kwargs['prefix'] = self.pre_key
         kwargs['db'] = self.db
         kwargs['srv'] = self.srv
         return func(*args, **kwargs)

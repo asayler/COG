@@ -136,26 +136,31 @@ class RedisFactoryTestCase(BackendRedisTestCase):
 
         # Test w/o Prefix or Key
         of = backend.Factory(backend.Object, db=self.db)
-        self.assertRaises(backend.ObjectError, of.from_new)
+        obj = of.from_new()
+        self.assertTrue(obj)
+        self.assertEquals(obj.full_key, "{:s}".format(of.cls.__name__).lower())
 
         # Test w/ Prefix but w/o Key
-        p = "testprefix_{:03d}".format(random.randint(0, 999))
-        of = backend.Factory(backend.Object, prefix=p, db=self.db)
-        o = of.from_new()
-        self.assertTrue(o)
+        pre = "testprefix"
+        of = backend.Factory(backend.Object, prefix=pre, db=self.db)
+        obj = of.from_new()
+        self.assertTrue(obj)
+        self.assertEquals(obj.full_key, "{:s}:{:s}".format(pre, of.cls.__name__).lower())
 
         # Test w/ Key but w/o Prefix
-        k = "testkey_{:03d}".format(random.randint(0, 999))
+        key = "testkey"
         of = backend.Factory(backend.Object, db=self.db)
-        o = of.from_new(key=k)
-        self.assertTrue(o)
+        obj = of.from_new(key=key)
+        self.assertTrue(obj)
+        self.assertEquals(obj.full_key, "{:s}+{:s}".format(of.cls.__name__, key).lower())
 
         # Test w/ Prefix and Key
-        p = "testprefix_{:03d}".format(random.randint(0, 999))
-        k = "testkey_{:03d}".format(random.randint(0, 999))
-        of = backend.Factory(backend.Object, prefix=p, db=self.db)
-        o = of.from_new(key=k)
-        self.assertTrue(o)
+        pre = "testprefix"
+        kwy = "testkey"
+        of = backend.Factory(backend.Object, prefix=pre, db=self.db)
+        obj = of.from_new(key=key)
+        self.assertTrue(obj)
+        self.assertEquals(obj.full_key, "{:s}:{:s}+{:s}".format(pre, of.cls.__name__, key).lower())
 
     def test_list(self):
 
@@ -305,24 +310,28 @@ class RedisHashTestCase(BackendRedisTestCase):
     def test_from_new(self):
 
         # Create Key
-        k = "testkey_{:03d}".format(random.randint(0, 999))
+        key = "testkey"
 
         # Test Empty Dict w/o Key
-        d = {}
-        self.assertRaises(backend.ObjectError, self.HashFactory.from_new, d)
+        data = {}
+        self.assertRaises(backend.ObjectError, self.HashFactory.from_new, data)
 
         # Test Empty Dict w/ Key
-        d = {}
-        self.assertRaises(backend.ObjectError, self.HashFactory.from_new, d, key=k)
+        data = {}
+        self.assertRaises(backend.ObjectError, self.HashFactory.from_new, data, key=key)
 
         # Test Non-Empty Dict w/o Key
-        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
-        self.assertRaises(backend.ObjectError, self.HashFactory.from_new, d)
+        data = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        obj = self.HashFactory.from_new(data)
+        self.assertTrue(obj)
+        self.assertEquals(obj.full_key, "{:s}".format(self.HashFactory.cls.__name__).lower())
 
-        # Test Non-Empty Dict w Key
-        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
-        h = self.HashFactory.from_new(d, key=k)
-        self.assertSubset(d, h.get_dict())
+        # Test Non-Empty Dict w/ Key
+        data = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        obj = self.HashFactory.from_new(data, key=key)
+        self.assertTrue(obj)
+        self.assertEquals(obj.full_key, "{:s}+{:s}".format(self.HashFactory.cls.__name__, key).lower())
+        self.assertSubset(data, obj.get_dict())
 
     def test_from_existing(self):
 
@@ -444,26 +453,33 @@ class RedisTSHashTestCase(BackendRedisTestCase):
     def test_from_new(self):
 
         # Test Empty Dict w/o Key
-        d = {}
-        self.assertRaises(backend.ObjectError, self.TSHashFactory.from_new, d)
+        data = {}
+        obj = self.TSHashFactory.from_new(data)
+        self.assertTrue(obj)
+        self.assertEquals(obj.full_key, "{:s}".format(self.TSHashFactory.cls.__name__).lower())
+        self.assertSubset(data, obj.get_dict())
 
         # Test Empty Dict w/ Key
-        d = {}
-        k = "testkey_1"
-        h = self.TSHashFactory.from_new(d, key=k)
-        self.assertSubset(d, h.get_dict())
-        self.assertEqual(h['created_time'], h['modified_time'])
+        data = {}
+        key = "testkey_1"
+        obj = self.TSHashFactory.from_new(data, key=key)
+        self.assertTrue(obj)
+        self.assertEquals(obj.full_key, "{}+{}".format(self.TSHashFactory.cls.__name__, key).lower())
+        self.assertSubset(data, obj.get_dict())
+        self.assertEqual(obj['created_time'], obj['modified_time'])
 
         # Test Non-Empty Dict w/o Key
-        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
-        self.assertRaises(backend.ObjectError, self.TSHashFactory.from_new, d)
+        data = test_common.DUMMY_TESTDICT
+        self.assertRaises(backend.ObjectError, self.TSHashFactory.from_new, data)
 
-        # Test Non-Empty Dict w Key
-        k = "testkey_2"
-        d = copy.deepcopy(test_common.DUMMY_TESTDICT)
-        h = self.TSHashFactory.from_new(d, key=k)
-        self.assertSubset(d, h.get_dict())
-        self.assertEqual(h['created_time'], h['modified_time'])
+        # Test Non-Empty Dict w/ Key
+        key = "testkey_2"
+        data = copy.deepcopy(test_common.DUMMY_TESTDICT)
+        obj = self.TSHashFactory.from_new(data, key=key)
+        self.assertTrue(obj)
+        self.assertEquals(obj.full_key, "{}+{}".format(self.TSHashFactory.cls.__name__, key).lower())
+        self.assertSubset(data, obj.get_dict())
+        self.assertEqual(obj['created_time'], obj['modified_time'])
 
     def test_set_dict(self):
 
@@ -573,7 +589,7 @@ class RedisSetTestCase(BackendRedisTestCase):
     def test_from_new(self):
 
         # Create Key
-        k = "testkey_{:03d}".format(random.randint(0, 999))
+        key = "testkey"
 
         # Test Empty Set w/o Key
         v = set([])
@@ -581,16 +597,19 @@ class RedisSetTestCase(BackendRedisTestCase):
 
         # Test Empty Dict w/ Key
         v = set([])
-        self.assertRaises(backend.ObjectError, self.SetFactory.from_new, v, key=k)
+        self.assertRaises(backend.ObjectError, self.SetFactory.from_new, v, key=key)
 
         # Test Non-Empty Dict w/o Key
         v = set(['a', 'b', 'c'])
-        self.assertRaises(backend.ObjectError, self.SetFactory.from_new, v)
+        obj = self.SetFactory.from_new(v)
+        self.assertTrue(obj)
+        self.assertEquals(obj.full_key, "{:s}".format(self.SetFactory.cls.__name__).lower())
 
         # Test Non-Empty Dict w/ Key
         v = set(['a', 'b', 'c'])
-        s = self.SetFactory.from_new(v, key=k)
-        self.assertEqual(v, s.get_set())
+        obj = self.SetFactory.from_new(v, key=key)
+        self.assertEquals(obj.full_key, "{:s}+{:s}".format(self.SetFactory.cls.__name__, key).lower())
+        self.assertEqual(v, obj.get_set())
 
     def test_from_existing(self):
 
