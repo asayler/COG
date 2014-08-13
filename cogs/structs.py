@@ -369,9 +369,8 @@ class RunBase(backend.OwnedTSHashBase):
         run = super(RunBase, cls).from_new(data, **kwargs)
 
         # Add Task to Pool
-        testrun.test(asn, sub, tst, run)
-        #res = cls.srv.workers.apply_async(testrun.test, args=(asn, sub, tst, run))
-        #print(res.get())
+        res = cls.srv.workers.apply_async(testrun.test, args=(asn, sub, tst, run))
+        print(res.get())
 
         # Return Run
         return run
