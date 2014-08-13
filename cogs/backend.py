@@ -6,12 +6,9 @@
 
 import abc
 
-TS_SCHEMA = ['created_time', 'modified_time']
-
 _ENCODING = 'utf-8'
 _FIELD_SEP = ':'
 _TYPE_SEP = '+'
-_SUF_BASE = 'Base'
 
 assert(_FIELD_SEP != _TYPE_SEP)
 
@@ -30,13 +27,13 @@ class FactoryError(BackendError):
     def __init__(self, *args, **kwargs):
         super(FactoryError, self).__init__(*args, **kwargs)
 
-class ObjectError(BackendError):
-    """Backend Object Exception"""
+class PersistentObjectError(BackendError):
+    """Backend PersistentObject Exception"""
 
     def __init__(self, *args, **kwargs):
-        super(ObjectError, self).__init__(*args, **kwargs)
+        super(PersistentObjectError, self).__init__(*args, **kwargs)
 
-class ObjectDNE(ObjectError):
+class ObjectDNE(PersistentObjectError):
     """Backend Object Does Not Exist"""
 
     def __init__(self, obj):
@@ -64,70 +61,29 @@ class abstractclassmethod(classmethod):
 
 ### Abstract Objects ###
 
-class Object(object):
+class PersistentObject(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, key=None, prefix=None, db=None, **kwargs):
+    def __init__(self, **kwargs):
         """ Constructor"""
 
-        # Input Check Key
-        if key:
-            if _FIELD_SEP in str(key):
-                raise ObjectError("Key may not contain '{:s}'".format(_FIELD_SEP))
-            if _TYPE_SEP in str(key):
-                raise ObjectError("Key may not contain '{:s}'".format(_TYPE_SEP))
+        # Get Key
+        try:
+            self.key = kwargs.pop('key')
+        except KeyError:
+            raise TypeError("'key' required")
 
         # Call Parent
-        super(Object, self).__init__()
+        super(PersistentObject, self).__init__()
 
         # Set Vars
         for arg in kwargs:
             setattr(self, arg, kwargs[arg])
 
-        if db:
-            self.db = db
-        else:
-            raise Exception("Requires db")
-
-        # Set Keys
-        if prefix:
-            self.pre_key = str(prefix).lower()
-        else:
-            self.pre_key = ""
-        if key:
-            self.obj_key = str(key).lower()
-            self.typ_key = "{:s}{:s}{:s}".format(type(self).__name__, _TYPE_SEP, self.obj_key).lower()
-        else:
-            self.obj_key = ""
-            self.typ_key = "{:s}".format(type(self).__name__).lower()
-
-        # Compute Full Key
-        if self.pre_key:
-            self.full_key = "{:s}{:s}{:s}".format(self.pre_key, _FIELD_SEP, self.typ_key).lower()
-        else:
-            self.full_key = "{:s}".format(self.typ_key).lower()
-
-    # def __getstate__(self):
-
-    #     # Create State
-    #     state = {}
-
-    #     # Set State
-    #     state['typ_str'] = self.typ_str
-    #     state['typ_key'] = self.typ_key
-    #     state['obj_key'] = self.obj_key
-    #     state['pre_key'] = self.pre_key
-    #     state['full_key'] = self.full_key
-    #     state['db'] = None
-    #     state['srv'] = None
-
-    #     # Return State
-    #     return state
-
     def __unicode__(self):
         """Return Unicode Representation"""
-        return unicode(self.typ_key)
+        return unicode(repr(self))
 
     def __str__(self):
         """Return String Representation"""
@@ -135,7 +91,7 @@ class Object(object):
 
     def __repr__(self):
         """Return Unique Representation"""
-        return "{:s}".format(self.full_key)
+        return "{:s}".format(self.key)
 
     def __hash__(self):
         """Return Hash"""
@@ -144,10 +100,6 @@ class Object(object):
     def __eq__(self, other):
         """Test Equality"""
         return (repr(self) == repr(other))
-
-    def key(self):
-        """Return Object Key"""
-        return self.obj_key
 
     @abstractclassmethod
     def from_new(cls, *args, **kwargs):
@@ -175,51 +127,48 @@ class Object(object):
         pass
 
 
-class Factory(object):
+class TypedObject(PersistentObject):
+
+    def __init__(self, *args, **kwargs):
+        """ Constructor"""
+
+        # Get Type Key
+        try:
+            self.typ_key = kwargs.pop('typ_key')
+        except KeyError:
+            raise TypeError("'typ_key' required")
+
+        # Call Parent
+        super(TypedObject, self).__init__(*args, **kwargs)
+
+    def __unicode__(self):
+        """Return Unicode Representation"""
+        return unicode(self.typ_key)
+
+    def __str__(self):
+        """Return String Representation"""
+        return unicode(self).encode(_ENCODING)
+
+
+class PrefixedFactory(object):
 
     __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
-    def __init__(self, base_cls, prefix=None, passthrough={}, db=None, srv=None):
+    def __init__(self, cls, prefix=None, typed=True, passthrough={}):
 
         # Call Parent
-        super(Factory, self).__init__()
+        super(PrefixedFactory, self).__init__()
 
         # Check Input
-        if not issubclass(base_cls, Object):
-            raise FactoryError("cls must be subclass of Object")
-        base_name = base_cls.__name__
-        # if not base_name.endswith(_SUF_BASE):
-        #     raise FactoryError("cls name must end with '{:s}'".format(_SUF_BASE))
+        if not issubclass(cls, PersistentObject):
+            raise FactoryError("cls must be subclass of PersistentObject")
 
-        # Setup Class Name
-        #self.cls_name = base_name[0:base_name.rfind(_SUF_BASE)]
-        self.cls_name = base_name
-
-        # Setup DB
-        self.db = db
-        self.srv = srv
+        # Save Vars
+        self.cls = cls
+        self.cls_name = cls.__name__.lower()
+        self.prefix = prefix
+        self.typed = typed
         self.passthrough = passthrough
-
-        # Setup Base Key
-        if prefix:
-            self.pre_key = str(prefix)
-        else:
-            self.pre_key = ""
-
-        # Setup Class
-        # p_db = db
-        # p_srv = srv
-        # class Cls(base_cls):
-        #     pre_key = self.pre_key
-        #     db = p_db
-        #     srv = p_srv
-        # for p in passthrough:
-        #     setattr(Cls, p, passthrough[p])
-
-        # Set Class Attributes and Return
-        # Cls.__name__ = self.cls_name
-        self.cls = base_cls
 
     @abc.abstractmethod
     def list_family(self):
@@ -244,26 +193,69 @@ class Factory(object):
                 chd_keys.add(fam_key)
         return chd_keys
 
-    def get_siblings(self):
-        """Get Sibling Objects"""
-        siblings = self.list_siblings()
-        objs = []
-        for sib in siblings:
-            objs.append(self.from_existing(sib))
-        return objs
+    def _generate_keys(self, key):
 
+        # Sanitize Key
+        if key:
+            if _FIELD_SEP in str(key):
+                raise PersistentObjectError("Key may not contain '{:s}'".format(_FIELD_SEP))
+            if self.typed:
+                if _TYPE_SEP in str(key):
+                    raise PersistentObjectError("Key may not contain '{:s}'".format(_TYPE_SEP))
 
-    def _add_args(self, func, *args, **kwargs):
-        kwargs['prefix'] = self.pre_key
-        kwargs['db'] = self.db
-        kwargs['srv'] = self.srv
+        # Set Keys
+        if self.prefix:
+            pre_key = str(self.prefix).lower()
+        else:
+            pre_key = ""
+
+        if key:
+            obj_key = str(key).lower()
+            if self.typed:
+                typ_key = "{:s}{:s}{:s}".format(self.cls_name, _TYPE_SEP, obj_key).lower()
+        else:
+            obj_key = ""
+            if self.typed:
+                typ_key = "{:s}".format(self.cls_name).lower()
+
+        if pre_key:
+            if self.typed:
+                full_key = "{:s}{:s}{:s}".format(pre_key, _FIELD_SEP, typ_key).lower()
+            else:
+                full_key = "{:s}{:s}{:s}".format(pre_key, _FIELD_SEP, obj_key).lower()
+        else:
+            if self.typed:
+                full_key = "{:s}".format(typ_key).lower()
+            else:
+                full_key = "{:s}".format(obj_key).lower()
+
+        # Check Keys
+        if not full_key:
+            raise PersistentObjectError("full_key blank: object requires key, prefix, or typing")
+
+        # Collect Keys
+        keys = {'pre_key': pre_key,
+                'obj_key': obj_key,
+                'full_key': full_key,
+                'key': full_key}
+        if self.typed:
+            keys['typ_key'] = typ_key
+
+        # Return Keys
+        return keys
+
+    def _add_kwargs(self, func, *args, **kwargs):
+        key = kwargs.pop('key', None)
+        keys = self._generate_keys(key)
+        kwargs.update(keys)
+        kwargs.update(self.passthrough)
         return func(*args, **kwargs)
 
     def from_new(self, *args, **kwargs):
-        return self._add_args(self.cls.from_new, *args, **kwargs)
+        return self._add_kwargs(self.cls.from_new, *args, **kwargs)
 
     def from_existing(self, *args, **kwargs):
-        return self._add_args(self.cls.from_existing, *args, **kwargs)
+        return self._add_kwargs(self.cls.from_existing, *args, **kwargs)
 
     def from_raw(self, *args, **kwargs):
-        return self._add_args(self.cls.from_raw, *args, **kwargs)
+        return self._add_kwargs(self.cls.from_raw, *args, **kwargs)

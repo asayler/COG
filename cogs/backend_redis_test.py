@@ -10,8 +10,13 @@ import random
 import time
 import unittest
 import uuid
+import os
 
 import redis
+
+os.environ['COGS_REDIS_HOST'] = "localhost"
+os.environ['COGS_REDIS_PORT'] = str(6379)
+os.environ['COGS_REDIS_DB'] = str(5)
 
 import test_common
 import backend_redis as backend
@@ -32,12 +37,13 @@ class RedisObjectTestCase(BackendRedisTestCase):
         super(RedisObjectTestCase, self).setUp()
 
         self.key = 'key'
-        self.rid = "object+{:s}".format(self.key)
+        self.cls_name = backend.TypedObject.__name__.lower()
+        self.rid = "{:s}+{:s}".format(self.cls_name, self.key).lower()
         self.val = 'val'
 
         self.db.set(self.rid, self.val)
 
-        self.ObjFactory = backend.Factory(backend.Object, db=self.db)
+        self.ObjFactory = backend.PrefixedFactory(backend.TypedObject)
 
     def tearDown(self):
         super(RedisObjectTestCase, self).tearDown()
@@ -47,21 +53,22 @@ class RedisObjectTestCase(BackendRedisTestCase):
         # Test w/o Key
         obj = self.ObjFactory.from_new()
         self.assertTrue(obj)
-        self.assertEquals(obj.full_key, "object")
+        self.assertEquals(obj.full_key, "{:s}".format(self.cls_name))
 
         # Test w/ Key
-        obj = self.ObjFactory.from_new(key='newkey')
+        key = 'newkey'
+        obj = self.ObjFactory.from_new(key=key)
         self.assertTrue(obj)
-        self.assertEquals(obj.full_key, "object+newkey")
+        self.assertEquals(obj.full_key, "{:s}+{:s}".format(self.cls_name, key))
 
         # Test w/ Duplicate Key
-        self.assertRaises(backend.ObjectError, self.ObjFactory.from_new, key=self.key)
+        self.assertRaises(backend.PersistentObjectError, self.ObjFactory.from_new, key=self.key)
 
         # Test w/ Illegal Key ':'
-        self.assertRaises(backend.ObjectError, self.ObjFactory.from_new, key='test:1')
+        self.assertRaises(backend.PersistentObjectError, self.ObjFactory.from_new, key='test:1')
 
         # Test w/ Illegal Key '+'
-        self.assertRaises(backend.ObjectError, self.ObjFactory.from_new, key='test+1')
+        self.assertRaises(backend.PersistentObjectError, self.ObjFactory.from_new, key='test+1')
 
     def test_from_existing(self):
 
@@ -82,43 +89,43 @@ class RedisObjectTestCase(BackendRedisTestCase):
     def test_str(self):
 
         # Test Not Equal
-        s1 = str(self.ObjFactory.from_new('str1'))
-        s2 = str(self.ObjFactory.from_new('str2'))
+        s1 = str(self.ObjFactory.from_new(key='str1'))
+        s2 = str(self.ObjFactory.from_new(key='str2'))
         self.assertFalse(s1 == s2)
 
         # Test Equal
-        s1 = str(self.ObjFactory.from_new('str1'))
-        s2 = str(self.ObjFactory.from_new('str1'))
+        s1 = str(self.ObjFactory.from_new(key='str1'))
+        s2 = str(self.ObjFactory.from_new(key='str1'))
         self.assertTrue(s1 == s2)
 
     def test_hash(self):
 
         # Test Not Equal
-        h1 = hash(self.ObjFactory.from_new('hash1'))
-        h2 = hash(self.ObjFactory.from_new('hash2'))
+        h1 = hash(self.ObjFactory.from_new(key='hash1'))
+        h2 = hash(self.ObjFactory.from_new(key='hash2'))
         self.assertFalse(h1 == h2)
 
         # Test Equal
-        h1 = hash(self.ObjFactory.from_new('hash1'))
-        h2 = hash(self.ObjFactory.from_new('hash1'))
+        h1 = hash(self.ObjFactory.from_new(key='hash1'))
+        h2 = hash(self.ObjFactory.from_new(key='hash1'))
         self.assertTrue(h1 == h2)
 
     def test_eq(self):
 
         # Test Not Equal
-        o1 = self.ObjFactory.from_new('eq1')
-        o2 = self.ObjFactory.from_new('eq2')
+        o1 = self.ObjFactory.from_new(key='eq1')
+        o2 = self.ObjFactory.from_new(key='eq2')
         self.assertFalse(o1 == o2)
 
         # Test Equal
-        o1 = self.ObjFactory.from_new('eq1')
-        o2 = self.ObjFactory.from_new('eq1')
+        o1 = self.ObjFactory.from_new(key='eq1')
+        o2 = self.ObjFactory.from_new(key='eq1')
         self.assertTrue(o1 == o2)
 
     def test_delete(self):
 
         # Test Delete
-        o = self.ObjFactory.from_existing(self.key)
+        o = self.ObjFactory.from_existing(key=self.key)
         self.assertTrue(self.db.exists(self.rid))
         o.delete()
         self.assertFalse(self.db.exists(self.rid))
@@ -135,21 +142,21 @@ class RedisFactoryTestCase(BackendRedisTestCase):
     def test_init(self):
 
         # Test w/o Prefix or Key
-        of = backend.Factory(backend.Object, db=self.db)
+        of = backend.PrefixedFactory(backend.TypedObject)
         obj = of.from_new()
         self.assertTrue(obj)
         self.assertEquals(obj.full_key, "{:s}".format(of.cls.__name__).lower())
 
         # Test w/ Prefix but w/o Key
         pre = "testprefix"
-        of = backend.Factory(backend.Object, prefix=pre, db=self.db)
+        of = backend.PrefixedFactory(backend.TypedObject, prefix=pre)
         obj = of.from_new()
         self.assertTrue(obj)
         self.assertEquals(obj.full_key, "{:s}:{:s}".format(pre, of.cls.__name__).lower())
 
         # Test w/ Key but w/o Prefix
         key = "testkey"
-        of = backend.Factory(backend.Object, db=self.db)
+        of = backend.PrefixedFactory(backend.TypedObject)
         obj = of.from_new(key=key)
         self.assertTrue(obj)
         self.assertEquals(obj.full_key, "{:s}+{:s}".format(of.cls.__name__, key).lower())
@@ -157,7 +164,7 @@ class RedisFactoryTestCase(BackendRedisTestCase):
         # Test w/ Prefix and Key
         pre = "testprefix"
         kwy = "testkey"
-        of = backend.Factory(backend.Object, prefix=pre, db=self.db)
+        of = backend.PrefixedFactory(backend.TypedObject, prefix=pre)
         obj = of.from_new(key=key)
         self.assertTrue(obj)
         self.assertEquals(obj.full_key, "{:s}:{:s}+{:s}".format(pre, of.cls.__name__, key).lower())
@@ -166,15 +173,16 @@ class RedisFactoryTestCase(BackendRedisTestCase):
 
         val = 'val'
         pre = 'test'
+        cls = backend.TypedObject.__name__.lower()
 
         # Add Parents w/o Prefix
         self.db.flushdb()
         parents = ['p01', 'p02', 'p03']
         for p in parents:
-            self.db.set("object+{:s}".format(p), val)
+            self.db.set("{:s}+{:s}".format(cls, p).lower(), val)
 
         # Test Parents w/o Prefix
-        hf = backend.Factory(backend.Object, db=self.db)
+        hf = backend.PrefixedFactory(backend.TypedObject)
         fam = hf.list_family()
         self.assertEqual(set(parents), fam)
         sib = hf.list_siblings()
@@ -186,10 +194,10 @@ class RedisFactoryTestCase(BackendRedisTestCase):
         self.db.flushdb()
         parents = ['p01', 'p02', 'p03']
         for p in parents:
-            self.db.set("{:s}:object+{:s}".format(pre, p), val)
+            self.db.set("{:s}:{:s}+{:s}".format(pre, cls, p), val)
 
         # Test Parents w/ Prefix
-        hf = backend.Factory(backend.Object, prefix=pre, db=self.db)
+        hf = backend.PrefixedFactory(backend.TypedObject, prefix=pre)
         fam = hf.list_family()
         self.assertEqual(set(parents), fam)
         sib = hf.list_siblings()
@@ -201,16 +209,16 @@ class RedisFactoryTestCase(BackendRedisTestCase):
         self.db.flushdb()
         parents = ['p01', 'p02', 'p03']
         for p in parents:
-            self.db.set("object+{:s}".format(p), val)
+            self.db.set("{:s}+{:s}".format(cls, p), val)
         p1_children = ['c01', 'c02', 'c03']
         full_children = []
         for c in p1_children:
-            child = "{:s}:object+{:s}".format(parents[0], c)
-            self.db.set("object+{:s}".format(child), val)
+            child = "{:s}:{:s}+{:s}".format(parents[0], cls, c)
+            self.db.set("{:s}+{:s}".format(cls, child), val)
             full_children.append(child)
 
         # Test Parents + Children w/o Prefix
-        hf = backend.Factory(backend.Object, db=self.db)
+        hf = backend.PrefixedFactory(backend.TypedObject)
         fam = hf.list_family()
         self.assertEqual(set(parents + full_children), fam)
         sib = hf.list_siblings()
@@ -219,8 +227,8 @@ class RedisFactoryTestCase(BackendRedisTestCase):
         self.assertEqual(set(full_children), chd)
 
         # Test Children w/o Prefix
-        chd_pre = "object+{:s}".format(parents[0])
-        hf = backend.Factory(backend.Object, prefix=chd_pre, db=self.db)
+        chd_pre = "{:s}+{:s}".format(cls, parents[0])
+        hf = backend.PrefixedFactory(backend.TypedObject, prefix=chd_pre)
         fam = hf.list_family()
         self.assertEqual(set(p1_children), fam)
         sib = hf.list_siblings()
@@ -232,16 +240,16 @@ class RedisFactoryTestCase(BackendRedisTestCase):
         self.db.flushdb()
         parents = ['p01', 'p02', 'p03']
         for p in parents:
-            self.db.set("{:s}:object+{:s}".format(pre, p), val)
+            self.db.set("{:s}:{:s}+{:s}".format(pre, cls, p), val)
         p1_children = ['c01', 'c02', 'c03']
         full_children = []
         for c in p1_children:
-            child = "{:s}:object+{:s}".format(parents[0], c)
-            self.db.set("{:s}:object+{:s}".format(pre, child), val)
+            child = "{:s}:{:s}+{:s}".format(parents[0], cls, c)
+            self.db.set("{:s}:{:s}+{:s}".format(pre, cls, child), val)
             full_children.append(child)
 
         # Test Parents + Children w/ Prefix
-        hf = backend.Factory(backend.Object, prefix=pre, db=self.db)
+        hf = backend.PrefixedFactory(backend.TypedObject, prefix=pre)
         fam = hf.list_family()
         self.assertEqual(set(parents + full_children), fam)
         sib = hf.list_siblings()
@@ -250,29 +258,14 @@ class RedisFactoryTestCase(BackendRedisTestCase):
         self.assertEqual(set(full_children), chd)
 
         # Test Children w/ Prefix
-        chd_pre = "{:s}:object+{:s}".format(pre, parents[0])
-        hf = backend.Factory(backend.Object, prefix=chd_pre, db=self.db)
+        chd_pre = "{:s}:{:s}+{:s}".format(pre, cls, parents[0])
+        hf = backend.PrefixedFactory(backend.TypedObject, prefix=chd_pre)
         fam = hf.list_family()
         self.assertEqual(set(p1_children), fam)
         sib = hf.list_siblings()
         self.assertEqual(set(p1_children), sib)
         chd = hf.list_children()
         self.assertEqual(set([]), chd)
-
-    def test_get(self):
-
-        val = 'val'
-
-        # Add Parents w/o Prefix
-        self.db.flushdb()
-        parents = ['p01', 'p02', 'p03']
-        for p in parents:
-            self.db.set("object+{:s}".format(p), val)
-
-        # Test Parents w/o Prefix
-        hf = backend.Factory(backend.Object, db=self.db)
-        sibs = hf.get_siblings()
-        self.assertEqual(set(parents), set([s.key() for s in sibs]))
 
 
 class RedisUUIDFactoryTestCase(BackendRedisTestCase):
@@ -286,13 +279,13 @@ class RedisUUIDFactoryTestCase(BackendRedisTestCase):
     def test_init(self):
 
         # Test w/o Prefix
-        of = backend.UUIDFactory(backend.Object, db=self.db)
+        of = backend.UUIDFactory(backend.TypedObject)
         o = of.from_new()
         self.assertTrue(o)
 
         # Test w/ Prefix
         p = "testprefix_{:03d}".format(random.randint(0, 999))
-        of = backend.UUIDFactory(backend.Object, prefix=p, db=self.db)
+        of = backend.UUIDFactory(backend.TypedObject, prefix=p)
         o = of.from_new()
         self.assertTrue(o)
 
@@ -302,7 +295,7 @@ class RedisHashTestCase(BackendRedisTestCase):
     def setUp(self):
         super(RedisHashTestCase, self).setUp()
 
-        self.HashFactory = backend.Factory(backend.Hash, db=self.db)
+        self.HashFactory = backend.PrefixedFactory(backend.Hash)
 
     def tearDown(self):
         super(RedisHashTestCase, self).tearDown()
@@ -314,11 +307,11 @@ class RedisHashTestCase(BackendRedisTestCase):
 
         # Test Empty Dict w/o Key
         data = {}
-        self.assertRaises(backend.ObjectError, self.HashFactory.from_new, data)
+        self.assertRaises(backend.PersistentObjectError, self.HashFactory.from_new, data)
 
         # Test Empty Dict w/ Key
         data = {}
-        self.assertRaises(backend.ObjectError, self.HashFactory.from_new, data, key=key)
+        self.assertRaises(backend.PersistentObjectError, self.HashFactory.from_new, data, key=key)
 
         # Test Non-Empty Dict w/o Key
         data = copy.deepcopy(test_common.DUMMY_TESTDICT)
@@ -445,7 +438,7 @@ class RedisTSHashTestCase(BackendRedisTestCase):
     def setUp(self):
         super(RedisTSHashTestCase, self).setUp()
 
-        self.TSHashFactory = backend.Factory(backend.TSHash, db=self.db)
+        self.TSHashFactory = backend.PrefixedFactory(backend.TSHash)
 
     def tearDown(self):
         super(RedisTSHashTestCase, self).tearDown()
@@ -470,7 +463,7 @@ class RedisTSHashTestCase(BackendRedisTestCase):
 
         # Test Non-Empty Dict w/o Key
         data = test_common.DUMMY_TESTDICT
-        self.assertRaises(backend.ObjectError, self.TSHashFactory.from_new, data)
+        self.assertRaises(backend.PersistentObjectError, self.TSHashFactory.from_new, data)
 
         # Test Non-Empty Dict w/ Key
         key = "testkey_2"
@@ -544,7 +537,7 @@ class RedisUUIDHashTestCase(BackendRedisTestCase):
     def setUp(self):
         super(RedisUUIDHashTestCase, self).setUp()
 
-        self.UUIDHashFactory = backend.UUIDFactory(backend.Hash, db=self.db)
+        self.UUIDHashFactory = backend.UUIDFactory(backend.Hash)
 
     def tearDown(self):
         super(RedisUUIDHashTestCase, self).tearDown()
@@ -553,7 +546,7 @@ class RedisUUIDHashTestCase(BackendRedisTestCase):
 
         # Test Empty Dict
         d = {}
-        self.assertRaises(backend.ObjectError, self.UUIDHashFactory.from_new, d)
+        self.assertRaises(backend.PersistentObjectError, self.UUIDHashFactory.from_new, d)
 
         # Test Non-Empty Dict w/o Key
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
@@ -571,7 +564,7 @@ class RedisUUIDHashTestCase(BackendRedisTestCase):
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
         h1 = self.UUIDHashFactory.from_new(d)
         self.assertSubset(d, h1.get_dict())
-        h2 = self.UUIDHashFactory.from_existing(h1.key())
+        h2 = self.UUIDHashFactory.from_existing(h1.obj_key)
         self.assertEqual(h1, h2)
         self.assertEqual(h1.get_dict(), h2.get_dict())
 
@@ -581,7 +574,7 @@ class RedisSetTestCase(BackendRedisTestCase):
     def setUp(self):
         super(RedisSetTestCase, self).setUp()
 
-        self.SetFactory = backend.Factory(backend.Set, db=self.db)
+        self.SetFactory = backend.PrefixedFactory(backend.Set)
 
     def tearDown(self):
         super(RedisSetTestCase, self).tearDown()
@@ -593,11 +586,11 @@ class RedisSetTestCase(BackendRedisTestCase):
 
         # Test Empty Set w/o Key
         v = set([])
-        self.assertRaises(backend.ObjectError, self.SetFactory.from_new, v)
+        self.assertRaises(backend.PersistentObjectError, self.SetFactory.from_new, v)
 
         # Test Empty Dict w/ Key
         v = set([])
-        self.assertRaises(backend.ObjectError, self.SetFactory.from_new, v, key=key)
+        self.assertRaises(backend.PersistentObjectError, self.SetFactory.from_new, v, key=key)
 
         # Test Non-Empty Dict w/o Key
         v = set(['a', 'b', 'c'])
@@ -703,7 +696,7 @@ class RedisUUIDSetTestCase(BackendRedisTestCase):
     def setUp(self):
         super(RedisUUIDSetTestCase, self).setUp()
 
-        self.UUIDSetFactory = backend.UUIDFactory(backend.Set, db=self.db)
+        self.UUIDSetFactory = backend.UUIDFactory(backend.Set)
 
     def tearDown(self):
         super(RedisUUIDSetTestCase, self).tearDown()
@@ -712,7 +705,7 @@ class RedisUUIDSetTestCase(BackendRedisTestCase):
 
         # Test Empty Set
         v = set([])
-        self.assertRaises(backend.ObjectError, self.UUIDSetFactory.from_new, v)
+        self.assertRaises(backend.PersistentObjectError, self.UUIDSetFactory.from_new, v)
 
         # Test Non-Empty Dict w/o Key
         v = set(['a', 'b', 'c'])
@@ -730,7 +723,7 @@ class RedisUUIDSetTestCase(BackendRedisTestCase):
         v = set(['a', 'b', 'c'])
         s1 = self.UUIDSetFactory.from_new(v)
         self.assertSubset(v, s1.get_set())
-        s2 = self.UUIDSetFactory.from_existing(s1.key())
+        s2 = self.UUIDSetFactory.from_existing(s1.obj_key)
         self.assertEqual(s1, s2)
         self.assertEqual(s1.get_set(), s2.get_set())
 

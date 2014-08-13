@@ -10,125 +10,114 @@ import copy
 import time
 import uuid
 import collections
+import os
 
 import redis
 
 import backend
-from backend import BackendError, FactoryError, ObjectError, ObjectDNE, TS_SCHEMA
+from backend import BackendError, FactoryError, PersistentObjectError, ObjectDNE
 
+TS_SCHEMA = ['created_time', 'modified_time']
 
-_REDIS_CONF_DEFAULT = {'redis_host': "localhost",
-                       'redis_port': 6379,
-                       'redis_db': 4}
+DEFAULT_REDIS_HOST = "localhost"
+DEFAULT_REDIS_PORT = 6379
+DEFAULT_REDIS_DB = 4
+
+REDIS_HOST = os.environ.get('COGS_REDIS_HOST', DEFAULT_REDIS_HOST)
+REDIS_PORT = int(os.environ.get('COGS_REDIS_PORT', DEFAULT_REDIS_PORT))
+REDIS_DB = int(os.environ.get('COGS_REDIS_DB', DEFAULT_REDIS_DB))
+
+db = redis.StrictRedis(host=REDIS_HOST,
+                       port=REDIS_PORT,
+                       db=REDIS_DB)
 
 
 ### Objects ###
 
-class Object(backend.Object):
-
-    # def __getstate__(self):
-
-    #     # Call Parent
-    #     state = super(Object, self).__getstate__()
-
-    #     # Set Sate
-    #     state['db'] = None
-    #     state['srv'] = None
-
-    #     # Return State
-    #     return state
+class TypedObject(backend.TypedObject):
 
     @classmethod
     def from_new(cls, *args, **kwargs):
         """New Constructor"""
 
-        obj = super(Object, cls).from_new(*args, **kwargs)
-        if obj.db.exists(obj.full_key):
-            raise ObjectError("Key already exists in DB")
+        obj = super(TypedObject, cls).from_new(*args, **kwargs)
+        if db.exists(obj.key):
+            raise PersistentObjectError("Key already exists in DB")
         return obj
 
     @classmethod
     def from_existing(cls, *args, **kwargs):
         """Existing Constructor"""
 
-        obj = super(Object, cls).from_existing(*args, **kwargs)
-        if not obj.db.exists(obj.full_key):
+        obj = super(TypedObject, cls).from_existing(*args, **kwargs)
+        if not db.exists(obj.key):
             raise ObjectDNE(obj)
         return obj
 
     def delete(self):
         """Delete Object"""
 
-        super(Object, self).delete()
-        if not self.db.delete(self.full_key):
-            raise ObjectError("Delete Failed")
+        if not db.delete(self.key):
+            raise PersistentObjectError("Delete Failed")
+        super(TypedObject, self).delete()
 
     def exists(self):
         """Check if object exists"""
 
-        super(Object, self).exists()
-        return self.db.exists(self.full_key)
+        return db.exists(self.full_key)
 
 
-class Factory(backend.Factory):
-
-    def __init__(self, base_cls, db=None, **kwargs):
-
-        # Setup DB
-        if not db:
-            db = redis.StrictRedis(host=_REDIS_CONF_DEFAULT['redis_host'],
-                                   port=_REDIS_CONF_DEFAULT['redis_port'],
-                                   db=_REDIS_CONF_DEFAULT['redis_db'])
-
-        # Call Parent
-        super(Factory, self).__init__(base_cls, db=db, **kwargs)
+class PrefixedFactory(backend.PrefixedFactory):
 
     def list_family(self):
         """List Factory Objects"""
-        if self.pre_key:
-            p = "{:s}{:s}".format(self.pre_key, backend._FIELD_SEP)
+        if self.prefix:
+            pre_key = "{:s}{:s}".format(self.prefix, backend._FIELD_SEP).lower()
         else:
-            p = ""
-        q = "{:s}*".format(p)
-        fam_lst = self.db.keys(q)
+            pre_key = ""
+        query = "{:s}*".format(pre_key)
+        fam_lst = db.keys(query)
         obj_keys = set([])
         for itm in fam_lst:
-            full_key = itm[len(p): ]
-            typ_key = full_key[0:full_key.find(backend._TYPE_SEP)]
-            obj_key = full_key[(len(typ_key) + 1): ]
-            if typ_key.lower() == self.cls_name.lower():
-                obj_keys.add(obj_key)
+            full_key = itm[len(pre_key): ]
+            if self.typed:
+                typ_key = full_key[0:full_key.find(backend._TYPE_SEP)]
+                obj_key = full_key[(len(typ_key) + 1): ]
+                if typ_key == self.cls_name:
+                    obj_keys.add(obj_key)
+            else:
+                obj_keys.add(full_key)
         return obj_keys
 
 
-class UUIDFactory(Factory):
+class UUIDFactory(PrefixedFactory):
 
     def from_new(self, *args, **kwargs):
-        key = uuid.uuid4()
-        obj = super(UUIDFactory, self).from_new(*args, key=key, **kwargs)
-        obj.uuid = key
-        return obj
+        obj_uuid = uuid.uuid4()
+        kwargs['uuid'] = obj_uuid
+        kwargs['key'] = str(obj_uuid)
+        return super(UUIDFactory, self).from_new(*args, **kwargs)
 
     def from_custom(self, uuid_str, *args, **kwargs):
-        key = uuid.UUID(str(uuid_str))
-        obj = super(UUIDFactory, self).from_new(*args, key=key, **kwargs)
-        obj.uuid = key
-        return obj
+        obj_uuid = uuid.UUID(str(uuid_str))
+        kwargs['uuid'] = obj_uuid
+        kwargs['key'] = str(obj_uuid)
+        return super(UUIDFactory, self).from_new(*args, **kwargs)
 
     def from_existing(self, uuid_str, *args, **kwargs):
-        key = uuid.UUID(str(uuid_str))
-        obj = super(UUIDFactory, self).from_existing(*args, key=key, **kwargs)
-        obj.uuid = key
-        return obj
+        obj_uuid = uuid.UUID(str(uuid_str))
+        kwargs['uuid'] = obj_uuid
+        kwargs['key'] = str(obj_uuid)
+        return super(UUIDFactory, self).from_existing(*args, **kwargs)
 
     def from_raw(self, uuid_str, *args, **kwargs):
-        key = uuid.UUID(str(uuid_str))
-        obj = super(UUIDFactory, self).from_raw(*args, key=key, **kwargs)
-        obj.uuid = key
-        return obj
+        obj_uuid = uuid.UUID(str(uuid_str))
+        kwargs['uuid'] = obj_uuid
+        kwargs['key'] = str(obj_uuid)
+        return super(UUIDFactory, self).from_raw(*args, **kwargs)
 
 
-class Hash(collections.MutableMapping, Object):
+class Hash(collections.MutableMapping, TypedObject):
     """
     Redis Hash  Class
 
@@ -142,7 +131,7 @@ class Hash(collections.MutableMapping, Object):
 
         # Check Input
         if not data:
-            raise ObjectError("Input dict must not be None or empty")
+            raise PersistentObjectError("Input dict must not be None or empty")
 
         # Call Parent
         obj = super(Hash, cls).from_new(**kwargs)
@@ -156,8 +145,8 @@ class Hash(collections.MutableMapping, Object):
                 raise KeyError("Keys {:s} do not match schema {:s}".format(s, obj.schema))
 
         # Add Object Data to DB
-        if not obj.db.hmset(obj.full_key, data):
-            raise ObjectError("Create Failed")
+        if not db.hmset(obj.full_key, data):
+            raise PersistentObjectError("Create Failed")
 
         # Return Object
         return obj
@@ -165,13 +154,13 @@ class Hash(collections.MutableMapping, Object):
     def __len__(self):
         """Get Len of Hash"""
 
-        ret = self.db.hlen(self.full_key)
+        ret = db.hlen(self.full_key)
         return ret
 
     def __iter__(self):
         """Iterate Keys"""
 
-        for key in self.db.hkeys(self.full_key):
+        for key in db.hkeys(self.full_key):
             yield key
 
     def __getitem__(self, k):
@@ -181,7 +170,7 @@ class Hash(collections.MutableMapping, Object):
             if k not in self.schema:
                 raise KeyError("Key {:s} not valid in {:s}".format(str(k), self.schema))
 
-        ret = self.db.hget(self.full_key, k)
+        ret = db.hget(self.full_key, k)
         return ret
 
     def __setitem__(self, k, v):
@@ -191,7 +180,7 @@ class Hash(collections.MutableMapping, Object):
             if k not in self.schema:
                 raise KeyError("Key {:s} not valid in {:s}".format(k, self))
 
-        ret = self.db.hset(self.full_key, k, v)
+        ret = db.hset(self.full_key, k, v)
         return ret
 
     def __delitem__(self, key):
@@ -200,19 +189,19 @@ class Hash(collections.MutableMapping, Object):
             if key not in self.schema:
                 raise KeyError("Key {:s} not valid in {:s}".format(k, self))
 
-        ret = self.db.hdel(self.full_key, key)
+        ret = db.hdel(self.full_key, key)
         return ret
 
     def keys(self):
         """Get Dict Keys"""
 
-        ret = self.db.hkeys(self.full_key)
+        ret = db.hkeys(self.full_key)
         return ret
 
     def get_dict(self):
         """Get Full Dict"""
 
-        ret = self.db.hgetall(self.full_key)
+        ret = db.hgetall(self.full_key)
         return ret
 
     def set_dict(self, d):
@@ -220,16 +209,16 @@ class Hash(collections.MutableMapping, Object):
 
         # Check Input
         if not d:
-            raise ObjectError("Input dict must not be None or empty")
+            raise PersistentObjectError("Input dict must not be None or empty")
 
         if self.schema is not None:
             s = set(d.keys())
             if not s.issubset(self.schema):
                 raise KeyError("Keys {:s} do not match schema {:s}".format(s, self.schema))
 
-        ret = self.db.hmset(self.full_key, d)
+        ret = db.hmset(self.full_key, d)
         if not ret:
-            raise ObjectError("Set Failed")
+            raise PersistentObjectError("Set Failed")
 
 
 class TSHash(Hash):
@@ -306,7 +295,7 @@ class OwnedTSHash(TSHash):
         return obj
 
 
-class Set(collections.MutableSet, Object):
+class Set(collections.MutableSet, TypedObject):
     """
     Redis Set  Class
 
@@ -318,14 +307,14 @@ class Set(collections.MutableSet, Object):
 
         # Check Input
         if not vals:
-            raise ObjectError("Input set must not be None or empty")
+            raise PersistentObjectError("Input set must not be None or empty")
 
         # Call Parent
         obj = super(Set, cls).from_new(**kwargs)
 
         # Add lst to DB
-        if not obj.db.sadd(obj.full_key, *vals):
-            raise ObjectError("Create Failed")
+        if not db.sadd(obj.full_key, *vals):
+            raise PersistentObjectError("Create Failed")
 
         # Return Object
         return obj
@@ -333,37 +322,37 @@ class Set(collections.MutableSet, Object):
     def __len__(self):
         """Get Len of Set"""
 
-        return len(self.db.smembers(self.full_key))
+        return len(db.smembers(self.full_key))
 
     def __iter__(self):
         """Iterate Values"""
 
-        for val in self.db.smembers(self.full_key):
+        for val in db.smembers(self.full_key):
             yield val
 
     def __contains__(self, val):
 
-        return self.db.sismember(self.full_key, val)
+        return db.sismember(self.full_key, val)
 
     def add(self, val):
 
-        return self.db.sadd(self.full_key, val)
+        return db.sadd(self.full_key, val)
 
     def discard(self, val):
 
-        return self.db.srem(self.full_key, val)
+        return db.srem(self.full_key, val)
 
     def get_set(self):
         """Get All Vals from Set"""
 
-        return self.db.smembers(self.full_key)
+        return db.smembers(self.full_key)
 
     def add_vals(self, vals):
         """Add Vals to Set"""
 
-        return self.db.sadd(self.full_key, *vals)
+        return db.sadd(self.full_key, *vals)
 
     def del_vals(self, vals):
         """Remove Vals from Set"""
 
-        return self.db.srem(self.full_key, *vals)
+        return db.srem(self.full_key, *vals)
