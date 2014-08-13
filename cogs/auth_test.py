@@ -5,17 +5,24 @@
 # Summer 2014
 # Univerity of Colorado
 
+
 import copy
 import unittest
 import os
 import functools
 
+os.environ['COGS_REDIS_HOST'] = "localhost"
+os.environ['COGS_REDIS_PORT'] = str(6379)
+os.environ['COGS_REDIS_DB'] = str(5)
+
 import auth
 import test_common
 import test_common_backend
 
+
 _COGS_MOODLE_USERNAME = os.environ['COGS_MOODLE_USERNAME']
 _COGS_MOODLE_PASSWORD = os.environ['COGS_MOODLE_PASSWORD']
+
 
 class BaseTestCase(test_common.CogsTestCase):
 
@@ -25,7 +32,7 @@ class BaseTestCase(test_common.CogsTestCase):
         super(BaseTestCase, self).setUp()
 
         # Setup Server
-        self.auth = auth.Auth(db=self.db)
+        self.auth = auth.Auth()
 
     def tearDown(self):
 
@@ -290,6 +297,7 @@ class GroupTestCase(test_common_backend.SubMixin, test_common_backend.UUIDHashMi
         grp = self.auth.create_group(test_common.GROUP_TESTDICT)
         self.subSetReferenceHelper(grp.add_users, grp.rem_users, grp.list_users,
                                    self.users)
+
 
 # Main
 if __name__ == '__main__':

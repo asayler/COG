@@ -4,6 +4,7 @@
 # Summer 2014
 # Univerity of Colorado
 
+
 ### Imports ###
 
 import copy
@@ -21,7 +22,7 @@ import authmod_test
 
 ### Constants ###
 
-_USER_SCHEMA = ['username', 'first', 'last', 'auth', 'token']
+_USER_SCHEMA = ['username', 'first', 'last', 'auth']
 _GROUP_SCHEMA = ['name']
 
 DEFAULT_AUTHMOD = 'moodle'
@@ -78,30 +79,27 @@ class UserNotAuthorizedError(AuthorizationError):
 class Auth(object):
 
     # Override Constructor
-    def __init__(self, db, prefix=None):
+    def __init__(self, prefix=None):
 
         # Call Parent
         super(Auth, self).__init__()
 
         # Save vars
-        self.db = db
         self.prefix = prefix
 
         # Setup Factories
         passthrough = {'auth': self}
-        self.UserFactory = backend.UUIDFactory(UserBase, prefix=self.prefix,
-                                               passthrough=passthrough, db=self.db)
-        self.GroupFactory = backend.UUIDFactory(GroupBase, prefix=self.prefix,
-                                                passthrough=passthrough, db=self.db)
-        self.AllowedGroupsFactory = backend.Factory(AllowedGroupsBase, prefix=self.prefix,
-                                                    passthrough=passthrough, db=self.db)
+        self.UserFactory = backend.UUIDFactory(User, prefix=self.prefix, passthrough=passthrough)
+        self.GroupFactory = backend.UUIDFactory(Group, prefix=self.prefix, passthrough=passthrough)
+        self.AllowedGroupsFactory = backend.PrefixedFactory(AllowedGroups, prefix=self.prefix,
+                                                            passthrough=passthrough)
 
         # Setup Lists
-        UsernameMapFactory = backend.Factory(UsernameMapBase, prefix=self.prefix,
-                                             passthrough=passthrough, db=self.db)
+        UsernameMapFactory = backend.PrefixedFactory(UsernameMap, prefix=self.prefix,
+                                                     passthrough=passthrough)
         self.username_map = UsernameMapFactory.from_raw()
-        TokenMapFactory = backend.Factory(TokenMapBase, prefix=self.prefix,
-                                          passthrough=passthrough, db=self.db)
+        TokenMapFactory = backend.PrefixedFactory(TokenMap, prefix=self.prefix,
+                                                  passthrough=passthrough)
         self.token_map = TokenMapFactory.from_raw()
 
     # User Methods
@@ -266,14 +264,17 @@ class Auth(object):
 
 
 ## User Account Object ##
-class UserBase(backend.TSHashBase):
+class User(backend.TSHash):
     """COGS User Class"""
-
-    schema = None
 
     # Override from_new
     @classmethod
-    def from_new(cls, data, username=None, password=None, authmod=None, **kwargs):
+    def from_new(cls, data, **kwargs):
+
+        username = kwargs.pop('username', None)
+        password = kwargs.pop('password', None)
+        authmod = kwargs.pop('authmod', None)
+        auth = kwargs.get('auth', None)
 
         # Check input
         if not username:
@@ -289,12 +290,12 @@ class UserBase(backend.TSHashBase):
             authmod = DEFAULT_AUTHMOD
 
         # Confirm user does not exist
-        if cls.auth.auth_userpass(username, password) is not None:
+        if auth.auth_userpass(username, password) is not None:
             msg = "Username {:s} already exists {:s}".format(username)
             raise backend.ObjectError(msg)
 
         # Auth User
-        user_data = cls.auth.auth_userpass_mod(username, password, authmod)
+        user_data = auth.auth_userpass_mod(username, password, authmod)
         if not user_data:
             raise BadCredentialsError(username)
         else:
@@ -305,30 +306,16 @@ class UserBase(backend.TSHashBase):
         data['token'] = ""
 
         # Set Schema
-        extra_schema = cls.auth.get_extra_user_schema(authmod)
+        extra_schema = auth.get_extra_user_schema(authmod)
         obj_schema = set(backend.TS_SCHEMA + _USER_SCHEMA + extra_schema)
 
         # Call Parent
-        user = super(UserBase, cls).from_new(data, obj_schema=obj_schema, **kwargs)
+        user = super(User, cls).from_new(data, **kwargs)
 
         # Setup User Auth
-        user_uuid = cls.auth.username_map.map_username(user['username'], str(uuid.UUID(user.obj_key)))
-        token = cls.auth.token_map.generate_token(user_uuid)
+        user_uuid = auth.username_map.map_username(user['username'], str(uuid.UUID(user.obj_key)))
+        token = auth.token_map.generate_token(user_uuid)
         user['token'] = token
-
-        # Return Submission
-        return user
-
-    # Override from_existing
-    @classmethod
-    def from_existing(cls, **kwargs):
-
-        # Call Parent
-        user = super(UserBase, cls).from_existing(**kwargs)
-
-        # Set Schema
-        extra_schema = cls.auth.get_extra_user_schema(user['auth'])
-        user.schema = set(backend.TS_SCHEMA + _USER_SCHEMA + extra_schema)
 
         # Return Submission
         return user
@@ -341,37 +328,35 @@ class UserBase(backend.TSHashBase):
         self.auth.token_map.rem_token(self['token'])
 
         # Call Parent
-        super(UserBase, self).delete()
+        super(User, self).delete()
 
 
 ## User List Object ##
-class UserListBase(backend.SetBase):
+class UserList(backend.Set):
     """COGS User List Class"""
     pass
 
 
 ## User Group Object ##
-class GroupBase(backend.TSHashBase):
+class Group(backend.TSHash):
     """COGS Group Class"""
 
-    schema = set(backend.TS_SCHEMA + _GROUP_SCHEMA)
-
     # Override Constructor
-    def __init__(self, uuid_obj):
+    def __init__(self, *args, **kwargs):
         """Base Constructor"""
 
         # Call Parent Construtor
-        super(GroupBase, self).__init__(uuid_obj)
+        super(Group, self).__init__(*args, **kwargs)
 
         # Setup Lists
-        UserListFactory = backend.Factory(UserListBase, prefix=self.full_key, db=self.db)
-        self.members = UserListFactory.from_raw('members')
+        UserListFactory = backend.PrefixedFactory(UserList, prefix=self.full_key)
+        self.members = UserListFactory.from_raw(key='members')
 
     # Override Delete
     def delete(self):
         if self.members.exists():
             self.members.delete()
-        super(GroupBase, self).delete()
+        super(Group, self).delete()
 
     # Members Methods
     def add_users(self, user_uuids):
@@ -383,15 +368,13 @@ class GroupBase(backend.TSHashBase):
 
 
 ## Group List Object ##
-class GroupListBase(backend.SetBase):
+class GroupList(backend.Set):
     """COGS Group List Class"""
     pass
 
 
 ## UsernameMap Object ##
-class UsernameMapBase(backend.HashBase):
-
-    SCHEMA = None
+class UsernameMap(backend.Hash):
 
     # Override and Disable from_new
     @classmethod
@@ -405,13 +388,13 @@ class UsernameMapBase(backend.HashBase):
 
     # Override from_raw
     @classmethod
-    def from_raw(cls):
+    def from_raw(cls, *args, **kwargs):
 
         # Set Key
-        key = "{:s}".format(_USERNAMEMAP_KEY)
+        kwargs['key'] = "{:s}".format(_USERNAMEMAP_KEY)
 
         # Call Parent
-        return super(UsernameMapBase, cls).from_raw(key)
+        return super(UsernameMap, cls).from_raw(*args, **kwargs)
 
     def map_username(self, username, user_uuid):
         self[username.lower()] = user_uuid.lower()
@@ -425,9 +408,7 @@ class UsernameMapBase(backend.HashBase):
 
 
 ## TokenMap Object ##
-class TokenMapBase(backend.HashBase):
-
-    SCHEMA = None
+class TokenMap(backend.Hash):
 
     # Override and Disable from_new
     @classmethod
@@ -441,13 +422,13 @@ class TokenMapBase(backend.HashBase):
 
     # Override from_raw
     @classmethod
-    def from_raw(cls):
+    def from_raw(cls, *args, **kwargs):
 
         # Set Key
-        key = "{:s}".format(_TOKENMAP_KEY)
+        kwargs['key'] = "{:s}".format(_TOKENMAP_KEY)
 
         # Call Parent
-        return super(TokenMapBase, cls).from_raw(key)
+        return super(TokenMap, cls).from_raw(*args, **kwargs)
 
     def generate_token(self, user_uuid):
 
@@ -471,7 +452,7 @@ class TokenMapBase(backend.HashBase):
 
 
 ## Allowed Groups Object ##
-class AllowedGroupsBase(GroupListBase):
+class AllowedGroups(GroupList):
 
     # Override and Disable from_new
     @classmethod
@@ -485,10 +466,10 @@ class AllowedGroupsBase(GroupListBase):
 
     # Override from_raw
     @classmethod
-    def from_raw(cls, method, path):
+    def from_raw(cls, method, path, *args, **kwargs):
 
         # Set Key
-        key = "{:s}_{:s}_{:s}".format(path, method, _GROUP_LIST_SUFFIX)
+        kwargs['key'] = "{:s}_{:s}_{:s}".format(path, method, _GROUP_LIST_SUFFIX)
 
         # Call Parent
-        return super(AllowedGroupsBase, cls).from_raw(key)
+        return super(AllowedGroups, cls).from_raw(*args, **kwargs)

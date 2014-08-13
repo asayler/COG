@@ -11,7 +11,6 @@ import unittest
 
 import redis
 
-
 _REDIS_CONF_TEST = {'redis_host': "localhost",
                     'redis_port': 6379,
                     'redis_db': 5}
@@ -36,6 +35,17 @@ MOD_PATH = os.path.dirname(os.path.realpath(__file__))
 TEST_PATH = os.path.realpath("{:s}/../test_input".format(MOD_PATH))
 COGS_TEST_FILE_PATH = os.environ.get('COGS_TEST_FILES_PATH', TEST_PATH)
 
+DEFAULT_REDIS_HOST = "localhost"
+DEFAULT_REDIS_PORT = 6379
+DEFAULT_REDIS_DB = 5
+
+REDIS_HOST = os.environ.get('COGS_REDIS_HOST', DEFAULT_REDIS_HOST)
+REDIS_PORT = int(os.environ.get('COGS_REDIS_PORT', DEFAULT_REDIS_PORT))
+REDIS_DB = int(os.environ.get('COGS_REDIS_DB', DEFAULT_REDIS_DB))
+
+db = redis.StrictRedis(host=REDIS_HOST,
+                       port=REDIS_PORT,
+                       db=REDIS_DB)
 
 class CogsTestError(Exception):
     """Base class for Cogs Test Exceptions"""
@@ -47,14 +57,11 @@ class CogsTestError(Exception):
 class CogsTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.db = redis.StrictRedis(host=_REDIS_CONF_TEST['redis_host'],
-                                    port=_REDIS_CONF_TEST['redis_port'],
-                                    db=_REDIS_CONF_TEST['redis_db'])
-        if (self.db.dbsize() != 0):
+        if (db.dbsize() != 0):
             raise CogsTestError("Test Database Not Empty: {}".format(self.db.dbsize()))
 
     def tearDown(self):
-        self.db.flushdb()
+        db.flushdb()
 
     def assertSubset(self, sub, sup):
 

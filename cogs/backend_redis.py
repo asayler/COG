@@ -244,9 +244,9 @@ class OwnedTSHash(TSHash):
     def from_new(cls, data, **kwargs):
         """New Constructor"""
 
-        try:
-            kwargs.pop('owner')
-        except KeyError:
+        owner = kwargs.pop('owner', None)
+
+        if not owner:
             raise TypeError("Requires 'owner'")
 
         # Set Owner

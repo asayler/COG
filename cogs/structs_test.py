@@ -11,7 +11,12 @@ import werkzeug
 import os
 import time
 
+os.environ['COGS_REDIS_HOST'] = "localhost"
+os.environ['COGS_REDIS_PORT'] = str(6379)
+os.environ['COGS_REDIS_DB'] = str(5)
+
 import structs
+
 import test_common
 import test_common_backend
 
@@ -24,7 +29,7 @@ class StructsTestCase(test_common.CogsTestCase):
         super(StructsTestCase, self).setUp()
 
         # Setup Server
-        self.srv = structs.Server(db=self.db)
+        self.srv = structs.Server()
 
     def tearDown(self):
 
@@ -51,7 +56,7 @@ class ServerTestCase(test_common_backend.SubMixin,
                                  self.srv.get_file,
                                  self.srv.list_files,
                                  test_common.FILE_TESTDICT,
-                                 extra_kwargs={'file_obj': file_obj})
+                                 extra_kwargs={'file_obj': file_obj, 'owner': })
         file_obj.close()
 
     def test_assignments(self):

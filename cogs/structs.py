@@ -4,6 +4,9 @@
 # Summer 2014
 # Univerity of Colorado
 
+
+### Imports ###
+
 import copy
 import os
 import time
@@ -15,6 +18,8 @@ import backend_redis as backend
 from backend_redis import BackendError, FactoryError, PersistentObjectError, ObjectDNE
 import testrun
 
+
+### Constants ###
 
 _NUM_WORKERS = 10
 
@@ -92,10 +97,8 @@ class Server(object):
         return self.RunFactory.list_siblings()
 
 
-### COGS Base Objects ###
-
 ## Assignment Object ##
-class AssignmentBase(backend.OwnedTSHash):
+class Assignment(backend.OwnedTSHash):
     """COGS Assignment Class"""
 
     # Override Constructor
@@ -239,13 +242,13 @@ class Test(backend.OwnedTSHash):
 
 
 ## Test List Object ##
-class TestListBase(backend.Set):
+class TestList(backend.Set):
     """COGS Test List Class"""
     pass
 
 
 ## Submission Object ##
-class SubmissionBase(backend.OwnedTSHash):
+class Submission(backend.OwnedTSHash):
     """COGS Submission Class"""
 
     # Override Constructor
@@ -417,8 +420,8 @@ class File(backend.OwnedTSHash):
         """New Constructor"""
 
         # Extract Args
-        file_obj = **kwargs.pop('file_obj', None)
-        dst = **kwargs.pop('dst', None)
+        file_obj = kwargs.pop('file_obj', None)
+        dst = kwargs.pop('dst', None)
 
         # Create New Object
         data = copy.copy(data)
