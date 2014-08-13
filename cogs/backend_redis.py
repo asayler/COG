@@ -123,10 +123,8 @@ class Hash(collections.MutableMapping, TypedObject):
 
     """
 
-    schema = None
-
     @classmethod
-    def from_new(cls, data, obj_schema=None, **kwargs):
+    def from_new(cls, data, **kwargs):
         """New Constructor"""
 
         # Check Input
@@ -135,14 +133,6 @@ class Hash(collections.MutableMapping, TypedObject):
 
         # Call Parent
         obj = super(Hash, cls).from_new(**kwargs)
-        if obj_schema:
-            obj.schema = obj_schema
-
-        # Check dict
-        if obj.schema:
-            s = set(data.keys())
-            if (s != obj.schema):
-                raise KeyError("Keys {:s} do not match schema {:s}".format(s, obj.schema))
 
         # Add Object Data to DB
         if not db.hmset(obj.full_key, data):
@@ -153,69 +143,42 @@ class Hash(collections.MutableMapping, TypedObject):
 
     def __len__(self):
         """Get Len of Hash"""
-
         ret = db.hlen(self.full_key)
         return ret
 
     def __iter__(self):
         """Iterate Keys"""
-
         for key in db.hkeys(self.full_key):
             yield key
 
     def __getitem__(self, k):
         """Get Dict Item"""
-
-        if self.schema is not None:
-            if k not in self.schema:
-                raise KeyError("Key {:s} not valid in {:s}".format(str(k), self.schema))
-
         ret = db.hget(self.full_key, k)
         return ret
 
     def __setitem__(self, k, v):
         """Set Dict Item"""
-
-        if self.schema is not None:
-            if k not in self.schema:
-                raise KeyError("Key {:s} not valid in {:s}".format(k, self))
-
         ret = db.hset(self.full_key, k, v)
         return ret
 
     def __delitem__(self, key):
-
-        if self.schema is not None:
-            if key not in self.schema:
-                raise KeyError("Key {:s} not valid in {:s}".format(k, self))
-
         ret = db.hdel(self.full_key, key)
         return ret
 
     def keys(self):
         """Get Dict Keys"""
-
         ret = db.hkeys(self.full_key)
         return ret
 
     def get_dict(self):
         """Get Full Dict"""
-
         ret = db.hgetall(self.full_key)
         return ret
 
     def set_dict(self, d):
         """Set Full Dict"""
-
-        # Check Input
         if not d:
             raise PersistentObjectError("Input dict must not be None or empty")
-
-        if self.schema is not None:
-            s = set(d.keys())
-            if not s.issubset(self.schema):
-                raise KeyError("Keys {:s} do not match schema {:s}".format(s, self.schema))
-
         ret = db.hmset(self.full_key, d)
         if not ret:
             raise PersistentObjectError("Set Failed")
@@ -278,15 +241,17 @@ class OwnedTSHash(TSHash):
     """
 
     @classmethod
-    def from_new(cls, data, user=None, **kwargs):
+    def from_new(cls, data, **kwargs):
         """New Constructor"""
+
+        try:
+            kwargs.pop('owner')
+        except KeyError:
+            raise TypeError("Requires 'owner'")
 
         # Set Owner
         data = copy.copy(data)
-        if user:
-            data['owner'] = str(user.uuid).lower()
-        else:
-            data['owner'] = ""
+        data['owner'] = str(owner.uuid).lower()
 
         # Call Parent
         obj = super(OwnedTSHash, cls).from_new(data, **kwargs)
