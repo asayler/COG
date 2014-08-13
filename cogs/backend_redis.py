@@ -31,14 +31,6 @@ db = redis.StrictRedis(host=REDIS_HOST,
                        port=REDIS_PORT,
                        db=REDIS_DB)
 
-### Exceptions ###
-class SchemaError(PersistentObjectError):
-    """Hash Schema Violation"""
-
-    def __init__(self, keys, schema):
-        msg = "{:s} do not match {:s}".format(keys, schema)
-        super(SchemaError, self).__init__(msg)
-
 
 ### Objects ###
 
@@ -349,10 +341,12 @@ class SchemaHash(Hash):
         schema = kwargs.pop('schema', None)
         if not schema:
             raise TypeError("Requires 'schema'")
+        schema = set(schema)
 
         keys = set(data.keys())
         if (keys != schema):
-            raise SchemaError(keys, schema)
+            msg = "{:s} do not match {:s}".format(keys, schema)
+            raise KeyError(msg)
 
         hsh = super(SchemaHash, cls).from_new(data, **kwargs)
         hsh.schema.add_vals(keys)
@@ -363,7 +357,8 @@ class SchemaHash(Hash):
         if key in self.schema:
             return super(SchemaHash, self).__setitem__(key, val)
         else:
-            raise SchemaError(set([key]), self.schema.get_set())
+            msg = "{:s} not in {:s}".format(key, schema)
+            raise KeyError(msg)
 
     def __delitem__(self, key):
         """Del Dict Item"""
@@ -371,7 +366,8 @@ class SchemaHash(Hash):
         if key in self.schema:
             return super(SchemaHash, self).__delitem__(key)
         else:
-            raise SchemaError(set([key]), self.schema.get_set())
+            msg = "{:s} not in {:s}".format(key, schema)
+            raise KeyError(msg)
 
     def set_dict(self, d):
         """Set Full Dict"""

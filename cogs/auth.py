@@ -22,7 +22,7 @@ import authmod_test
 
 ### Constants ###
 
-_USER_SCHEMA = ['username', 'first', 'last', 'auth']
+_USER_SCHEMA = ['username', 'first', 'last', 'auth', 'token']
 _GROUP_SCHEMA = ['name']
 
 DEFAULT_AUTHMOD = 'moodle'
@@ -264,7 +264,7 @@ class Auth(object):
 
 
 ## User Account Object ##
-class User(backend.TSHash):
+class User(backend.SchemaHash, backend.TSHash, backend.Hash):
     """COGS User Class"""
 
     # Override from_new
@@ -306,8 +306,9 @@ class User(backend.TSHash):
         data['token'] = ""
 
         # Set Schema
-        extra_schema = auth.get_extra_user_schema(authmod)
-        obj_schema = set(backend.TS_SCHEMA + _USER_SCHEMA + extra_schema)
+        schema = set(_USER_SCHEMA)
+        schema.update(set(auth.get_extra_user_schema(authmod)))
+        kwargs['schema'] = schema
 
         # Call Parent
         user = super(User, cls).from_new(data, **kwargs)
@@ -338,7 +339,7 @@ class UserList(backend.Set):
 
 
 ## User Group Object ##
-class Group(backend.TSHash):
+class Group(backend.SchemaHash, backend.TSHash, backend.Hash):
     """COGS Group Class"""
 
     # Override Constructor
@@ -351,6 +352,20 @@ class Group(backend.TSHash):
         # Setup Lists
         UserListFactory = backend.PrefixedFactory(UserList, prefix=self.full_key)
         self.members = UserListFactory.from_raw(key='members')
+
+    # Override from_new
+    @classmethod
+    def from_new(cls, data, **kwargs):
+
+        # Set Schema
+        schema = set(_GROUP_SCHEMA)
+        kwargs['schema'] = schema
+
+        # Call Parent
+        group = super(Group, cls).from_new(data, **kwargs)
+
+        # Return
+        return group
 
     # Override Delete
     def delete(self):

@@ -11,13 +11,9 @@ import unittest
 import os
 import functools
 
-os.environ['COGS_REDIS_HOST'] = "localhost"
-os.environ['COGS_REDIS_PORT'] = str(6379)
-os.environ['COGS_REDIS_DB'] = str(5)
-
-import auth
 import test_common
 import test_common_backend
+import auth
 
 
 _COGS_MOODLE_USERNAME = os.environ['COGS_MOODLE_USERNAME']
