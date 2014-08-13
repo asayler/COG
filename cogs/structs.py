@@ -12,19 +12,20 @@ import mimetypes
 import multiprocessing
 
 import backend_redis as backend
-from backend_redis import BackendError, FactoryError, ObjectError, ObjectDNE
+from backend_redis import BackendError, FactoryError, PersistentObjectError, ObjectDNE
 import testrun
 
 
 _NUM_WORKERS = 10
 
-_ASSIGNMENT_SCHEMA = ['owner', 'name', 'env']
-_TEST_SCHEMA = ['owner', 'assignment', 'name', 'maxscore', 'tester']
-_SUBMISSION_SCHEMA = ['owner', 'assignment']
-_RUN_SCHEMA = ['owner', 'submission', 'test', 'status', 'score', 'retcode', 'output']
-_FILE_SCHEMA = ['owner', 'key', 'name', 'type', 'encoding', 'path']
+_ASSIGNMENT_SCHEMA = ['name', 'env']
+_TEST_SCHEMA = ['name', 'maxscore', 'tester']
+_SUBMISSION_SCHEMA = []
+_RUN_SCHEMA = []
+_FILE_SCHEMA = ['key']
 
-_FILES_DIR = "./files/"
+_DEFAULT_FILES_DIR = "./files/"
+_FILES_DIR = os.environ.get('COGS_UPLOADED_FILES_PATH', _DEFAULT_FILES_DIR)
 
 
 ### COGS Core Objects ###
@@ -34,21 +35,19 @@ class Server(object):
     """COGS Server Class"""
 
     # Override Constructor
-    def __init__(self, db=None):
+    def __init__(self):
         """Base Constructor"""
 
         # Call Parent Construtor
         super(Server, self).__init__()
 
-        # Save vars
-        self.db = db
-
         # Setup Factories
-        self.FileFactory = backend.UUIDFactory(FileBase, db=self.db, srv=self)
-        self.AssignmentFactory = backend.UUIDFactory(AssignmentBase, db=self.db, srv=self)
-        self.SubmissionFactory = backend.UUIDFactory(SubmissionBase, db=self.db, srv=self)
-        self.TestFactory = backend.UUIDFactory(TestBase, db=self.db, srv=self)
-        self.RunFactory = backend.UUIDFactory(RunBase, db=self.db, srv=self)
+        passthrough = {'srv': self}
+        self.FileFactory = backend.UUIDFactory(File, passthrough)
+        self.AssignmentFactory = backend.UUIDFactory(Assignment, passthrough)
+        self.SubmissionFactory = backend.UUIDFactory(Submission, passthrough)
+        self.TestFactory = backend.UUIDFactory(Test, passthrough)
+        self.RunFactory = backend.UUIDFactory(Run, passthrough)
 
         # Setup Worker Pool
         self.workers = multiprocessing.Pool(_NUM_WORKERS)
@@ -59,16 +58,16 @@ class Server(object):
         self.workers.join()
 
     # File Methods
-    def create_file(self, data, file_obj=None, dst=None, user=None):
-        return self.FileFactory.from_new(data, file_obj=file_obj, dst=dst, user=user)
+    def create_file(self, data, file_obj=None, dst=None, owner=None):
+        return self.FileFactory.from_new(data, file_obj=file_obj, dst=dst, owner=owner)
     def get_file(self, uuid_hex):
         return self.FileFactory.from_existing(uuid_hex)
     def list_files(self):
         return self.FileFactory.list_siblings()
 
     # Assignment Methods
-    def create_assignment(self, data, user=None):
-        return self.AssignmentFactory.from_new(data, user=user)
+    def create_assignment(self, data, owner=None):
+        return self.AssignmentFactory.from_new(data, owner=owner)
     def get_assignment(self, uuid_hex):
         return self.AssignmentFactory.from_existing(uuid_hex)
     def list_assignments(self):
@@ -96,28 +95,25 @@ class Server(object):
 ### COGS Base Objects ###
 
 ## Assignment Object ##
-class AssignmentBase(backend.OwnedTSHashBase):
+class AssignmentBase(backend.OwnedTSHash):
     """COGS Assignment Class"""
 
-    schema = set(backend.TS_SCHEMA + _ASSIGNMENT_SCHEMA)
-
     # Override Constructor
-    def __init__(self, key=None):
-        """Base Constructor"""
+    def __init__(self, *args, **kwargs):
+        """Assignment Constructor"""
 
         # Call Parent Construtor
-        super(AssignmentBase, self).__init__(key)
+        super(Assignment, self).__init__(*args, **kwargs)
 
         # Setup Lists
-        TestListFactory = backend.Factory(TestListBase, prefix=self.full_key,
-                                          db=self.db, srv=self.srv)
+        TestListFactory = backend.PrefixedFactory(TestList, prefix=self.full_key)
         self.tests = TestListFactory.from_raw('tests')
-        SubmissionListFactory = backend.Factory(SubmissionListBase, prefix=self.full_key,
-                                                db=self.db, srv=self.srv)
+        SubmissionListFactory = backend.PrefixedFactory(SubmissionList, prefix=self.full_key)
         self.submissions = SubmissionListFactory.from_raw('submissions')
 
     # Override Delete
     def delete(self):
+        """Delete Assignment and Children"""
 
         # Remove Test Objects
         for tst_uuid in self.list_tests():
@@ -140,19 +136,19 @@ class AssignmentBase(backend.OwnedTSHashBase):
             self.submissions.delete()
 
         # Call Parent
-        super(AssignmentBase, self).delete()
+        super(Assignment, self).delete()
 
     # Public Test Methods
-    def create_test(self, dictionary, user=None):
-        tst = self.srv.TestFactory.from_new(dictionary, asn=self, user=user)
+    def create_test(self, dictionary, owner=None):
+        tst = self.srv.TestFactory.from_new(dictionary, asn=self, owner=owner)
         self._add_tests([str(tst.uuid)])
         return tst
     def list_tests(self):
         return self._list_tests()
 
     # Public Submission Methods
-    def create_submission(self, dictionary, user=None):
-        sub = self.srv.SubmissionFactory.from_new(dictionary, asn=self, user=user)
+    def create_submission(self, dictionary, owner=None):
+        sub = self.srv.SubmissionFactory.from_new(dictionary, asn=self, owner=owner)
         self._add_submissions([str(sub.uuid)])
         return sub
     def list_submissions(self):
@@ -176,24 +172,23 @@ class AssignmentBase(backend.OwnedTSHashBase):
 
 
 ## Test Object ##
-class TestBase(backend.OwnedTSHashBase):
+class Test(backend.OwnedTSHash):
     """COGS Test Class"""
 
-    schema = set(backend.TS_SCHEMA + _TEST_SCHEMA)
-
     # Override Constructor
-    def __init__(self, uuid_obj):
-        """Base Constructor"""
+    def __init__(self, *args, **kwargs):
+        """Test Constructor"""
 
         # Call Parent Construtor
-        super(TestBase, self).__init__(uuid_obj)
+        super(Test, self).__init__(**kwargs)
 
         # Setup Lists
-        FileListFactory = backend.Factory(FileListBase, prefix=self.full_key, db=self.db, srv=self.srv)
+        FileListFactory = backend.PrefixedFactory(FileList, prefix=self.full_key)
         self.files = FileListFactory.from_raw('files')
 
     # Override Delete
     def delete(self):
+        """Delete Test"""
 
         # Remove from assignment
         tst_uuid = str(self.uuid)
@@ -202,18 +197,24 @@ class TestBase(backend.OwnedTSHashBase):
             asn = self.srv.get_assignment(asn_uuid)
             if not asn._rem_tests([tst_uuid]):
                 msg = "Could not remove Test {:s} from Assignment {:s}".format(tst_uuid, asn_uuid)
-                raise backend.ObjectError(msg)
+                raise backend.PersistentObjectError(msg)
 
         # Remove file list
         if self.files.exists():
             self.files.delete()
 
         # Call Parent
-        super(TestBase, self).delete()
+        super(Test, self).delete()
 
     # Override from_new
     @classmethod
-    def from_new(cls, data, asn=None, **kwargs):
+    def from_new(cls, data, **kwargs):
+
+        # Extract Args
+        try:
+            asn = kwargs.pop('asn')
+        except KeyError:
+            raise TypeError("Requires 'asn'")
 
         # Set Assignment
         data = copy.copy(data)
@@ -223,7 +224,7 @@ class TestBase(backend.OwnedTSHashBase):
             data['assignment'] = ""
 
         # Call Parent
-        obj = super(TestBase, cls).from_new(data, **kwargs)
+        obj = super(Test, cls).from_new(data, **kwargs)
 
         # Return Test
         return obj
@@ -238,32 +239,31 @@ class TestBase(backend.OwnedTSHashBase):
 
 
 ## Test List Object ##
-class TestListBase(backend.SetBase):
+class TestListBase(backend.Set):
     """COGS Test List Class"""
     pass
 
 
 ## Submission Object ##
-class SubmissionBase(backend.OwnedTSHashBase):
+class SubmissionBase(backend.OwnedTSHash):
     """COGS Submission Class"""
 
-    schema = set(backend.TS_SCHEMA + _SUBMISSION_SCHEMA)
-
     # Override Constructor
-    def __init__(self, uuid_obj):
-        """Base Constructor"""
+    def __init__(self, *args, **kwargs):
+        """Submission Constructor"""
 
         # Call Parent Construtor
-        super(SubmissionBase, self).__init__(uuid_obj)
+        super(Submission, self).__init__(*args, **kwargs)
 
         # Setup Lists
-        FileListFactory = backend.Factory(FileListBase, prefix=self.full_key, db=self.db, srv=self.srv)
+        FileListFactory = backend.PrefixedFactory(FileList, prefix=self.full_key)
         self.files = FileListFactory.from_raw('files')
-        RunListFactory = backend.Factory(RunListBase, prefix=self.full_key, db=self.db, srv=self.srv)
+        RunListFactory = backend.PrefixedFactory(RunList, prefix=self.full_key)
         self.runs = RunListFactory.from_raw('runs')
 
     # Override Delete
     def delete(self):
+        """Delete Submission and Children"""
 
         # Remove from assignment
         sub_uuid = str(self.uuid)
@@ -272,7 +272,7 @@ class SubmissionBase(backend.OwnedTSHashBase):
             asn = self.srv.get_assignment(asn_uuid)
             if not asn._rem_submissions([sub_uuid]):
                 msg = "Could not remove Submission {:s} from Assignment {:s}".format(sub_uuid, asn_uuid)
-                raise backend.ObjectError(msg)
+                raise backend.PersistentObjectError(msg)
 
         # Remove run objects
         for run_uuid in self.list_runs():
@@ -289,11 +289,17 @@ class SubmissionBase(backend.OwnedTSHashBase):
             self.files.delete()
 
         # Call Parent
-        super(SubmissionBase, self).delete()
+        super(Submission, self).delete()
 
     # Override from_new
     @classmethod
-    def from_new(cls, data, asn=None, **kwargs):
+    def from_new(cls, data, **kwargs):
+
+        # Extract Args
+        try:
+            asn = kwargs.pop('asn')
+        except KeyError:
+            raise TypeError("Requires 'asn'")
 
         # Set Assignment
         data = copy.copy(data)
@@ -303,7 +309,7 @@ class SubmissionBase(backend.OwnedTSHashBase):
             data['assignment'] = ""
 
         # Call Parent
-        obj = super(SubmissionBase, cls).from_new(data, **kwargs)
+        obj = super(Submission, cls).from_new(data, **kwargs)
 
         # Return Submission
         return obj
@@ -317,8 +323,8 @@ class SubmissionBase(backend.OwnedTSHashBase):
         return self.files.get_set()
 
     # Run Methods
-    def execute_run(self, tst, user=None):
-        run = self.srv.RunFactory.from_new(tst, self, user=user)
+    def execute_run(self, tst, owner=None):
+        run = self.srv.RunFactory.from_new(tst, self, owner=owner)
         self._add_runs([str(run.uuid)])
         return run
     def list_runs(self):
@@ -334,16 +340,14 @@ class SubmissionBase(backend.OwnedTSHashBase):
 
 
 ## Submission List Object ##
-class SubmissionListBase(backend.SetBase):
+class SubmissionList(backend.Set):
     """COGS Submission List Class"""
     pass
 
 
 ## Test Run Object ##
-class RunBase(backend.OwnedTSHashBase):
+class Run(backend.OwnedTSHash):
     """COGS Run Class"""
-
-    schema = set(backend.TS_SCHEMA + _RUN_SCHEMA)
 
     # Override from_new
     @classmethod
@@ -366,7 +370,7 @@ class RunBase(backend.OwnedTSHashBase):
         data['output'] = ""
 
         # Create Run
-        run = super(RunBase, cls).from_new(data, **kwargs)
+        run = super(Run, cls).from_new(data, **kwargs)
 
         # Add Task to Pool
         res = cls.srv.workers.apply_async(testrun.test, args=(asn, sub, tst, run))
@@ -391,28 +395,30 @@ class RunBase(backend.OwnedTSHashBase):
             sub = self.srv.get_submission(sub_uuid)
             if not sub._rem_runs([run_uuid]):
                 msg = "Could not remove Run {:s} from Submission {:s}".format(run_uuid, sub_uuid)
-                raise backend.ObjectError(msg)
+                raise backend.PersistentObjectError(msg)
 
         # Call Parent
-        super(RunBase, self).delete()
+        super(Run, self).delete()
 
 
 ## Run List Object ##
-class RunListBase(backend.SetBase):
+class RunList(backend.Set):
     """COGS Run List Class"""
     pass
 
 
 ## File Object ##
-class FileBase(backend.OwnedTSHashBase):
+class File(backend.OwnedTSHash):
     """COGS File Class"""
-
-    schema = set(backend.TS_SCHEMA + _FILE_SCHEMA)
 
     # Override from_new
     @classmethod
-    def from_new(cls, data, file_obj=None, dst=None, **kwargs):
+    def from_new(cls, data, **kwargs):
         """New Constructor"""
+
+        # Extract Args
+        file_obj = **kwargs.pop('file_obj', None)
+        dst = **kwargs.pop('dst', None)
 
         # Create New Object
         data = copy.copy(data)
@@ -433,7 +439,7 @@ class FileBase(backend.OwnedTSHashBase):
         data['encoding'] = str(typ[1])
 
         # Create File
-        fle = super(FileBase, cls).from_new(data, **kwargs)
+        fle = super(File, cls).from_new(data, **kwargs)
 
         # Set Path
         if dst is None:
@@ -466,10 +472,10 @@ class FileBase(backend.OwnedTSHashBase):
                 raise
 
         # Delete Self
-        super(FileBase, self).delete()
+        super(File, self).delete()
 
 
 ## File List Object ##
-class FileListBase(backend.SetBase):
+class FileList(backend.Set):
     """COGS File List Class"""
     pass
