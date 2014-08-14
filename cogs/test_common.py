@@ -11,10 +11,7 @@ import unittest
 
 import redis
 
-_REDIS_CONF_TEST = {'redis_host': "localhost",
-                    'redis_port': 6379,
-                    'redis_db': 5}
-
+# Set Test Struct Create Data
 DUMMY_SCHEMA   = ['key1', 'key2', 'key3']
 DUMMY_TESTDICT = {'key1': "val1",
                   'key2': "val2",
@@ -28,28 +25,35 @@ TEST_TESTDICT = {'name': "Test_Assignment",
                  'tester': "script"}
 SUBMISSION_TESTDICT = {}
 
-COGS_ADMIN_AUTH_MOD = os.environ.get('COGS_ADMIN_AUTH_MOD', 'test')
-COGS_ADMIN_USERNAME = os.environ.get('COGS_ADMIN_USERNAME', 'adminuser')
-COGS_ADMIN_PASSWORD = os.environ.get('COGS_ADMIN_PASSWORD', 'adminpass')
+# Set Default Vals
 MOD_PATH = os.path.dirname(os.path.realpath(__file__))
-TEST_PATH = os.path.realpath("{:s}/../test_input".format(MOD_PATH))
-COGS_TEST_FILE_PATH = os.environ.get('COGS_TEST_FILES_PATH', TEST_PATH)
-
+TOP_PATH = os.path.realpath("{:s}/..".format(MOD_PATH))
+TEST_INPUT_PATH = os.path.realpath("{:s}/test_input".format(TOP_PATH))
 TEST_REDIS_HOST = "localhost"
 TEST_REDIS_PORT = 6379
 TEST_REDIS_DB = 5
 
+# Get Test Vars
+TEST_INPUT_PATH = os.environ.get('COGS_TEST_INPUT_PATH', TEST_INPUT_PATH)
+MOODLE_USERNAME = os.environ.get('COGS_TEST_MOODLE_USERNAME', 'moodleuser')
+MOODLE_PASSWORD = os.environ.get('COGS_TEST_MOODLE_PASSWORD', 'moodlepass')
+ADMIN_AUTHMOD = os.environ.get('COGS_TEST_ADMIN_AUTHMOD', 'test')
+ADMIN_USERNAME = os.environ.get('COGS_TEST_ADMIN_USERNAME', 'adminuser')
+ADMIN_PASSWORD = os.environ.get('COGS_TEST_ADMIN_PASSWORD', 'adminpass')
 REDIS_HOST = os.environ.get('COGS_TEST_REDIS_HOST', TEST_REDIS_HOST)
 REDIS_PORT = int(os.environ.get('COGS_TEST_REDIS_PORT', TEST_REDIS_PORT))
 REDIS_DB = int(os.environ.get('COGS_TEST_REDIS_DB', TEST_REDIS_DB))
 
+# Set DB Vars
 os.environ['COGS_REDIS_HOST'] = REDIS_HOST
 os.environ['COGS_REDIS_PORT'] = str(REDIS_PORT)
 os.environ['COGS_REDIS_DB'] = str(REDIS_DB)
 
+# Create DB
 db = redis.StrictRedis(host=REDIS_HOST,
                        port=REDIS_PORT,
                        db=REDIS_DB)
+
 
 class CogsTestError(Exception):
     """Base class for Cogs Test Exceptions"""

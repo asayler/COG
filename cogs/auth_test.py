@@ -16,10 +16,6 @@ import test_common_backend
 import auth
 
 
-_COGS_MOODLE_USERNAME = os.environ['COGS_MOODLE_USERNAME']
-_COGS_MOODLE_PASSWORD = os.environ['COGS_MOODLE_PASSWORD']
-
-
 class BaseTestCase(test_common.CogsTestCase):
 
     def setUp(self):
@@ -137,8 +133,8 @@ class AuthTestCase(test_common_backend.SubMixin, BaseTestCase):
     def test_auth_userpass(self):
 
         # Create Test User
-        username = _COGS_MOODLE_USERNAME
-        password = _COGS_MOODLE_PASSWORD
+        username = test_common.MOODLE_USERNAME
+        password = test_common.MOODLE_PASSWORD
         user_in = self.auth.create_user(test_common.USER_TESTDICT,
                                         username=username, password=password,
                                         authmod='moodle')
@@ -208,8 +204,8 @@ class MoodleUserTestCase(TestUserTestCase):
 
     def setUp(self):
         super(MoodleUserTestCase, self).setUp()
-        self.username = _COGS_MOODLE_USERNAME
-        self.password = _COGS_MOODLE_PASSWORD
+        self.username = test_common.MOODLE_USERNAME
+        self.password = test_common.MOODLE_PASSWORD
         self.authmod = 'moodle'
 
     def tearDown(self):

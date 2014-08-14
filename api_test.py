@@ -33,9 +33,9 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
 
         # Setup Admin
         self.admin = api.auth.create_user(cogs.test_common.USER_TESTDICT,
-                                          username=cogs.test_common.COGS_ADMIN_USERNAME,
-                                          password=cogs.test_common.COGS_ADMIN_PASSWORD,
-                                          authmod=cogs.test_common.COGS_ADMIN_AUTH_MOD)
+                                          username=cogs.test_common.ADMIN_USERNAME,
+                                          password=cogs.test_common.ADMIN_PASSWORD,
+                                          authmod=cogs.test_common.ADMIN_AUTHMOD)
         self.admin_uuid = str(self.admin.uuid).lower()
         api.auth.add_admins([self.admin_uuid])
 

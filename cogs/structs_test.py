@@ -318,7 +318,7 @@ class RunTestCase(test_common_backend.SubMixin,
         super(RunTestCase, self).setUp()
 
         # Create Test File
-        tst_file = open("{:s}/script_1.py".format(test_common.COGS_TEST_FILE_PATH), 'rb')
+        tst_file = open("{:s}/script_1.py".format(test_common.TEST_INPUT_PATH), 'rb')
         tst_file_obj = werkzeug.datastructures.FileStorage(stream=tst_file, filename="script.py")
         data = copy.copy(test_common.FILE_TESTDICT)
         data['key'] = 'script'
@@ -326,7 +326,7 @@ class RunTestCase(test_common_backend.SubMixin,
         tst_file_obj.close()
 
         # Create Sub File
-        sub_file = open("{:s}/pgm_good.py".format(test_common.COGS_TEST_FILE_PATH), 'rb')
+        sub_file = open("{:s}/pgm_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
         sub_file_obj = werkzeug.datastructures.FileStorage(stream=sub_file, filename="pgm.py")
         data = copy.copy(test_common.FILE_TESTDICT)
         data['key'] = 'submission'
@@ -361,8 +361,7 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
-            time.sleep(0.1)
-        print("run = {:s}".format(run.get_dict()))
+            time.sleep(1)
         self.assertEqual(run['status'], "complete")
         self.assertEqual(float(run['score']), 10)
 
