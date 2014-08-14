@@ -34,7 +34,6 @@ reqs: $(REQUIRMENTS)
 	$(PIP) install -r "$<" -U
 	$(MAKE) -C $(COGS) $@
 	$(MAKE) -C $(MOODLE) $@
-	sudo apt-get install timeout
 
 lint: $(PYLINT_CONF)
 	$(EXPORT_PATH) && $(PYLINT) --rcfile="$<" $(COGS)
