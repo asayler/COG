@@ -10,12 +10,17 @@ import unittest
 import werkzeug
 import os
 import time
+import multiprocessing
 
 import test_common
 import test_common_backend
 
 import auth
 import structs
+
+
+_NUM_WORKERS = 10
+
 
 class StructsTestCase(test_common.CogsTestCase):
 
@@ -36,7 +41,14 @@ class StructsTestCase(test_common.CogsTestCase):
         # Setup Server
         self.srv = structs.Server()
 
+        # Setup Worker Pool
+        self.workers = multiprocessing.Pool(_NUM_WORKERS)
+
     def tearDown(self):
+
+        # Cleanup Pool
+        self.workers.close()
+        self.workers.join()
 
         # Cleanup Server
         self.srv.close()
@@ -344,8 +356,14 @@ class RunTestCase(test_common_backend.SubMixin,
         # Call Parent
         super(RunTestCase, self).tearDown()
 
-    def test_create_run(self):
-        run = self.srv.execute_run(self.sub, self.tst, owner=self.user)
+    def test_execute_run(self):
+        run = self.sub.execute_run(self.tst, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(0.1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(float(run['score']), 10)
 
 
 # Main

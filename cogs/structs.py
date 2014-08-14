@@ -12,7 +12,6 @@ import os
 import time
 import werkzeug
 import mimetypes
-import multiprocessing
 
 import backend_redis as backend
 from backend_redis import BackendError, FactoryError, PersistentObjectError, ObjectDNE
@@ -20,8 +19,6 @@ import testrun
 
 
 ### Constants ###
-
-_NUM_WORKERS = 10
 
 _ASSIGNMENT_SCHEMA = ['name', 'env']
 _TEST_SCHEMA = ['assignment', 'name', 'maxscore', 'tester']
@@ -53,14 +50,9 @@ class Server(object):
         self.TestFactory = backend.UUIDFactory(Test)
         self.RunFactory = backend.UUIDFactory(Run)
 
-        # Setup Worker Pool
-        self.workers = multiprocessing.Pool(_NUM_WORKERS)
-
-
     # Cleanup Up Server
     def close(self):
-        self.workers.close()
-        self.workers.join()
+        pass
 
     # File Methods
     def create_file(self, data, file_obj=None, dst=None, owner=None):
@@ -91,12 +83,6 @@ class Server(object):
         return self.SubmissionFactory.list_siblings()
 
     # Run Methods
-    def execute_run(self, sub, tst, owner=None):
-        assert(sub['assignment'] == tst['assignment'])
-        asn = self.AssignmentFactory.from_existing(sub['assignment'])
-        run = self.RunFactory.from_new(asn, sub, tst, workers=self.workers, owner=owner)
-        sub._add_runs([str(run.uuid)])
-        return run
     def get_run(self, uuid_hex):
         return self.RunFactory.from_existing(uuid_hex)
     def list_runs(self):
@@ -364,10 +350,10 @@ class Submission(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
         return self.files.get_set()
 
     # Run Methods
-    def execute_run(self, tst, owner=None):
+    def execute_run(self, tst, workers=None, owner=None):
         asn = self.AssignmentFactory.from_existing(self['assignment'])
         sub = self
-        run = self.RunFactory.from_new(asn, tst, sub, owner=owner)
+        run = self.RunFactory.from_new(asn, sub, tst, workers=workers, owner=owner)
         self._add_runs([str(run.uuid)])
         return run
     def list_runs(self):
@@ -436,9 +422,8 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         run_uuid = str(run.uuid).lower()
 
         # Add Task to Pool
-        res = testrun.test(asn, sub, tst, run)
-        #res = workers.apply(testrun.test, args=(asn, sub, tst, run_uuid))
-        print(res)
+        #res = testrun.test(asn, sub, tst, run)
+        res = workers.apply_async(testrun.test, args=(asn, sub, tst, run))
 
         # Return Run
         return run
@@ -448,9 +433,9 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 
         # TODO Prevent delete while still running
         if not force:
-            while not self['status'].startswith('complete'):
+            while not self.is_complete():
                 print("Waiting for run to complete...")
-                time.sleep(1)
+                time.sleep(5)
 
         # Remove from submission
         run_uuid = str(self.uuid)
@@ -463,6 +448,9 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 
         # Call Parent
         super(Run, self).delete()
+
+    def is_complete(self):
+        return self['status'].startswith('complete')
 
 
 ## Run List Object ##
