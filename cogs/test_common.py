@@ -61,9 +61,9 @@ class CogsTestError(Exception):
 class CogsTestCase(unittest.TestCase):
 
     def setUp(self):
-        if (db.dbsize() != 0):
-            raise CogsTestError("Test Database Not Empty: {}".format(self.db.dbsize()))
         self.db = db
+        if (self.db.dbsize() != 0):
+            raise CogsTestError("Test Database Not Empty: {}".format(self.db.dbsize()))
 
     def tearDown(self):
         self.db.flushdb()

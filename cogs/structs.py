@@ -24,10 +24,10 @@ import testrun
 _NUM_WORKERS = 10
 
 _ASSIGNMENT_SCHEMA = ['name', 'env']
-_TEST_SCHEMA = ['name', 'maxscore', 'tester']
-_SUBMISSION_SCHEMA = []
-_RUN_SCHEMA = []
-_FILE_SCHEMA = ['key']
+_TEST_SCHEMA = ['assignment', 'name', 'maxscore', 'tester']
+_SUBMISSION_SCHEMA = ['assignment']
+_RUN_SCHEMA = ['submission', 'test', 'status', 'score', 'retcode', 'output']
+_FILE_SCHEMA = ['key', 'name', 'type', 'encoding', 'path']
 
 _DEFAULT_FILES_DIR = "./files/"
 _FILES_DIR = os.environ.get('COGS_UPLOADED_FILES_PATH', _DEFAULT_FILES_DIR)
@@ -48,11 +48,11 @@ class Server(object):
 
         # Setup Factories
         passthrough = {'srv': self}
-        self.FileFactory = backend.UUIDFactory(File, passthrough)
-        self.AssignmentFactory = backend.UUIDFactory(Assignment, passthrough)
-        self.SubmissionFactory = backend.UUIDFactory(Submission, passthrough)
-        self.TestFactory = backend.UUIDFactory(Test, passthrough)
-        self.RunFactory = backend.UUIDFactory(Run, passthrough)
+        self.FileFactory = backend.UUIDFactory(File, passthrough=passthrough)
+        self.AssignmentFactory = backend.UUIDFactory(Assignment, passthrough=passthrough)
+        self.SubmissionFactory = backend.UUIDFactory(Submission, passthrough=passthrough)
+        self.TestFactory = backend.UUIDFactory(Test, passthrough=passthrough)
+        self.RunFactory = backend.UUIDFactory(Run, passthrough=passthrough)
 
         # Setup Worker Pool
         self.workers = multiprocessing.Pool(_NUM_WORKERS)
@@ -98,7 +98,7 @@ class Server(object):
 
 
 ## Assignment Object ##
-class Assignment(backend.OwnedTSHash):
+class Assignment(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
     """COGS Assignment Class"""
 
     # Override Constructor
@@ -110,9 +110,23 @@ class Assignment(backend.OwnedTSHash):
 
         # Setup Lists
         TestListFactory = backend.PrefixedFactory(TestList, prefix=self.full_key)
-        self.tests = TestListFactory.from_raw('tests')
+        self.tests = TestListFactory.from_raw(key='tests')
         SubmissionListFactory = backend.PrefixedFactory(SubmissionList, prefix=self.full_key)
-        self.submissions = SubmissionListFactory.from_raw('submissions')
+        self.submissions = SubmissionListFactory.from_raw(key='submissions')
+
+    # Override from_new
+    @classmethod
+    def from_new(cls, data, **kwargs):
+
+        # Set Schema
+        schema = set(_ASSIGNMENT_SCHEMA)
+        kwargs['schema'] = schema
+
+        # Call Parent
+        assignment = super(Assignment, cls).from_new(data, **kwargs)
+
+        # Return
+        return assignment
 
     # Override Delete
     def delete(self):
@@ -175,7 +189,7 @@ class Assignment(backend.OwnedTSHash):
 
 
 ## Test Object ##
-class Test(backend.OwnedTSHash):
+class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
     """COGS Test Class"""
 
     # Override Constructor
@@ -187,7 +201,34 @@ class Test(backend.OwnedTSHash):
 
         # Setup Lists
         FileListFactory = backend.PrefixedFactory(FileList, prefix=self.full_key)
-        self.files = FileListFactory.from_raw('files')
+        self.files = FileListFactory.from_raw(key='files')
+
+    # Override from_new
+    @classmethod
+    def from_new(cls, data, **kwargs):
+
+        # Extract Args
+        try:
+            asn = kwargs.pop('asn')
+        except KeyError:
+            raise TypeError("Requires 'asn'")
+
+        # Set Schema
+        schema = set(_TEST_SCHEMA)
+        kwargs['schema'] = schema
+
+        # Set Assignment
+        data = copy.copy(data)
+        if asn:
+            data['assignment'] = str(asn.uuid).lower()
+        else:
+            data['assignment'] = ""
+
+        # Call Parent
+        obj = super(Test, cls).from_new(data, **kwargs)
+
+        # Return Test
+        return obj
 
     # Override Delete
     def delete(self):
@@ -209,29 +250,6 @@ class Test(backend.OwnedTSHash):
         # Call Parent
         super(Test, self).delete()
 
-    # Override from_new
-    @classmethod
-    def from_new(cls, data, **kwargs):
-
-        # Extract Args
-        try:
-            asn = kwargs.pop('asn')
-        except KeyError:
-            raise TypeError("Requires 'asn'")
-
-        # Set Assignment
-        data = copy.copy(data)
-        if asn:
-            data['assignment'] = str(asn.uuid).lower()
-        else:
-            data['assignment'] = ""
-
-        # Call Parent
-        obj = super(Test, cls).from_new(data, **kwargs)
-
-        # Return Test
-        return obj
-
     # Files Methods
     def add_files(self, file_uuids):
         return self.files.add_vals(file_uuids)
@@ -248,7 +266,7 @@ class TestList(backend.Set):
 
 
 ## Submission Object ##
-class Submission(backend.OwnedTSHash):
+class Submission(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
     """COGS Submission Class"""
 
     # Override Constructor
@@ -260,9 +278,36 @@ class Submission(backend.OwnedTSHash):
 
         # Setup Lists
         FileListFactory = backend.PrefixedFactory(FileList, prefix=self.full_key)
-        self.files = FileListFactory.from_raw('files')
+        self.files = FileListFactory.from_raw(key='files')
         RunListFactory = backend.PrefixedFactory(RunList, prefix=self.full_key)
-        self.runs = RunListFactory.from_raw('runs')
+        self.runs = RunListFactory.from_raw(key='runs')
+
+    # Override from_new
+    @classmethod
+    def from_new(cls, data, **kwargs):
+
+        # Extract Args
+        try:
+            asn = kwargs.pop('asn')
+        except KeyError:
+            raise TypeError("Requires 'asn'")
+
+        # Set Schema
+        schema = set(_SUBMISSION_SCHEMA)
+        kwargs['schema'] = schema
+
+        # Set Assignment
+        data = copy.copy(data)
+        if asn:
+            data['assignment'] = str(asn.uuid).lower()
+        else:
+            data['assignment'] = ""
+
+        # Call Parent
+        obj = super(Submission, cls).from_new(data, **kwargs)
+
+        # Return Submission
+        return obj
 
     # Override Delete
     def delete(self):
@@ -293,29 +338,6 @@ class Submission(backend.OwnedTSHash):
 
         # Call Parent
         super(Submission, self).delete()
-
-    # Override from_new
-    @classmethod
-    def from_new(cls, data, **kwargs):
-
-        # Extract Args
-        try:
-            asn = kwargs.pop('asn')
-        except KeyError:
-            raise TypeError("Requires 'asn'")
-
-        # Set Assignment
-        data = copy.copy(data)
-        if asn:
-            data['assignment'] = str(asn.uuid).lower()
-        else:
-            data['assignment'] = ""
-
-        # Call Parent
-        obj = super(Submission, cls).from_new(data, **kwargs)
-
-        # Return Submission
-        return obj
 
     # Files Methods
     def add_files(self, file_uuids):
@@ -349,7 +371,7 @@ class SubmissionList(backend.Set):
 
 
 ## Test Run Object ##
-class Run(backend.OwnedTSHash):
+class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
     """COGS Run Class"""
 
     # Override from_new
@@ -360,6 +382,10 @@ class Run(backend.OwnedTSHash):
         # Get Assignment
         assert(sub['assignment'] == tst['assignment'])
         asn = cls.srv.get_assignment(sub['assignment'])
+
+        # Set Schema
+        schema = set(_RUN_SCHEMA)
+        kwargs['schema'] = schema
 
         # Create New Object
         data = {}
@@ -411,7 +437,7 @@ class RunList(backend.Set):
 
 
 ## File Object ##
-class File(backend.OwnedTSHash):
+class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
     """COGS File Class"""
 
     # Override from_new
@@ -422,6 +448,10 @@ class File(backend.OwnedTSHash):
         # Extract Args
         file_obj = kwargs.pop('file_obj', None)
         dst = kwargs.pop('dst', None)
+
+        # Set Schema
+        schema = set(_FILE_SCHEMA)
+        kwargs['schema'] = schema
 
         # Create New Object
         data = copy.copy(data)
@@ -441,7 +471,7 @@ class File(backend.OwnedTSHash):
         data['type'] = str(typ[0])
         data['encoding'] = str(typ[1])
 
-        # Create File
+        # Call Parent
         fle = super(File, cls).from_new(data, **kwargs)
 
         # Set Path

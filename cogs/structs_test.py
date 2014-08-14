@@ -11,15 +11,11 @@ import werkzeug
 import os
 import time
 
-os.environ['COGS_REDIS_HOST'] = "localhost"
-os.environ['COGS_REDIS_PORT'] = str(6379)
-os.environ['COGS_REDIS_DB'] = str(5)
-
-import structs
-
 import test_common
 import test_common_backend
 
+import auth
+import structs
 
 class StructsTestCase(test_common.CogsTestCase):
 
@@ -28,6 +24,15 @@ class StructsTestCase(test_common.CogsTestCase):
         # Call Parent
         super(StructsTestCase, self).setUp()
 
+        # Setup Auth
+        self.auth = auth.Auth()
+
+        # Create User
+        self.user = self.auth.create_user(test_common.USER_TESTDICT,
+                                          username="testuser",
+                                          password="testpass",
+                                          authmod="test")
+
         # Setup Server
         self.srv = structs.Server()
 
@@ -35,6 +40,9 @@ class StructsTestCase(test_common.CogsTestCase):
 
         # Cleanup Server
         self.srv.close()
+
+        # Cleanup User
+        self.user.delete()
 
         # Call parent
         super(StructsTestCase, self).tearDown()
@@ -56,45 +64,50 @@ class ServerTestCase(test_common_backend.SubMixin,
                                  self.srv.get_file,
                                  self.srv.list_files,
                                  test_common.FILE_TESTDICT,
-                                 extra_kwargs={'file_obj': file_obj, 'owner': })
+                                 extra_kwargs={'file_obj': file_obj, 'owner': self.user})
         file_obj.close()
 
     def test_assignments(self):
         self.subHashDirectHelper(self.srv.create_assignment,
                                  self.srv.get_assignment,
                                  self.srv.list_assignments,
-                                 test_common.ASSIGNMENT_TESTDICT)
+                                 test_common.ASSIGNMENT_TESTDICT,
+                                 extra_kwargs={'owner': self.user})
 
     def test_asn_tests(self):
-        asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT)
+        asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.user)
         self.subHashDirectHelper(asn.create_test,
                                  self.srv.get_test,
                                  asn.list_tests,
-                                 test_common.TEST_TESTDICT)
+                                 test_common.TEST_TESTDICT,
+                                 extra_kwargs={'owner': self.user})
         asn.delete()
 
     def test_srv_tests(self):
-        asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT)
+        asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.user)
         self.subHashDirectHelper(asn.create_test,
                                  self.srv.get_test,
                                  self.srv.list_tests,
-                                 test_common.TEST_TESTDICT)
+                                 test_common.TEST_TESTDICT,
+                                 extra_kwargs={'owner': self.user})
         asn.delete()
 
     def test_asn_submissions(self):
-        asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT)
+        asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.user)
         self.subHashDirectHelper(asn.create_submission,
                                  self.srv.get_submission,
                                  asn.list_submissions,
-                                 test_common.SUBMISSION_TESTDICT)
+                                 test_common.SUBMISSION_TESTDICT,
+                                 extra_kwargs={'owner': self.user})
         asn.delete()
 
     def test_srv_submissions(self):
-        asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT)
+        asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.user)
         self.subHashDirectHelper(asn.create_submission,
                                  self.srv.get_submission,
                                  self.srv.list_submissions,
-                                 test_common.SUBMISSION_TESTDICT)
+                                 test_common.SUBMISSION_TESTDICT,
+                                 extra_kwargs={'owner': self.user})
         asn.delete()
 
 
