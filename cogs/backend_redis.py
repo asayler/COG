@@ -14,22 +14,17 @@ import os
 
 import redis
 
+import config
 import backend
 from backend import BackendError, FactoryError, PersistentObjectError, ObjectDNE
 
+
 TS_SCHEMA = ['created_time', 'modified_time']
 
-DEFAULT_REDIS_HOST = "localhost"
-DEFAULT_REDIS_PORT = 6379
-DEFAULT_REDIS_DB = 4
-
-REDIS_HOST = os.environ.get('COGS_REDIS_HOST', DEFAULT_REDIS_HOST)
-REDIS_PORT = int(os.environ.get('COGS_REDIS_PORT', DEFAULT_REDIS_PORT))
-REDIS_DB = int(os.environ.get('COGS_REDIS_DB', DEFAULT_REDIS_DB))
-
-db = redis.StrictRedis(host=REDIS_HOST,
-                       port=REDIS_PORT,
-                       db=REDIS_DB)
+db = redis.StrictRedis(host=config.REDIS_HOST,
+                       port=config.REDIS_PORT,
+                       db=config.REDIS_DB,
+                       password=config.REDIS_PASSWORD)
 
 
 ### Objects ###

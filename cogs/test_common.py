@@ -48,6 +48,7 @@ REDIS_DB = int(os.environ.get('COGS_TEST_REDIS_DB', TEST_REDIS_DB))
 os.environ['COGS_REDIS_HOST'] = REDIS_HOST
 os.environ['COGS_REDIS_PORT'] = str(REDIS_PORT)
 os.environ['COGS_REDIS_DB'] = str(REDIS_DB)
+reload(config)
 
 # Create DB
 db = redis.StrictRedis(host=REDIS_HOST,
