@@ -34,9 +34,8 @@ reqs: $(REQUIRMENTS)
 	$(PIP) install -r "$<" -U
 	$(MAKE) -C $(COGS) $@
 	$(MAKE) -C $(MOODLE) $@
-	sudo cp --preserve=mode "./conf/sudoers.d/nobody" "/etc/sudoers.d/"
+	sudo cp "./conf/sudoers.d/nobody" "/etc/sudoers.d/"
 	sudo chmod 440 "/etc/sudoers.d/nobody"
-	#sudo chown "root:root" "/etc/sudoers.d/nobody"
 
 lint: $(PYLINT_CONF)
 	$(EXPORT_PATH) && $(PYLINT) --rcfile="$<" $(COGS)
