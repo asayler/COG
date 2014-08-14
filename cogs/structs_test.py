@@ -318,20 +318,28 @@ class RunTestCase(test_common_backend.SubMixin,
         super(RunTestCase, self).setUp()
 
         # Create Test File
-        tst_file = open("{:s}/script_1.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        tst_file_obj = werkzeug.datastructures.FileStorage(stream=tst_file, filename="script.py")
+        file_bse = open("{:s}/script_1.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="script.py")
         data = copy.copy(test_common.FILE_TESTDICT)
         data['key'] = 'script'
-        self.tst_file = self.srv.create_file(data, file_obj=tst_file_obj, owner=self.user)
-        tst_file_obj.close()
+        self.tst_file = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
 
-        # Create Sub File
-        sub_file = open("{:s}/pgm_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        sub_file_obj = werkzeug.datastructures.FileStorage(stream=sub_file, filename="pgm.py")
+        # Create Good Sub File
+        file_bse = open("{:s}/pgm_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
         data = copy.copy(test_common.FILE_TESTDICT)
         data['key'] = 'submission'
-        self.sub_file = self.srv.create_file(data, file_obj=sub_file_obj, owner=self.user)
-        sub_file_obj.close()
+        self.sub_file_good = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Bad Sub File
+        file_bse = open("{:s}/pgm_bad.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'submission'
+        self.sub_file_bad = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
 
         # Create Assignment
         self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.user)
@@ -341,29 +349,46 @@ class RunTestCase(test_common_backend.SubMixin,
         self.tst.add_files([str(self.tst_file.uuid)])
 
         # Create Submission
-        self.sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.user)
-        self.sub.add_files([str(self.sub_file.uuid)])
+        self.sub_good = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.user)
+        self.sub_good.add_files([str(self.sub_file_good.uuid)])
+        self.sub_bad = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.user)
+        self.sub_bad.add_files([str(self.sub_file_bad.uuid)])
 
     def tearDown(self):
 
         # Cleanup Structs
-        self.sub.delete()
+        self.sub_bad.delete()
+        self.sub_good.delete()
         self.tst.delete()
         self.asn.delete()
-        self.sub_file.delete()
+        self.sub_file_bad.delete()
+        self.sub_file_good.delete()
         self.tst_file.delete()
 
         # Call Parent
         super(RunTestCase, self).tearDown()
 
-    def test_execute_run(self):
-        run = self.sub.execute_run(self.tst, workers=self.workers, owner=self.user)
+    def test_execute_run_script_good(self):
+
+        # Test Good
+        run = self.sub_good.execute_run(self.tst, workers=self.workers, owner=self.user)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         self.assertEqual(run['status'], "complete")
         self.assertEqual(float(run['score']), 10)
+
+    def test_execute_run_script_bad(self):
+
+        # Test Bad
+        run = self.sub_bad.execute_run(self.tst, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertLess(float(run['score']), 10)
 
 
 # Main
