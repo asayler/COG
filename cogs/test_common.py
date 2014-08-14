@@ -11,6 +11,8 @@ import unittest
 
 import redis
 
+import config
+
 # Set Test Struct Create Data
 DUMMY_SCHEMA   = ['key1', 'key2', 'key3']
 DUMMY_TESTDICT = {'key1': "val1",
@@ -26,9 +28,7 @@ TEST_TESTDICT = {'name': "Test_Assignment",
 SUBMISSION_TESTDICT = {}
 
 # Set Default Vals
-MOD_PATH = os.path.dirname(os.path.realpath(__file__))
-TOP_PATH = os.path.realpath("{:s}/..".format(MOD_PATH))
-TEST_INPUT_PATH = os.path.realpath("{:s}/test_input".format(TOP_PATH))
+TEST_INPUT_PATH = os.path.realpath("{:s}/test_input".format(config.ROOT_PATH))
 TEST_REDIS_HOST = "localhost"
 TEST_REDIS_PORT = 6379
 TEST_REDIS_DB = 5
