@@ -364,7 +364,7 @@ class RunTestCase(test_common_backend.SubMixin,
             time.sleep(1)
         self.assertEqual(run['status'], "complete")
         print(run.get_dict())
-        print(run.get_dict('output'))
+        print(run.get_dict()['output'])
         self.assertEqual(float(run['score']), 10)
 
 

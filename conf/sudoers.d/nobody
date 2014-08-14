@@ -1,0 +1,6 @@
+
+# Members of the admin group may gain root privileges
+%admin ALL=(nobody:nogroup) NOPASSWD: ALL
+
+# Allow members of group sudo to execute any command
+%sudo  ALL=(nobody:nogroup) NOPASSWD: ALL
