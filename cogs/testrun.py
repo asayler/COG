@@ -9,6 +9,10 @@ import tester_script
 
 def test(asn, sub, tst, run):
 
+    print("asn = {:s}".format(asn.get_dict()))
+    print("sub = {:s}".format(sub.get_dict()))
+    print("tst = {:s}".format(tst.get_dict()))
+
     env_type = asn['env']
     if env_type == 'local':
         env = env_local.Env(asn, sub, tst, run)

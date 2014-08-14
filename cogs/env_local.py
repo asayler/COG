@@ -10,22 +10,28 @@ import copy
 
 _LOC_DIR = "/tmp/cogs/"
 
+import backend_redis as backend
+import structs
+
 class Env(object):
 
     def __init__(self, asn, sub, tst, run):
 
+        # Setup Factory
+        FileFactory = backend.UUIDFactory(structs.File)
+
         # Get Files
         sub_file_uuids = sub.list_files()
-        sub_files = [asn.srv.get_file(file_uuid) for file_uuid in sub_file_uuids]
+        sub_files = [FileFactory.from_existing(file_uuid) for file_uuid in sub_file_uuids]
         tst_file_uuids = tst.list_files()
-        tst_files = [asn.srv.get_file(file_uuid) for file_uuid in tst_file_uuids]
+        tst_files = [FileFactory.from_existing(file_uuid) for file_uuid in tst_file_uuids]
 
         # Save File Paths
         self.tst_files = []
         self.sub_files = []
 
         # Setup Working Directory
-        self.wd = os.path.abspath("{:s}/{:s}/".format(_LOC_DIR, str(run)))
+        self.wd = os.path.abspath("{:s}/{:s}/".format(_LOC_DIR, str(run).lower()))
         os.makedirs(self.wd)
 
         # Copy Submission Files

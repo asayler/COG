@@ -47,15 +47,15 @@ class Server(object):
         super(Server, self).__init__()
 
         # Setup Factories
-        passthrough = {'srv': self}
-        self.FileFactory = backend.UUIDFactory(File, passthrough=passthrough)
-        self.AssignmentFactory = backend.UUIDFactory(Assignment, passthrough=passthrough)
-        self.SubmissionFactory = backend.UUIDFactory(Submission, passthrough=passthrough)
-        self.TestFactory = backend.UUIDFactory(Test, passthrough=passthrough)
-        self.RunFactory = backend.UUIDFactory(Run, passthrough=passthrough)
+        self.FileFactory = backend.UUIDFactory(File)
+        self.AssignmentFactory = backend.UUIDFactory(Assignment)
+        self.SubmissionFactory = backend.UUIDFactory(Submission)
+        self.TestFactory = backend.UUIDFactory(Test)
+        self.RunFactory = backend.UUIDFactory(Run)
 
         # Setup Worker Pool
         self.workers = multiprocessing.Pool(_NUM_WORKERS)
+
 
     # Cleanup Up Server
     def close(self):
@@ -91,6 +91,12 @@ class Server(object):
         return self.SubmissionFactory.list_siblings()
 
     # Run Methods
+    def execute_run(self, sub, tst, owner=None):
+        assert(sub['assignment'] == tst['assignment'])
+        asn = self.AssignmentFactory.from_existing(sub['assignment'])
+        run = self.RunFactory.from_new(asn, sub, tst, workers=self.workers, owner=owner)
+        sub._add_runs([str(run.uuid)])
+        return run
     def get_run(self, uuid_hex):
         return self.RunFactory.from_existing(uuid_hex)
     def list_runs(self):
@@ -107,6 +113,10 @@ class Assignment(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
 
         # Call Parent Construtor
         super(Assignment, self).__init__(*args, **kwargs)
+
+        # Setup Factories
+        self.SubmissionFactory = backend.UUIDFactory(Submission)
+        self.TestFactory = backend.UUIDFactory(Test)
 
         # Setup Lists
         TestListFactory = backend.PrefixedFactory(TestList, prefix=self.full_key)
@@ -134,7 +144,7 @@ class Assignment(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
 
         # Remove Test Objects
         for tst_uuid in self.list_tests():
-            tst = self.srv.get_test(tst_uuid)
+            tst = self.TestFactory.from_existing(tst_uuid)
             tst.delete()
         assert(not self.list_tests())
 
@@ -144,7 +154,7 @@ class Assignment(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
 
         # Remove Submission Objects
         for sub_uuid in self.list_submissions():
-            sub = self.srv.get_submission(sub_uuid)
+            sub = self.SubmissionFactory.from_existing(sub_uuid)
             sub._delete()
         assert(not self.list_submissions())
 
@@ -157,7 +167,7 @@ class Assignment(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
 
     # Public Test Methods
     def create_test(self, dictionary, owner=None):
-        tst = self.srv.TestFactory.from_new(dictionary, asn=self, owner=owner)
+        tst = self.TestFactory.from_new(dictionary, asn=self, owner=owner)
         self._add_tests([str(tst.uuid)])
         return tst
     def list_tests(self):
@@ -165,7 +175,7 @@ class Assignment(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
 
     # Public Submission Methods
     def create_submission(self, dictionary, owner=None):
-        sub = self.srv.SubmissionFactory.from_new(dictionary, asn=self, owner=owner)
+        sub = self.SubmissionFactory.from_new(dictionary, asn=self, owner=owner)
         self._add_submissions([str(sub.uuid)])
         return sub
     def list_submissions(self):
@@ -199,6 +209,9 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         # Call Parent Construtor
         super(Test, self).__init__(**kwargs)
 
+        # Setup Factories
+        self.AssignmentFactory = backend.UUIDFactory(Assignment)
+
         # Setup Lists
         FileListFactory = backend.PrefixedFactory(FileList, prefix=self.full_key)
         self.files = FileListFactory.from_raw(key='files')
@@ -208,9 +221,8 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
     def from_new(cls, data, **kwargs):
 
         # Extract Args
-        try:
-            asn = kwargs.pop('asn')
-        except KeyError:
+        asn = kwargs.pop('asn', None)
+        if not asn:
             raise TypeError("Requires 'asn'")
 
         # Set Schema
@@ -238,7 +250,7 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         tst_uuid = str(self.uuid)
         asn_uuid = self['assignment']
         if asn_uuid:
-            asn = self.srv.get_assignment(asn_uuid)
+            asn = self.AssignmentFactory.from_existing(asn_uuid)
             if not asn._rem_tests([tst_uuid]):
                 msg = "Could not remove Test {:s} from Assignment {:s}".format(tst_uuid, asn_uuid)
                 raise backend.PersistentObjectError(msg)
@@ -275,6 +287,10 @@ class Submission(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
 
         # Call Parent Construtor
         super(Submission, self).__init__(*args, **kwargs)
+
+        # Setup Factories
+        self.AssignmentFactory = backend.UUIDFactory(Assignment)
+        self.RunFactory = backend.UUIDFactory(Run)
 
         # Setup Lists
         FileListFactory = backend.PrefixedFactory(FileList, prefix=self.full_key)
@@ -317,14 +333,14 @@ class Submission(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
         sub_uuid = str(self.uuid)
         asn_uuid = self['assignment']
         if asn_uuid:
-            asn = self.srv.get_assignment(asn_uuid)
+            asn = self.AssignmentFactory.from_existing(asn_uuid)
             if not asn._rem_submissions([sub_uuid]):
                 msg = "Could not remove Submission {:s} from Assignment {:s}".format(sub_uuid, asn_uuid)
                 raise backend.PersistentObjectError(msg)
 
         # Remove run objects
         for run_uuid in self.list_runs():
-            run = self.srv.get_run(run_uuid)
+            run = self.RunFactory.from_existing(run_uuid)
             run.delete()
         assert(not self.list_runs())
 
@@ -349,7 +365,9 @@ class Submission(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
 
     # Run Methods
     def execute_run(self, tst, owner=None):
-        run = self.srv.RunFactory.from_new(tst, self, owner=owner)
+        asn = self.AssignmentFactory.from_existing(self['assignment'])
+        sub = self
+        run = self.RunFactory.from_new(asn, tst, sub, owner=owner)
         self._add_runs([str(run.uuid)])
         return run
     def list_runs(self):
@@ -374,14 +392,29 @@ class SubmissionList(backend.Set):
 class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
     """COGS Run Class"""
 
+    # Override Constructor
+    def __init__(self, *args, **kwargs):
+        """Submission Constructor"""
+
+        # Call Parent Construtor
+        super(Run, self).__init__(*args, **kwargs)
+
+        # Setup Factories
+        self.SubmissionFactory = backend.UUIDFactory(Submission)
+
+
     # Override from_new
     @classmethod
-    def from_new(cls, tst, sub, **kwargs):
+    def from_new(cls, asn, sub, tst, **kwargs):
         """New Constructor"""
 
-        # Get Assignment
-        assert(sub['assignment'] == tst['assignment'])
-        asn = cls.srv.get_assignment(sub['assignment'])
+        workers = kwargs.pop('workers')
+        if not workers:
+            raise TypeError("Requires Workers")
+
+        # Check Input
+        assert(str(asn.uuid).lower() == tst['assignment'])
+        assert(str(asn.uuid).lower() == sub['assignment'])
 
         # Set Schema
         schema = set(_RUN_SCHEMA)
@@ -400,10 +433,12 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 
         # Create Run
         run = super(Run, cls).from_new(data, **kwargs)
+        run_uuid = str(run.uuid).lower()
 
         # Add Task to Pool
-        res = cls.srv.workers.apply_async(testrun.test, args=(asn, sub, tst, run))
-        print(res.get())
+        res = testrun.test(asn, sub, tst, run)
+        #res = workers.apply(testrun.test, args=(asn, sub, tst, run_uuid))
+        print(res)
 
         # Return Run
         return run
@@ -421,7 +456,7 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         run_uuid = str(self.uuid)
         sub_uuid = self['submission']
         if sub_uuid:
-            sub = self.srv.get_submission(sub_uuid)
+            sub = self.SubmissionFactory.from_existing(sub_uuid)
             if not sub._rem_runs([run_uuid]):
                 msg = "Could not remove Run {:s} from Submission {:s}".format(run_uuid, sub_uuid)
                 raise backend.PersistentObjectError(msg)
@@ -512,3 +547,5 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 class FileList(backend.Set):
     """COGS File List Class"""
     pass
+
+#  LocalWords:  kwargs

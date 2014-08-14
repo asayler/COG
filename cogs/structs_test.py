@@ -126,23 +126,23 @@ class FileTestCase(test_common_backend.UUIDHashMixin,
     def test_create_file(self):
         self.hashCreateHelper(self.srv.create_file,
                               test_common.FILE_TESTDICT,
-                              extra_kwargs={'file_obj': self.file_obj})
+                              extra_kwargs={'file_obj': self.file_obj, 'owner': self.user})
 
     def test_get_file(self):
         self.hashGetHelper(self.srv.create_file,
                            self.srv.get_file,
                            test_common.FILE_TESTDICT,
-                              extra_kwargs={'file_obj': self.file_obj})
+                              extra_kwargs={'file_obj': self.file_obj, 'owner': self.user})
 
     def test_update_file(self):
         self.hashUpdateHelper(self.srv.create_file,
                               test_common.FILE_TESTDICT,
-                              extra_kwargs={'file_obj': self.file_obj})
+                              extra_kwargs={'file_obj': self.file_obj, 'owner': self.user})
 
     def test_delete_file(self):
         self.hashDeleteHelper(self.srv.create_file,
                               test_common.FILE_TESTDICT,
-                              extra_kwargs={'file_obj': self.file_obj})
+                              extra_kwargs={'file_obj': self.file_obj, 'owner': self.user})
 
 
 class AssignmentTestCase(test_common_backend.UUIDHashMixin,
@@ -156,20 +156,24 @@ class AssignmentTestCase(test_common_backend.UUIDHashMixin,
 
     def test_create_assignment(self):
         self.hashCreateHelper(self.srv.create_assignment,
-                              test_common.ASSIGNMENT_TESTDICT)
+                              test_common.ASSIGNMENT_TESTDICT,
+                              extra_kwargs={'owner': self.user})
 
     def test_get_assignment(self):
         self.hashGetHelper(self.srv.create_assignment,
                            self.srv.get_assignment,
-                           test_common.ASSIGNMENT_TESTDICT)
+                           test_common.ASSIGNMENT_TESTDICT,
+                           extra_kwargs={'owner': self.user})
 
     def test_update_assignment(self):
         self.hashUpdateHelper(self.srv.create_assignment,
-                              test_common.ASSIGNMENT_TESTDICT)
+                              test_common.ASSIGNMENT_TESTDICT,
+                              extra_kwargs={'owner': self.user})
 
     def test_delete_assignment(self):
         self.hashDeleteHelper(self.srv.create_assignment,
-                              test_common.ASSIGNMENT_TESTDICT)
+                              test_common.ASSIGNMENT_TESTDICT,
+                              extra_kwargs={'owner': self.user})
 
 
 class TestTestCase(test_common_backend.SubMixin,
@@ -182,7 +186,7 @@ class TestTestCase(test_common_backend.SubMixin,
         super(TestTestCase, self).setUp()
 
         # Create Assignment
-        self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT)
+        self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.user)
 
         # Create Files
         src_file = open("./Makefile", 'rb')
@@ -192,7 +196,7 @@ class TestTestCase(test_common_backend.SubMixin,
             data = copy.copy(test_common.FILE_TESTDICT)
             for k in data:
                 data[k] = "test_{:s}_{:02d}".format(k, i)
-            self.files.add(str(self.srv.create_file(data, file_obj=file_obj).uuid))
+            self.files.add(str(self.srv.create_file(data, file_obj=file_obj, owner=self.user).uuid))
         file_obj.close()
 
     def tearDown(self):
@@ -207,23 +211,27 @@ class TestTestCase(test_common_backend.SubMixin,
 
     def test_create_test(self):
         self.hashCreateHelper(self.asn.create_test,
-                              test_common.TEST_TESTDICT)
+                              test_common.TEST_TESTDICT,
+                              extra_kwargs={'owner': self.user})
 
     def test_get_test(self):
         self.hashGetHelper(self.asn.create_test,
                            self.srv.get_test,
-                           test_common.TEST_TESTDICT)
+                           test_common.TEST_TESTDICT,
+                           extra_kwargs={'owner': self.user})
 
     def test_update_test(self):
         self.hashUpdateHelper(self.asn.create_test,
-                              test_common.TEST_TESTDICT)
+                              test_common.TEST_TESTDICT,
+                              extra_kwargs={'owner': self.user})
 
     def test_delete_test(self):
         self.hashDeleteHelper(self.asn.create_test,
-                              test_common.TEST_TESTDICT)
+                              test_common.TEST_TESTDICT,
+                              extra_kwargs={'owner': self.user})
 
     def test_files(self):
-        tst = self.asn.create_test(test_common.TEST_TESTDICT)
+        tst = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.user)
         self.subSetReferenceHelper(tst.add_files, tst.rem_files, tst.list_files, self.files)
         tst.delete()
 
@@ -238,7 +246,7 @@ class SubmissionTestCase(test_common_backend.SubMixin,
         super(SubmissionTestCase, self).setUp()
 
         # Create Assignment
-        self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT)
+        self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.user)
 
         # Create Files
         src_file = open("./Makefile", 'rb')
@@ -248,7 +256,7 @@ class SubmissionTestCase(test_common_backend.SubMixin,
             data = copy.copy(test_common.FILE_TESTDICT)
             for k in data:
                 data[k] = "test_{:s}_{:02d}".format(k, i)
-            self.files.add(str(self.srv.create_file(data, file_obj=file_obj).uuid))
+            self.files.add(str(self.srv.create_file(data, file_obj=file_obj, owner=self.user).uuid))
         file_obj.close()
 
     def tearDown(self):
@@ -263,23 +271,27 @@ class SubmissionTestCase(test_common_backend.SubMixin,
 
     def test_create_submission(self):
         self.hashCreateHelper(self.asn.create_submission,
-                              test_common.SUBMISSION_TESTDICT)
+                              test_common.SUBMISSION_TESTDICT,
+                              extra_kwargs={'owner': self.user})
 
     def test_get_submission(self):
         self.hashGetHelper(self.asn.create_submission,
                            self.srv.get_submission,
-                           test_common.SUBMISSION_TESTDICT)
+                           test_common.SUBMISSION_TESTDICT,
+                           extra_kwargs={'owner': self.user})
 
     def test_update_submission(self):
         self.hashUpdateHelper(self.asn.create_submission,
-                              test_common.SUBMISSION_TESTDICT)
+                              test_common.SUBMISSION_TESTDICT,
+                              extra_kwargs={'owner': self.user})
 
     def test_delete_submission(self):
         self.hashDeleteHelper(self.asn.create_submission,
-                              test_common.SUBMISSION_TESTDICT)
+                              test_common.SUBMISSION_TESTDICT,
+                              extra_kwargs={'owner': self.user})
 
     def test_files(self):
-        sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT)
+        sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.user)
         self.subSetReferenceHelper(sub.add_files, sub.rem_files, sub.list_files, self.files)
         sub.delete()
 
@@ -298,7 +310,7 @@ class RunTestCase(test_common_backend.SubMixin,
         tst_file_obj = werkzeug.datastructures.FileStorage(stream=tst_file, filename="script.py")
         data = copy.copy(test_common.FILE_TESTDICT)
         data['key'] = 'script'
-        self.tst_file = self.srv.create_file(data, file_obj=tst_file_obj)
+        self.tst_file = self.srv.create_file(data, file_obj=tst_file_obj, owner=self.user)
         tst_file_obj.close()
 
         # Create Sub File
@@ -306,18 +318,18 @@ class RunTestCase(test_common_backend.SubMixin,
         sub_file_obj = werkzeug.datastructures.FileStorage(stream=sub_file, filename="pgm.py")
         data = copy.copy(test_common.FILE_TESTDICT)
         data['key'] = 'submission'
-        self.sub_file = self.srv.create_file(data, file_obj=sub_file_obj)
+        self.sub_file = self.srv.create_file(data, file_obj=sub_file_obj, owner=self.user)
         sub_file_obj.close()
 
         # Create Assignment
-        self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT)
+        self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.user)
 
         # Create Test
-        self.tst = self.asn.create_test(test_common.TEST_TESTDICT)
+        self.tst = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.user)
         self.tst.add_files([str(self.tst_file.uuid)])
 
         # Create Submission
-        self.sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT)
+        self.sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.user)
         self.sub.add_files([str(self.sub_file.uuid)])
 
     def tearDown(self):
@@ -333,7 +345,7 @@ class RunTestCase(test_common_backend.SubMixin,
         super(RunTestCase, self).tearDown()
 
     def test_create_run(self):
-        run = self.sub.execute_run(self.tst)
+        run = self.srv.execute_run(self.sub, self.tst, owner=self.user)
 
 
 # Main
