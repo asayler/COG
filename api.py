@@ -26,28 +26,14 @@ _SUBMISSIONS_KEY = "submissions"
 _FILES_KEY = "files"
 _RUNS_KEY = "runs"
 
-_DEFAULT_AUTHMOD = 'moodle'
-
-COGS_REDIS_HOST = os.environ.get('COGS_REDIS_HOST', "localhost")
-COGS_REDIS_PORT = int(os.environ.get('COGS_REDIS_PORT', 6379))
-COGS_REDIS_DB = int(os.environ.get('COGS_REDIS_DB', 3))
-
-_REDIS_CONF= {'redis_host': COGS_REDIS_HOST,
-              'redis_port': COGS_REDIS_PORT,
-              'redis_db': COGS_REDIS_DB}
-
 ### Global Setup ###
 
 app = flask.Flask(__name__)
-http_auth = flask.ext.httpauth.HTTPBasicAuth()
-redis_conf = _REDIS_CONF
-db = redis.StrictRedis(host=redis_conf['redis_host'],
-                       port=redis_conf['redis_port'],
-                       db=redis_conf['redis_db'])
-srv = cogs.structs.Server(db)
-auth = cogs.auth.Auth(db)
+httpauth = flask.ext.httpauth.HTTPBasicAuth()
+srv = cogs.structs.Server()
+auth = cogs.auth.Auth()
 
-@http_auth.verify_password
+@httpauth.verify_password
 def verify_login(username, password):
 
     flask.g.user = None
@@ -83,7 +69,7 @@ def verify_login(username, password):
 
 @app.route("/",
            methods=['GET'])
-@http_auth.login_required
+@httpauth.login_required
 @auth.requires_auth_route()
 def get_root():
 

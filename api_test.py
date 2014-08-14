@@ -13,11 +13,8 @@ import unittest
 import uuid
 import os
 
-os.environ['COGS_REDIS_HOST'] = "localhost"
-os.environ['COGS_REDIS_PORT'] = str(6379)
-os.environ['COGS_REDIS_DB'] = str(5)
-
 import cogs.test_common
+
 import api
 
 
@@ -27,9 +24,6 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
 
         # Call Parent
         super(CogsApiTestCase, self).setUp()
-
-        # Set API active DB to Test DB
-        assert(api.db.connection_pool.connection_kwargs == self.db.connection_pool.connection_kwargs)
 
         # Set App to Testing Mode
         api.app.testing = True
@@ -46,6 +40,11 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
         api.auth.add_admins([self.admin_uuid])
 
     def tearDown(self):
+
+        # Remove User
+        self.admin.delete()
+
+        # Call Parent
         super(CogsApiTestCase, self).tearDown()
 
     def open_auth(self, method, url, username, password=None):
