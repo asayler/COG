@@ -8,14 +8,11 @@ import os
 import stat
 import subprocess
 import mimetypes
+import shutil
+import copy
 
-TOTAL_TIME_LIMIT = 30 #seconds
-CPU_TIME_LIMIT = 10 #seconds
-PROC_LIMIT = 1000 #processes
-FILE_SIZE = 100 #blocks
-MEM_LIMIT = 10240 #kB
-TEST_USER = "nobody"
-TEST_GROUP = "nogroup"
+import config
+
 
 class Tester(object):
 
@@ -25,13 +22,7 @@ class Tester(object):
     def test(self):
 
         if (len(self.env.tst_files) != 1):
-            raise Exception("Script only supports a single test script file")
-
-        score = float('nan')
-        tst_pgm = self.env.tst_files[0]['path']
-
-        # Make Executable
-        os.chmod(tst_pgm, 0777)
+            raise Exception("Script requires a single test script file")
 
         # Change WD
         owd = os.getcwd()
@@ -40,24 +31,36 @@ class Tester(object):
         except:
             raise
 
+        # Copy Sandbox
+        sandbox_exe = config.TESTER_SCRIPT_SANDBOX
+        sandbox_src = os.path.realpath("{:s}/{:s}".format(config.SCRIPT_PATH, sandbox_exe))
+        sandbox_dst = os.path.realpath("{:s}/{:s}".format(self.env.wd, sandbox_exe))
+        shutil.copy(sandbox_src, sandbox_dst)
+
+        # Setup Cmd
+        tst_path = self.env.tst_files[0]['path']
+        tst_cmd = [tst_path]
+        os.chmod(tst_path, 0775)
+        sandbox_path = sandbox_dst
+        sandbox_cmd = [sandbox_path]
+        os.chmod(sandbox_path, 0775)
+        sudo_cmd = ['sudo', '-u', config.TESTER_SCRIPT_USER, '-g', config.TESTER_SCRIPT_GROUP]
+        cmd = sudo_cmd + sandbox_cmd + tst_cmd
+
+        # Clean ENV
+        env = {}
+        for var in os.environ:
+            if not var.startswith("COGS"):
+                env[var] = os.environ[var]
+
         # Run Script
-        ulimit = "ulimit -t {:d} -u {:d}".format(CPU_TIME_LIMIT, PROC_LIMIT)
-        # ulimit = "ulimit -t {:d} -u {:d} -f {:d} -m {:d}".format(CPU_TIME_LIMIT,
-        #                                                          PROC_LIMIT,
-        #                                                          FILE_SIZE,
-        #                                                          MEM_LIMIT)
-        timeout = "timeout {:d}".format(TOTAL_TIME_LIMIT)
-        sudo = "sudo -u {:s} -g {:s}".format(TEST_USER, TEST_GROUP)
-
-        cmd = "{:s} && {:s}".format(ulimit, tst_pgm)
-
+        score = float('nan')
         try:
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                 shell=True, executable="/bin/bash")
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
             stdout, stderr = p.communicate()
             ret = p.returncode
-        except:
-            raise
+        except Exception as e:
+            ret = str(e)
 
         # Change Back to OWD
         try:
@@ -70,8 +73,10 @@ class Tester(object):
             stdout_clean = stdout.rstrip().lstrip()
             try:
                 score = float(stdout_clean)
-            except:
-                score = 0
+            except Exception as e:
+                score = str(e)
+        else:
+            score = ""
 
         # Return
         return ret, score, stderr
