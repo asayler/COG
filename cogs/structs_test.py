@@ -362,6 +362,7 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(0.1)
+        print("run = {:s}".format(run.get_dict()))
         self.assertEqual(run['status'], "complete")
         self.assertEqual(float(run['score']), 10)
 
