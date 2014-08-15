@@ -7,5 +7,5 @@ while True:
     try:
         os.fork()
     except:
-        print("fork failed")
-    time.sleep(1)
+        print("Forking failed...")
+        time.sleep(1)
