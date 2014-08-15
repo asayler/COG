@@ -13,7 +13,6 @@ SUB_NAME = "add.py"
 
 def grade(argv):
 
-
     sub_path = os.path.abspath("{:s}/{:s}".format(argv[0], SUB_NAME))
 
     sys.stderr.write("Grading {:s}\n".format(sub_path))
