@@ -58,6 +58,8 @@ def grade():
     sys.stderr.write("__________________________\n".format(score))
     sys.stderr.write("Score ---------------> {:2d}\n".format(score))
 
+    sys.stdout.write("{:2d}\n".format(score))
+
     return 0
 
 if __name__ == "__main__":
