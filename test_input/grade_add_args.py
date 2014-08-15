@@ -4,13 +4,19 @@ import sys
 import random
 import subprocess
 import time
+import os
+
 
 PGM = "python"
-SUB = "./add.py"
+SUB_NAME = "add.py"
 
-def grade():
 
-    sys.stderr.write("Grading {:s}\n".format(SUB))
+def grade(argv):
+
+
+    sub_path = os.path.abspath("{:s}/{:s}".format(argv[0], SUB_NAME))
+
+    sys.stderr.write("Grading {:s}\n".format(sub_path))
     sys.stderr.write("__________________________\n")
 
     score = 0
@@ -24,7 +30,7 @@ def grade():
 
         sys.stderr.write("Trying ({:2d} + {:2d})...\n".format(x, y))
         try:
-            p = subprocess.Popen([PGM, SUB, str(x), str(y)],
+            p = subprocess.Popen([PGM, sub_path, str(x), str(y)],
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = p.communicate()
             ret = p.returncode
@@ -50,7 +56,7 @@ def grade():
                     score += 0
 
         else:
-            sys.stderr.write("{:s} returned error: {:d} +0\n".format(SUB, ret))
+            sys.stderr.write("{:s} returned error: {:d} +0\n".format(sub_path, ret))
             sys.stderr.write(str(stderr))
 
         w = random.randint(0, 10)
@@ -64,4 +70,4 @@ def grade():
     return 0
 
 if __name__ == "__main__":
-    sys.exit(grade())
+    sys.exit(grade(sys.argv[1:]))

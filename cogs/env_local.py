@@ -9,6 +9,10 @@ import shutil
 import copy
 
 _LOC_DIR = "/tmp/cogs/"
+_TST_DIR = "test"
+_SUB_DIR = "submission"
+
+import config
 
 import backend_redis as backend
 import structs
@@ -26,26 +30,42 @@ class Env(object):
         tst_file_uuids = tst.list_files()
         tst_files = [FileFactory.from_existing(file_uuid) for file_uuid in tst_file_uuids]
 
-        # Save File Paths
-        self.tst_files = []
-        self.sub_files = []
-
-        # Setup Working Directory
+        # Setup Directories
         self.wd = os.path.abspath("{:s}/{:s}/".format(_LOC_DIR, str(run).lower()))
+        self.wd_tst = "{:s}\{:s}".format(self.wd, _TST_DIR)
+        self.wd_sub = "{:s}\{:s}".format(self.wd, _SUB_DIR)
         os.makedirs(self.wd)
+        os.makedirs(self.wd_tst)
+        os.makedirs(self.wd_sub)
 
-        # Copy Submission Files
-        for fle in sub_files:
-            self.sub_files.append(self.copy_to_wd(fle))
+        # Setup Sandbox
+        sandbox_exe = config.ENV_LOCAL_SANDBOX
+        sandbox_src = "{:s}/{:s}".format(config.SCRIPT_PATH, sandbox_exe)
+        sandbox_fle = {}
+        sandbox_fle['name'] = sandbox_exe
+        sandbox_fle['path'] = sandbox_src
+        self.sandbox = self.copy_fle(sandbox_fle, self.wd)
 
         # Copy Tester Files
+        self.tst_files = []
         for fle in tst_files:
-            self.tst_files.append(self.copy_to_wd(fle))
+            self.tst_files.append(self.copy_fle(fle.get_dict(), self.wd_tst))
 
-    def copy_to_wd(self, fle):
-        new_fle = fle.get_dict()
+        # Copy Submission Files
+        self.sub_files = []
+        for fle in sub_files:
+            self.sub_files.append(self.copy_fle(fle.get_dict(), self.wd_sub))
+
+        # Clean ENV
+        self.env = {}
+        for var in os.environ:
+            if not var.startswith("COGS"):
+                self.env[var] = os.environ[var]
+
+    def copy_fle(self, fle, dst_dir):
+        new_fle = copy.copy(fle)
         src = os.path.abspath("{:s}".format(new_fle['path']))
-        dst = os.path.abspath("{:s}/{:s}".format(self.wd, fle['name']))
+        dst = os.path.abspath("{:s}/{:s}".format(dst_dir, fle['name']))
         shutil.copy(src, dst)
         new_fle['path'] = dst
         return new_fle
