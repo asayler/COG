@@ -605,6 +605,22 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.input_file_1 = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
         file_obj.close()
 
+        # Create Input 2
+        file_bse = open("{:s}/add_input2.txt".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="input2.txt")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'input'
+        self.input_file_2 = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Input 3
+        file_bse = open("{:s}/add_input3.txt".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="input3.txt")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'input'
+        self.input_file_3 = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
         # Create Assignment
         self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.user)
 
@@ -614,6 +630,8 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.tst = self.asn.create_test(data, owner=self.user)
         self.tst.add_files([str(self.sol_file.uuid)])
         self.tst.add_files([str(self.input_file_1.uuid)])
+        self.tst.add_files([str(self.input_file_2.uuid)])
+        self.tst.add_files([str(self.input_file_3.uuid)])
 
         # Create Submissions
         self.sub_good = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.user)
@@ -628,6 +646,8 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.sub_good.delete()
         self.tst.delete()
         self.asn.delete()
+        self.input_file_3.delete()
+        self.input_file_2.delete()
         self.input_file_1.delete()
         self.sol_file.delete()
         self.sub_file_bad.delete()
@@ -640,16 +660,31 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         pass
 
         # Test Good
-        # run = self.sub_good.execute_run(self.tst_args, workers=self.workers, owner=self.user)
-        # self.assertTrue(run)
-        # self.assertNotEqual(run['status'], "complete")
-        # while not run.is_complete():
-        #     time.sleep(1)
-        # self.assertEqual(run['status'], "complete")
-        # self.assertEqual(int(run['retcode']), 0)
-        # self.assertTrue(run['output'])
-        # self.assertEqual(float(run['score']), 10)
-        # run.delete()
+        run = self.sub_good.execute_run(self.tst, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(int(run['retcode']), 0)
+        self.assertTrue(run['output'])
+        self.assertEqual(float(run['score']), 10)
+        run.delete()
+
+    def test_execute_run_args_bad(self):
+        pass
+
+        # Test Bad
+        run = self.sub_bad.execute_run(self.tst, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(int(run['retcode']), 0)
+        self.assertTrue(run['output'])
+        self.assertLess(float(run['score']), 10)
+        run.delete()
 
 
 # Main

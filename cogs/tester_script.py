@@ -17,8 +17,9 @@ KEY_SCRIPT = 'script'
 
 class Tester(object):
 
-    def __init__(self, env):
+    def __init__(self, env, data):
         self.env = env
+        self.data = data
 
     def test(self):
 

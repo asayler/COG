@@ -6,10 +6,12 @@
 
 import env_local
 import tester_script
+import tester_io
 
 def test(asn, sub, tst, run):
 
     try:
+
         # Setup Env
         env_type = asn['env']
         if env_type == 'local':
@@ -20,7 +22,9 @@ def test(asn, sub, tst, run):
         # Setup Tester
         tester_type = tst['tester']
         if tester_type == 'script':
-            tester = tester_script.Tester(env)
+            tester = tester_script.Tester(env, tst.get_dict())
+        elif tester_type == 'io':
+            tester = tester_io.Tester(env, tst.get_dict())
         else:
             raise Exception("Unknown tester type {:s}".format(tester_type))
 
@@ -33,6 +37,7 @@ def test(asn, sub, tst, run):
             raise
         else:
             run['status'] = 'complete'
+
     except Exception as e:
         run['status'] = "complete-exception"
         run['output'] = str(e)

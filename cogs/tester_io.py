@@ -19,8 +19,9 @@ KEY_INPUT = 'input'
 
 class Tester(object):
 
-    def __init__(self, env):
+    def __init__(self, env, data):
         self.env = env
+        self.data = data
 
     def test(self):
 
@@ -66,10 +67,10 @@ class Tester(object):
         os.chmod(sandbox_path, 0775)
         sol_path = sol_fle['path']
         sol_cmd = [sol_path]
-        os.chmod(tst_path, 0775)
-        sol_path = sol_fle['path']
-        sol_cmd = [sol_path]
-        os.chmod(tst_path, 0775)
+        os.chmod(sol_path, 0775)
+        sub_path = sub_fle['path']
+        sub_cmd = [sub_path]
+        os.chmod(sub_path, 0775)
 
         # Change WD
         owd = os.getcwd()
@@ -79,7 +80,7 @@ class Tester(object):
             raise
 
         ret_val = 0
-        score = 0
+        pts = 0
         output = ""
         for input_fle in input_fles:
 
@@ -136,7 +137,7 @@ class Tester(object):
             output += "Expected: {:s}, Received: {:s}".format(exp, rec)
             if (rec == exp):
                 output += "   +1 pts\n"
-                score += 1
+                pts += 1
             else:
                 output += "   +0 pts\n"
 
@@ -145,6 +146,9 @@ class Tester(object):
             os.chdir(owd)
         except:
             raise
+
+        # Calculate Score
+        score = (pts / float(len(input_fles))) * float(self.data['maxscore'])
 
         # Return
         return ret_val, score, output
