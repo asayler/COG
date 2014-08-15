@@ -317,25 +317,33 @@ class RunTestCase(test_common_backend.SubMixin,
         # Call Parent
         super(RunTestCase, self).setUp()
 
-        # Create Test File
-        file_bse = open("{:s}/script_1.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="script.py")
+        # Create Args Test File
+        file_bse = open("{:s}/grade_add_args.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="grade.py")
         data = copy.copy(test_common.FILE_TESTDICT)
         data['key'] = 'script'
-        self.tst_file = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        self.tst_file_args = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Stdin Test File
+        file_bse = open("{:s}/grade_add_stdin.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="grade.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'script'
+        self.tst_file_stdin = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
         file_obj.close()
 
         # Create Good Sub File
-        file_bse = open("{:s}/pgm_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        file_bse = open("{:s}/add_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="add.py")
         data = copy.copy(test_common.FILE_TESTDICT)
         data['key'] = 'submission'
         self.sub_file_good = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
         file_obj.close()
 
         # Create Bad Sub File
-        file_bse = open("{:s}/pgm_bad.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        file_bse = open("{:s}/add_bad.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="add.py")
         data = copy.copy(test_common.FILE_TESTDICT)
         data['key'] = 'submission'
         self.sub_file_bad = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
@@ -344,11 +352,13 @@ class RunTestCase(test_common_backend.SubMixin,
         # Create Assignment
         self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.user)
 
-        # Create Test
-        self.tst = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.user)
-        self.tst.add_files([str(self.tst_file.uuid)])
+        # Create Tests
+        self.tst_args = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.user)
+        self.tst_args.add_files([str(self.tst_file_args.uuid)])
+        self.tst_stdin = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.user)
+        self.tst_stdin.add_files([str(self.tst_file_stdin.uuid)])
 
-        # Create Submission
+        # Create Submissions
         self.sub_good = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.user)
         self.sub_good.add_files([str(self.sub_file_good.uuid)])
         self.sub_bad = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.user)
@@ -359,19 +369,21 @@ class RunTestCase(test_common_backend.SubMixin,
         # Cleanup Structs
         self.sub_bad.delete()
         self.sub_good.delete()
-        self.tst.delete()
+        self.tst_stdin.delete()
+        self.tst_args.delete()
         self.asn.delete()
         self.sub_file_bad.delete()
         self.sub_file_good.delete()
-        self.tst_file.delete()
+        self.tst_file_stdin.delete()
+        self.tst_file_args.delete()
 
         # Call Parent
         super(RunTestCase, self).tearDown()
 
-    def test_execute_run_script_good(self):
+    def test_execute_run_script_args_good(self):
 
         # Test Good
-        run = self.sub_good.execute_run(self.tst, workers=self.workers, owner=self.user)
+        run = self.sub_good.execute_run(self.tst_args, workers=self.workers, owner=self.user)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -379,10 +391,32 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertEqual(run['status'], "complete")
         self.assertEqual(float(run['score']), 10)
 
-    def test_execute_run_script_bad(self):
+    def test_execute_run_script_args_bad(self):
 
         # Test Bad
-        run = self.sub_bad.execute_run(self.tst, workers=self.workers, owner=self.user)
+        run = self.sub_bad.execute_run(self.tst_args, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertLess(float(run['score']), 10)
+
+    def test_execute_run_script_stdin_good(self):
+
+        # Test Good
+        run = self.sub_good.execute_run(self.tst_stdin, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(float(run['score']), 10)
+
+    def test_execute_run_script_stdin_bad(self):
+
+        # Test Bad
+        run = self.sub_bad.execute_run(self.tst_stdin, workers=self.workers, owner=self.user)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
