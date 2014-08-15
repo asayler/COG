@@ -506,7 +506,7 @@ class RunTestCase(test_common_backend.SubMixin,
         while not run.is_complete():
             time.sleep(1)
         self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 124)
+        self.assertNotEqual(int(run['retcode']), 124)
         self.assertFalse(run['output'])
         run.delete()
 
@@ -519,7 +519,7 @@ class RunTestCase(test_common_backend.SubMixin,
         while not run.is_complete():
             time.sleep(1)
         self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 247)
+        self.assertNotEqual(int(run['retcode']), 0)
         self.assertFalse(run['output'])
         run.delete()
 
@@ -532,7 +532,7 @@ class RunTestCase(test_common_backend.SubMixin,
         while not run.is_complete():
             time.sleep(1)
         self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 124)
+        self.assertNotEqual(int(run['retcode']), 0)
         self.assertTrue(run['output'])
         run.delete()
 
