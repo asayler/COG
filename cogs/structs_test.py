@@ -427,6 +427,7 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertEqual(int(run['retcode']), 0)
         self.assertTrue(run['output'])
         self.assertEqual(float(run['score']), 10)
+        run.delete()
 
     def test_execute_run_script_args_bad(self):
 
@@ -440,6 +441,7 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertEqual(int(run['retcode']), 0)
         self.assertTrue(run['output'])
         self.assertLess(float(run['score']), 10)
+        run.delete()
 
     def test_execute_run_script_stdin_good(self):
 
@@ -453,6 +455,7 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertEqual(int(run['retcode']), 0)
         self.assertTrue(run['output'])
         self.assertEqual(float(run['score']), 10)
+        run.delete()
 
     def test_execute_run_script_stdin_bad(self):
 
@@ -466,6 +469,33 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertEqual(int(run['retcode']), 0)
         self.assertTrue(run['output'])
         self.assertLess(float(run['score']), 10)
+        run.delete()
+
+    def test_execute_run_script_parallel(self):
+
+        # Start Runs
+        runs = []
+        for i in range(25):
+            run = self.sub_good.execute_run(self.tst_args, workers=self.workers, owner=self.user)
+            self.assertTrue(run)
+            self.assertNotEqual(run['status'], "complete")
+            runs.append(run)
+
+        # Wait for Completion
+        for run in runs:
+            while not run.is_complete():
+                time.sleep(1)
+
+        # Check Output
+        for run in runs:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 10)
+
+        # Cleanup
+        for run in runs:
+            run.delete()
 
     def test_execute_run_script_hang(self):
 
@@ -478,6 +508,7 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertEqual(run['status'], "complete")
         self.assertEqual(int(run['retcode']), 124)
         self.assertFalse(run['output'])
+        run.delete()
 
     def test_execute_run_script_busy(self):
 
@@ -490,6 +521,7 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertEqual(run['status'], "complete")
         self.assertEqual(int(run['retcode']), 247)
         self.assertFalse(run['output'])
+        run.delete()
 
     def test_execute_run_script_fork(self):
 
@@ -502,6 +534,8 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertEqual(run['status'], "complete")
         self.assertEqual(int(run['retcode']), 124)
         self.assertTrue(run['output'])
+        run.delete()
+
 
 # Main
 if __name__ == '__main__':

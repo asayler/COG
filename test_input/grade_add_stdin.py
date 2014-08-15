@@ -4,11 +4,10 @@
 import sys
 import random
 import subprocess
-
+import time
 
 PGM = "python"
 SUB = "./add.py"
-
 
 def grade():
 
@@ -54,6 +53,9 @@ def grade():
         else:
             sys.stderr.write("{:s} returned error: {:d} +0\n".format(SUB, ret))
             sys.stderr.write(str(stderr))
+
+        w = random.randint(0, 10)
+        time.sleep(w/10.0)
 
     sys.stderr.write("__________________________\n".format(score))
     sys.stderr.write("Score ---------------> {:2d}\n".format(score))
