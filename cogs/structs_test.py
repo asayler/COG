@@ -308,14 +308,14 @@ class SubmissionTestCase(test_common_backend.SubMixin,
         sub.delete()
 
 
-class RunTestCase(test_common_backend.SubMixin,
-                  test_common_backend.UUIDHashMixin,
-                  StructsTestCase):
+class RunTestCaseScript(test_common_backend.SubMixin,
+                        test_common_backend.UUIDHashMixin,
+                        StructsTestCase):
 
     def setUp(self):
 
         # Call Parent
-        super(RunTestCase, self).setUp()
+        super(RunTestCaseScript, self).setUp()
 
         # Create Args Test Script
         file_bse = open("{:s}/grade_add_args.py".format(test_common.TEST_INPUT_PATH), 'rb')
@@ -413,9 +413,9 @@ class RunTestCase(test_common_backend.SubMixin,
         self.tst_file_args.delete()
 
         # Call Parent
-        super(RunTestCase, self).tearDown()
+        super(RunTestCaseScript, self).tearDown()
 
-    def test_execute_run_script_args_good(self):
+    def test_execute_run_args_good(self):
 
         # Test Good
         run = self.sub_good.execute_run(self.tst_args, workers=self.workers, owner=self.user)
@@ -429,7 +429,7 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertEqual(float(run['score']), 10)
         run.delete()
 
-    def test_execute_run_script_args_bad(self):
+    def test_execute_run_args_bad(self):
 
         # Test Bad
         run = self.sub_bad.execute_run(self.tst_args, workers=self.workers, owner=self.user)
@@ -443,7 +443,7 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertLess(float(run['score']), 10)
         run.delete()
 
-    def test_execute_run_script_stdin_good(self):
+    def test_execute_run_stdin_good(self):
 
         # Test Good
         run = self.sub_good.execute_run(self.tst_stdin, workers=self.workers, owner=self.user)
@@ -457,7 +457,7 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertEqual(float(run['score']), 10)
         run.delete()
 
-    def test_execute_run_script_stdin_bad(self):
+    def test_execute_run_stdin_bad(self):
 
         # Test Bad
         run = self.sub_bad.execute_run(self.tst_stdin, workers=self.workers, owner=self.user)
@@ -471,7 +471,7 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertLess(float(run['score']), 10)
         run.delete()
 
-    def test_execute_run_script_parallel(self):
+    def test_execute_run_parallel(self):
 
         # Start Runs
         runs = []
@@ -497,7 +497,7 @@ class RunTestCase(test_common_backend.SubMixin,
         for run in runs:
             run.delete()
 
-    def test_execute_run_script_hang(self):
+    def test_execute_run_hang(self):
 
         # Test Hang
         run = self.sub_null.execute_run(self.tst_hang, workers=self.workers, owner=self.user)
@@ -510,7 +510,7 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertFalse(run['output'])
         run.delete()
 
-    def test_execute_run_script_busy(self):
+    def test_execute_run_busy(self):
 
         # Test Busy
         run = self.sub_null.execute_run(self.tst_busy, workers=self.workers, owner=self.user)
@@ -523,7 +523,7 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertFalse(run['output'])
         run.delete()
 
-    def test_execute_run_script_fork(self):
+    def test_execute_run_fork(self):
 
         # Test Fork
         run = self.sub_null.execute_run(self.tst_fork, workers=self.workers, owner=self.user)
@@ -534,6 +534,128 @@ class RunTestCase(test_common_backend.SubMixin,
         self.assertEqual(run['status'], "complete")
         self.assertNotEqual(int(run['retcode']), 0)
         self.assertTrue(run['output'])
+        run.delete()
+
+
+class RunTestCaseIO(test_common_backend.SubMixin,
+                    test_common_backend.UUIDHashMixin,
+                    StructsTestCase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseIO, self).setUp()
+
+        # Create Args Test Script
+        file_bse = open("{:s}/grade_add_args.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="grade.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'script'
+        self.tst_file_args = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Stdin Test Script
+        file_bse = open("{:s}/grade_add_stdin.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="grade.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'script'
+        self.tst_file_stdin = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Hanging Script
+        file_bse = open("{:s}/pgm_hang.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'script'
+        self.pgm_hang = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Busy Script
+        file_bse = open("{:s}/pgm_busy.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'script'
+        self.pgm_busy = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Forkbomb Script
+        file_bse = open("{:s}/pgm_forkbomb.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'script'
+        self.pgm_fork = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Good Sub File
+        file_bse = open("{:s}/add_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="add.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'submission'
+        self.sub_file_good = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Bad Sub File
+        file_bse = open("{:s}/add_bad.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="add.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'submission'
+        self.sub_file_bad = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Assignment
+        self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.user)
+
+        # Create Tests
+        self.tst_args = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.user)
+        self.tst_args.add_files([str(self.tst_file_args.uuid)])
+        self.tst_stdin = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.user)
+        self.tst_stdin.add_files([str(self.tst_file_stdin.uuid)])
+        self.tst_hang = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.user)
+        self.tst_hang.add_files([str(self.pgm_hang.uuid)])
+        self.tst_busy = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.user)
+        self.tst_busy.add_files([str(self.pgm_busy.uuid)])
+        self.tst_fork = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.user)
+        self.tst_fork.add_files([str(self.pgm_fork.uuid)])
+
+        # Create Submissions
+        self.sub_good = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.user)
+        self.sub_good.add_files([str(self.sub_file_good.uuid)])
+        self.sub_bad = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.user)
+        self.sub_bad.add_files([str(self.sub_file_bad.uuid)])
+        self.sub_null = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.user)
+
+    def tearDown(self):
+
+        # Cleanup Structs
+        self.sub_null.delete()
+        self.sub_bad.delete()
+        self.sub_good.delete()
+        self.tst_fork.delete()
+        self.tst_busy.delete()
+        self.tst_hang.delete()
+        self.tst_stdin.delete()
+        self.tst_args.delete()
+        self.asn.delete()
+        self.sub_file_bad.delete()
+        self.sub_file_good.delete()
+        self.tst_file_stdin.delete()
+        self.tst_file_args.delete()
+
+        # Call Parent
+        super(RunTestCaseIO, self).tearDown()
+
+    def test_execute_run_args_good(self):
+
+        # Test Good
+        run = self.sub_good.execute_run(self.tst_args, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(int(run['retcode']), 0)
+        self.assertTrue(run['output'])
+        self.assertEqual(float(run['score']), 10)
         run.delete()
 
 
