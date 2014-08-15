@@ -197,6 +197,7 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 
         # Setup Factories
         self.AssignmentFactory = backend.UUIDFactory(Assignment)
+        self.FileFactory = backend.UUIDFactory(File)
 
         # Setup Lists
         FileListFactory = backend.PrefixedFactory(FileList, prefix=self.full_key)
@@ -250,9 +251,26 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 
     # Files Methods
     def add_files(self, file_uuids):
+
+        # Calculte Difference
+        file_uuids = (set(file_uuids) - set(self.list_files()))
+
+        # Check for Duplicate Names
+        names = []
+        for file_uuid in self.list_files():
+            fle = self.FileFactory.from_existing(file_uuid)
+            names.append(fle['name'])
+        for file_uuid in file_uuids:
+            fle = self.FileFactory.from_existing(file_uuid)
+            if fle['name'] in names:
+                raise PersistentObjectError("File named {:s} already in test".format(fle['name']))
+
+        # Add to List
         return self.files.add_vals(file_uuids)
+
     def rem_files(self, file_uuids):
         return self.files.del_vals(file_uuids)
+
     def list_files(self):
         return self.files.get_set()
 
@@ -277,6 +295,7 @@ class Submission(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
         # Setup Factories
         self.AssignmentFactory = backend.UUIDFactory(Assignment)
         self.RunFactory = backend.UUIDFactory(Run)
+        self.FileFactory = backend.UUIDFactory(File)
 
         # Setup Lists
         FileListFactory = backend.PrefixedFactory(FileList, prefix=self.full_key)
@@ -343,9 +362,26 @@ class Submission(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
 
     # Files Methods
     def add_files(self, file_uuids):
+
+        # Calculte Difference
+        file_uuids = (set(file_uuids) - set(self.list_files()))
+
+        # Check for Duplicate Names
+        names = []
+        for file_uuid in self.list_files():
+            fle = self.FileFactory.from_existing(file_uuid)
+            names.append(fle['name'])
+        for file_uuid in file_uuids:
+            fle = self.FileFactory.from_existing(file_uuid)
+            if fle['name'] in names:
+                raise PersistentObjectError("File named {:s} already in test".format(fle['name']))
+
+        # Add to List
         return self.files.add_vals(file_uuids)
+
     def rem_files(self, file_uuids):
         return self.files.del_vals(file_uuids)
+
     def list_files(self):
         return self.files.get_set()
 
