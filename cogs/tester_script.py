@@ -13,6 +13,7 @@ import copy
 
 import config
 
+KEY_SCRIPT = 'script'
 
 class Tester(object):
 
@@ -21,8 +22,18 @@ class Tester(object):
 
     def test(self):
 
-        if (len(self.env.tst_files) != 1):
-            raise Exception("Script requires a single test script file")
+        # Find Grading Script
+        tst_fle = None
+        count = 0
+        for fle in self.env.tst_files:
+            key = fle['key']
+            if (key == KEY_SCRIPT):
+                tst_fle = fle
+                count += 1
+        if not tst_fle:
+            raise Exception("Tester module requires a test script file")
+        if (count > 1):
+            raise Exception("Tester module only supports suppling one test script file")
 
         # Change WD
         owd = os.getcwd()
@@ -38,7 +49,7 @@ class Tester(object):
         shutil.copy(sandbox_src, sandbox_dst)
 
         # Setup Cmd
-        tst_path = self.env.tst_files[0]['path']
+        tst_path = tst_fle['path']
         tst_cmd = [tst_path]
         os.chmod(tst_path, 0775)
         sandbox_path = sandbox_dst

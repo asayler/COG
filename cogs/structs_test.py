@@ -317,7 +317,7 @@ class RunTestCase(test_common_backend.SubMixin,
         # Call Parent
         super(RunTestCase, self).setUp()
 
-        # Create Args Test File
+        # Create Args Test Script
         file_bse = open("{:s}/grade_add_args.py".format(test_common.TEST_INPUT_PATH), 'rb')
         file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="grade.py")
         data = copy.copy(test_common.FILE_TESTDICT)
@@ -325,12 +325,36 @@ class RunTestCase(test_common_backend.SubMixin,
         self.tst_file_args = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
         file_obj.close()
 
-        # Create Stdin Test File
+        # Create Stdin Test Script
         file_bse = open("{:s}/grade_add_stdin.py".format(test_common.TEST_INPUT_PATH), 'rb')
         file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="grade.py")
         data = copy.copy(test_common.FILE_TESTDICT)
         data['key'] = 'script'
         self.tst_file_stdin = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Hanging Script
+        file_bse = open("{:s}/pgm_hang.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'script'
+        self.pgm_hang = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Busy Script
+        file_bse = open("{:s}/pgm_busy.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'script'
+        self.pgm_busy = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Forkbomb Script
+        file_bse = open("{:s}/pgm_forkbomb.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'script'
+        self.pgm_fork = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
         file_obj.close()
 
         # Create Good Sub File
@@ -347,30 +371,6 @@ class RunTestCase(test_common_backend.SubMixin,
         data = copy.copy(test_common.FILE_TESTDICT)
         data['key'] = 'submission'
         self.sub_file_bad = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
-        file_obj.close()
-
-        # Create Hanging File
-        file_bse = open("{:s}/pgm_hang.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
-        data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'submission'
-        self.pgm_hang = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
-        file_obj.close()
-
-        # Create Busy File
-        file_bse = open("{:s}/pgm_busy.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
-        data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'submission'
-        self.pgm_busy = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
-        file_obj.close()
-
-        # Create Fork File
-        file_bse = open("{:s}/pgm_forkbomb.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
-        data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'submission'
-        self.pgm_fork = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
         file_obj.close()
 
         # Create Assignment
