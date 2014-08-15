@@ -549,27 +549,35 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         # Call Parent
         super(RunTestCaseIO, self).setUp()
 
+        # Create Null File
+        file_bse = open("{:s}/null".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="null")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'null'
+        self.file_null = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
         # Create Hanging Script
         file_bse = open("{:s}/pgm_hang.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="hang.py")
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'script'
+        data['key'] = 'pgm'
         self.pgm_hang = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
         file_obj.close()
 
         # Create Busy Script
         file_bse = open("{:s}/pgm_busy.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="busy.py")
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'script'
+        data['key'] = 'pgm'
         self.pgm_busy = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
         file_obj.close()
 
         # Create Forkbomb Script
         file_bse = open("{:s}/pgm_forkbomb.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="fork.py")
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'script'
+        data['key'] = 'pgm'
         self.pgm_fork = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
         file_obj.close()
 
@@ -650,6 +658,8 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.asn_add = self.srv.create_assignment(asn_add_data, owner=self.user)
         asn_hello_data = copy.copy(test_common.ASSIGNMENT_TESTDICT)
         self.asn_hello = self.srv.create_assignment(asn_hello_data, owner=self.user)
+        asn_bad_data = copy.copy(test_common.ASSIGNMENT_TESTDICT)
+        self.asn_bad = self.srv.create_assignment(asn_bad_data, owner=self.user)
 
         # Create Tests
         tst_add_data = copy.copy(test_common.TEST_TESTDICT)
@@ -663,30 +673,58 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         tst_hello_data['tester'] = "io"
         self.tst_hello = self.asn_hello.create_test(tst_hello_data, owner=self.user)
         self.tst_hello.add_files([str(self.sol_hello_file.uuid)])
+        tst_bad_data = copy.copy(test_common.TEST_TESTDICT)
+        tst_bad_data['tester'] = "io"
+        self.tst_bad = self.asn_bad.create_test(tst_bad_data, owner=self.user)
+        self.tst_bad.add_files([str(self.pgm_hang.uuid)])
+        self.tst_bad.add_files([str(self.pgm_busy.uuid)])
+        self.tst_bad.add_files([str(self.pgm_fork.uuid)])
 
         # Create Submissions
         sub_add_data = copy.copy(test_common.SUBMISSION_TESTDICT)
         self.sub_add_good = self.asn_add.create_submission(sub_add_data, owner=self.user)
         self.sub_add_good.add_files([str(self.sub_file_add_good.uuid)])
+        self.sub_add_wrong = self.asn_add.create_submission(sub_add_data, owner=self.user)
+        self.sub_add_wrong.add_files([str(self.sub_file_add_bad.uuid)])
         self.sub_add_bad = self.asn_add.create_submission(sub_add_data, owner=self.user)
-        self.sub_add_bad.add_files([str(self.sub_file_add_bad.uuid)])
+        self.sub_add_bad.add_files([str(self.pgm_hang.uuid)])
+        self.sub_add_bad.add_files([str(self.pgm_busy.uuid)])
+        self.sub_add_bad.add_files([str(self.pgm_fork.uuid)])
         sub_hello_data = copy.copy(test_common.SUBMISSION_TESTDICT)
         self.sub_hello_good = self.asn_hello.create_submission(sub_hello_data, owner=self.user)
         self.sub_hello_good.add_files([str(self.sub_file_hello_good.uuid)])
+        self.sub_hello_wrong = self.asn_hello.create_submission(sub_hello_data, owner=self.user)
+        self.sub_hello_wrong.add_files([str(self.sub_file_hello_bad.uuid)])
         self.sub_hello_bad = self.asn_hello.create_submission(sub_hello_data, owner=self.user)
-        self.sub_hello_bad.add_files([str(self.sub_file_hello_bad.uuid)])
+        self.sub_hello_bad.add_files([str(self.pgm_hang.uuid)])
+        self.sub_hello_bad.add_files([str(self.pgm_busy.uuid)])
+        self.sub_hello_bad.add_files([str(self.pgm_fork.uuid)])
+        sub_bad_data = copy.copy(test_common.SUBMISSION_TESTDICT)
+        self.sub_bad = self.asn_bad.create_submission(sub_bad_data, owner=self.user)
+        self.sub_bad.add_files([str(self.pgm_hang.uuid)])
+        self.sub_bad.add_files([str(self.pgm_busy.uuid)])
+        self.sub_bad.add_files([str(self.pgm_fork.uuid)])
+        sub_null_data = copy.copy(test_common.SUBMISSION_TESTDICT)
+        self.sub_null = self.asn_bad.create_submission(sub_null_data, owner=self.user)
+        self.sub_null.add_files([str(self.file_null.uuid)])
 
     def tearDown(self):
 
         # Cleanup Structs
-        self.sub_add_bad.delete()
-        self.sub_add_good.delete()
+        self.sub_null.delete()
+        self.sub_bad.delete()
         self.sub_hello_bad.delete()
+        self.sub_hello_wrong.delete()
         self.sub_hello_good.delete()
-        self.tst_add.delete()
+        self.sub_add_bad.delete()
+        self.sub_add_wrong.delete()
+        self.sub_add_good.delete()
+        self.tst_bad.delete()
         self.tst_hello.delete()
-        self.asn_add.delete()
+        self.tst_add.delete()
+        self.asn_bad.delete()
         self.asn_hello.delete()
+        self.asn_add.delete()
         self.input_file_3.delete()
         self.input_file_2.delete()
         self.input_file_1.delete()
@@ -696,12 +734,63 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.sub_file_add_good.delete()
         self.sub_file_hello_bad.delete()
         self.sub_file_hello_good.delete()
+        self.pgm_hang.delete()
+        self.pgm_busy.delete()
+        self.pgm_fork.delete()
+        self.file_null.delete()
 
         # Call Parent
         super(RunTestCaseIO, self).tearDown()
 
+    def test_execute_run_bad_hang(self):
+
+        # Test Hanging Reference Solution
+        self.pgm_hang['key'] = 'solution'
+        self.file_null['key'] = 'submission'
+        run = self.sub_null.execute_run(self.tst_bad, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(int(run['retcode']), 124)
+        self.assertTrue(run['output'])
+        self.assertEqual(float(run['score']), 0)
+        run.delete()
+
+    def test_execute_run_bad_busy(self):
+
+        # Test Busy Wait Reference Solution
+        self.pgm_busy['key'] = 'solution'
+        self.file_null['key'] = 'submission'
+        run = self.sub_null.execute_run(self.tst_bad, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertGreater(int(run['retcode']), 0)
+        self.assertTrue(run['output'])
+        self.assertEqual(float(run['score']), 0)
+        run.delete()
+
+    def test_execute_run_bad_fork(self):
+
+        # Test Fork Bomb Reference Solution
+        self.pgm_fork['key'] = 'solution'
+        self.file_null['key'] = 'submission'
+        run = self.sub_null.execute_run(self.tst_bad, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(int(run['retcode']), 124)
+        self.assertTrue(run['output'])
+        self.assertEqual(float(run['score']), 0)
+        run.delete()
+
     def test_execute_run_hello_good(self):
-        pass
 
         # Test Good
         run = self.sub_hello_good.execute_run(self.tst_hello, workers=self.workers, owner=self.user)
@@ -715,10 +804,54 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertEqual(float(run['score']), 10)
         run.delete()
 
-    def test_execute_run_hello_bad(self):
-        pass
+    def test_execute_run_hello_wrong(self):
 
-        # Test Good
+        # Test Wrong
+        run = self.sub_hello_wrong.execute_run(self.tst_hello, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(int(run['retcode']), 0)
+        self.assertTrue(run['output'])
+        self.assertEqual(float(run['score']), 0)
+        run.delete()
+
+    def test_execute_run_hello_hang(self):
+
+        # Test Hang
+        self.pgm_hang['key'] = 'submission'
+        run = self.sub_hello_bad.execute_run(self.tst_hello, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(int(run['retcode']), 0)
+        self.assertTrue(run['output'])
+        self.assertEqual(float(run['score']), 0)
+        run.delete()
+
+    def test_execute_run_hello_busy(self):
+
+        # Test Busy
+        self.pgm_busy['key'] = 'submission'
+        run = self.sub_hello_bad.execute_run(self.tst_hello, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(int(run['retcode']), 0)
+        self.assertTrue(run['output'])
+        self.assertEqual(float(run['score']), 0)
+        run.delete()
+
+    def test_execute_run_hello_fork(self):
+
+        # Test Fork Bomb
+        self.pgm_fork['key'] = 'submission'
         run = self.sub_hello_bad.execute_run(self.tst_hello, workers=self.workers, owner=self.user)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
@@ -731,7 +864,6 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         run.delete()
 
     def test_execute_run_add_good(self):
-        pass
 
         # Test Good
         run = self.sub_add_good.execute_run(self.tst_add, workers=self.workers, owner=self.user)
@@ -745,11 +877,10 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertEqual(float(run['score']), 10)
         run.delete()
 
-    def test_execute_run_add_bad(self):
-        pass
+    def test_execute_run_add_wrong(self):
 
         # Test Bad
-        run = self.sub_add_bad.execute_run(self.tst_add, workers=self.workers, owner=self.user)
+        run = self.sub_add_wrong.execute_run(self.tst_add, workers=self.workers, owner=self.user)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -758,6 +889,51 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertEqual(int(run['retcode']), 0)
         self.assertTrue(run['output'])
         self.assertLess(float(run['score']), 10)
+        run.delete()
+
+    def test_execute_run_add_hang(self):
+
+        # Test Hang
+        self.pgm_hang['key'] = 'submission'
+        run = self.sub_add_bad.execute_run(self.tst_add, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(int(run['retcode']), 0)
+        self.assertTrue(run['output'])
+        self.assertEqual(float(run['score']), 0)
+        run.delete()
+
+    def test_execute_run_add_busy(self):
+
+        # Test Busy
+        self.pgm_busy['key'] = 'submission'
+        run = self.sub_add_bad.execute_run(self.tst_add, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(int(run['retcode']), 0)
+        self.assertTrue(run['output'])
+        self.assertEqual(float(run['score']), 0)
+        run.delete()
+
+    def test_execute_run_add_fork(self):
+
+        # Test Frok Bomb
+        self.pgm_fork['key'] = 'submission'
+        run = self.sub_add_bad.execute_run(self.tst_add, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(int(run['retcode']), 0)
+        self.assertTrue(run['output'])
+        self.assertEqual(float(run['score']), 0)
         run.delete()
 
 

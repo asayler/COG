@@ -145,7 +145,7 @@ class Tester(object):
                 output += "Non-zero exit running submission: {:d}\n".format(ret)
             rec = stdout.rstrip().lstrip()
 
-            output += "Expected: {:s}, Received: {:s}".format(exp, rec)
+            output += "Expected: '{:s}', Received: '{:s}'".format(exp, rec)
             if (rec == exp):
                 output += "   +1 pts\n"
                 pts += 1
