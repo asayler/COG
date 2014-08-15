@@ -573,28 +573,52 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.pgm_fork = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
         file_obj.close()
 
-        # Create Good Sub File
+        # Create Good Sub File Hello
+        file_bse = open("{:s}/hello_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="hello.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'submission'
+        self.sub_file_hello_good = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Bad Sub File Hello
+        file_bse = open("{:s}/hello_bad.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="hello.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'submission'
+        self.sub_file_hello_bad = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Good Sub File Add
         file_bse = open("{:s}/add_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
         file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="add.py")
         data = copy.copy(test_common.FILE_TESTDICT)
         data['key'] = 'submission'
-        self.sub_file_good = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        self.sub_file_add_good = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
         file_obj.close()
 
-        # Create Bad Sub File
+        # Create Bad Sub File Add
         file_bse = open("{:s}/add_bad.py".format(test_common.TEST_INPUT_PATH), 'rb')
         file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="add.py")
         data = copy.copy(test_common.FILE_TESTDICT)
         data['key'] = 'submission'
-        self.sub_file_bad = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        self.sub_file_add_bad = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
         file_obj.close()
 
-        # Create Ref Sub File
+        # Create Ref Sub File Hello
+        file_bse = open("{:s}/hello_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="hello.py")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        data['key'] = 'solution'
+        self.sol_hello_file = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        file_obj.close()
+
+        # Create Ref Sub File Add
         file_bse = open("{:s}/add_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
         file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="add.py")
         data = copy.copy(test_common.FILE_TESTDICT)
         data['key'] = 'solution'
-        self.sol_file = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
+        self.sol_add_file = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
         file_obj.close()
 
         # Create Input 1
@@ -621,46 +645,66 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.input_file_3 = self.srv.create_file(data, file_obj=file_obj, owner=self.user)
         file_obj.close()
 
-        # Create Assignment
-        self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.user)
+        # Create Assignments
+        asn_add_data = copy.copy(test_common.ASSIGNMENT_TESTDICT)
+        self.asn_add = self.srv.create_assignment(asn_add_data, owner=self.user)
+        asn_hello_data = copy.copy(test_common.ASSIGNMENT_TESTDICT)
+        self.asn_hello = self.srv.create_assignment(asn_hello_data, owner=self.user)
 
         # Create Tests
-        data = copy.copy(test_common.TEST_TESTDICT)
-        data['tester'] = "io"
-        self.tst = self.asn.create_test(data, owner=self.user)
-        self.tst.add_files([str(self.sol_file.uuid)])
-        self.tst.add_files([str(self.input_file_1.uuid)])
-        self.tst.add_files([str(self.input_file_2.uuid)])
-        self.tst.add_files([str(self.input_file_3.uuid)])
+        tst_add_data = copy.copy(test_common.TEST_TESTDICT)
+        tst_add_data['tester'] = "io"
+        self.tst_add = self.asn_add.create_test(tst_add_data, owner=self.user)
+        self.tst_add.add_files([str(self.sol_add_file.uuid)])
+        self.tst_add.add_files([str(self.input_file_1.uuid)])
+        self.tst_add.add_files([str(self.input_file_2.uuid)])
+        self.tst_add.add_files([str(self.input_file_3.uuid)])
+        tst_hello_data = copy.copy(test_common.TEST_TESTDICT)
+        tst_hello_data['tester'] = "io"
+        self.tst_hello = self.asn_hello.create_test(tst_hello_data, owner=self.user)
+        self.tst_hello.add_files([str(self.sol_hello_file.uuid)])
 
         # Create Submissions
-        self.sub_good = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.user)
-        self.sub_good.add_files([str(self.sub_file_good.uuid)])
-        self.sub_bad = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.user)
-        self.sub_bad.add_files([str(self.sub_file_bad.uuid)])
+        sub_add_data = copy.copy(test_common.SUBMISSION_TESTDICT)
+        self.sub_add_good = self.asn_add.create_submission(sub_add_data, owner=self.user)
+        self.sub_add_good.add_files([str(self.sub_file_add_good.uuid)])
+        self.sub_add_bad = self.asn_add.create_submission(sub_add_data, owner=self.user)
+        self.sub_add_bad.add_files([str(self.sub_file_add_bad.uuid)])
+        sub_hello_data = copy.copy(test_common.SUBMISSION_TESTDICT)
+        self.sub_hello_good = self.asn_hello.create_submission(sub_hello_data, owner=self.user)
+        self.sub_hello_good.add_files([str(self.sub_file_hello_good.uuid)])
+        self.sub_hello_bad = self.asn_hello.create_submission(sub_hello_data, owner=self.user)
+        self.sub_hello_bad.add_files([str(self.sub_file_hello_bad.uuid)])
 
     def tearDown(self):
 
         # Cleanup Structs
-        self.sub_bad.delete()
-        self.sub_good.delete()
-        self.tst.delete()
-        self.asn.delete()
+        self.sub_add_bad.delete()
+        self.sub_add_good.delete()
+        self.sub_hello_bad.delete()
+        self.sub_hello_good.delete()
+        self.tst_add.delete()
+        self.tst_hello.delete()
+        self.asn_add.delete()
+        self.asn_hello.delete()
         self.input_file_3.delete()
         self.input_file_2.delete()
         self.input_file_1.delete()
-        self.sol_file.delete()
-        self.sub_file_bad.delete()
-        self.sub_file_good.delete()
+        self.sol_add_file.delete()
+        self.sol_hello_file.delete()
+        self.sub_file_add_bad.delete()
+        self.sub_file_add_good.delete()
+        self.sub_file_hello_bad.delete()
+        self.sub_file_hello_good.delete()
 
         # Call Parent
         super(RunTestCaseIO, self).tearDown()
 
-    def test_execute_run_args_good(self):
+    def test_execute_run_hello_good(self):
         pass
 
         # Test Good
-        run = self.sub_good.execute_run(self.tst, workers=self.workers, owner=self.user)
+        run = self.sub_hello_good.execute_run(self.tst_hello, workers=self.workers, owner=self.user)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -671,11 +715,41 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertEqual(float(run['score']), 10)
         run.delete()
 
-    def test_execute_run_args_bad(self):
+    def test_execute_run_hello_bad(self):
+        pass
+
+        # Test Good
+        run = self.sub_hello_bad.execute_run(self.tst_hello, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(int(run['retcode']), 0)
+        self.assertTrue(run['output'])
+        self.assertEqual(float(run['score']), 0)
+        run.delete()
+
+    def test_execute_run_add_good(self):
+        pass
+
+        # Test Good
+        run = self.sub_add_good.execute_run(self.tst_add, workers=self.workers, owner=self.user)
+        self.assertTrue(run)
+        self.assertNotEqual(run['status'], "complete")
+        while not run.is_complete():
+            time.sleep(1)
+        self.assertEqual(run['status'], "complete")
+        self.assertEqual(int(run['retcode']), 0)
+        self.assertTrue(run['output'])
+        self.assertEqual(float(run['score']), 10)
+        run.delete()
+
+    def test_execute_run_add_bad(self):
         pass
 
         # Test Bad
-        run = self.sub_bad.execute_run(self.tst, workers=self.workers, owner=self.user)
+        run = self.sub_add_bad.execute_run(self.tst_add, workers=self.workers, owner=self.user)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():

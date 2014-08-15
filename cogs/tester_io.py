@@ -58,7 +58,7 @@ class Tester(object):
             if (key == KEY_INPUT):
                 input_fles.append(fle)
         if not input_fles:
-            raise Exception("Tester module requires at least one input file")
+            input_fles.append(None)
 
         # Setup Cmd
         sudo_cmd = ['sudo', '-u', config.TESTER_SCRIPT_USER, '-g', config.TESTER_SCRIPT_GROUP]
@@ -84,10 +84,16 @@ class Tester(object):
         output = ""
         for input_fle in input_fles:
 
-            output += "Testing {:s}...\n".format(input_fle['name'])
+            if input_fle:
+                output += "Testing {:s}...\n".format(input_fle['name'])
+            else:
+                output += "Testing...\n"
 
             # Test Reference Solution
-            input_file = open(input_fle['path'], 'r')
+            if input_fle:
+                input_file = open(input_fle['path'], 'r')
+            else:
+                input_file = None
             cmd = sudo_cmd + sandbox_cmd + sol_cmd
             ret = 1
             stdout = ""
@@ -100,7 +106,8 @@ class Tester(object):
             except Exception as e:
                 output += "Exception running reference solution: {:s}\n".format(str(e))
             finally:
-                input_file.close()
+                if input_file:
+                    input_file.close()
 
             # Process Solution Output
             if stderr:
@@ -112,7 +119,10 @@ class Tester(object):
             exp = stdout.rstrip().lstrip()
 
             # Test Submission
-            input_file = open(input_fle['path'], 'r')
+            if input_fle:
+                input_file = open(input_fle['path'], 'r')
+            else:
+                input_file = None
             cmd = sudo_cmd + sandbox_cmd + sub_cmd
             ret = 1
             stdout = ""
@@ -125,7 +135,8 @@ class Tester(object):
             except Exception as e:
                 output += "Exception running submission: {:s}\n".format(str(e))
             finally:
-                input_file.close()
+                if input_file:
+                    input_file.close()
 
             # Process Solution Output
             if stderr:
