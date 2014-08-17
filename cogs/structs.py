@@ -20,11 +20,12 @@ import testrun
 
 ### Constants ###
 
+_FILE_SCHEMA = ['key', 'name', 'type', 'encoding', 'path']
+_REPORT_SCHEMA = ['reporter']
 _ASSIGNMENT_SCHEMA = ['name', 'env']
 _TEST_SCHEMA = ['assignment', 'name', 'maxscore', 'tester']
 _SUBMISSION_SCHEMA = ['assignment']
 _RUN_SCHEMA = ['submission', 'test', 'status', 'score', 'retcode', 'output']
-_FILE_SCHEMA = ['key', 'name', 'type', 'encoding', 'path']
 
 _DEFAULT_FILES_DIR = "./files/"
 _FILES_DIR = os.environ.get('COGS_UPLOADED_FILES_PATH', _DEFAULT_FILES_DIR)
@@ -45,6 +46,7 @@ class Server(object):
 
         # Setup Factories
         self.FileFactory = backend.UUIDFactory(File)
+        self.ReportFactory = backend.UUIDFactory(Report)
         self.AssignmentFactory = backend.UUIDFactory(Assignment)
         self.SubmissionFactory = backend.UUIDFactory(Submission)
         self.TestFactory = backend.UUIDFactory(Test)
@@ -61,6 +63,14 @@ class Server(object):
         return self.FileFactory.from_existing(uuid_hex)
     def list_files(self):
         return self.FileFactory.list_siblings()
+
+    # Report Methods
+    def create_report(self, data, owner=None):
+        return self.ReportFactory.from_new(data, owner=owner)
+    def get_report(self, uuid_hex):
+        return self.ReportFactory.from_existing(uuid_hex)
+    def list_reports(self):
+        return self.ReportFactory.list_siblings()
 
     # Assignment Methods
     def create_assignment(self, data, owner=None):
@@ -87,6 +97,96 @@ class Server(object):
         return self.RunFactory.from_existing(uuid_hex)
     def list_runs(self):
         return self.RunFactory.list_siblings()
+
+
+## File Object ##
+class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
+    """COGS File Class"""
+
+    # Override from_new
+    @classmethod
+    def from_new(cls, data, **kwargs):
+        """New Constructor"""
+
+        # Extract Args
+        file_obj = kwargs.pop('file_obj', None)
+        dst = kwargs.pop('dst', None)
+
+        # Set Schema
+        schema = set(_FILE_SCHEMA)
+        kwargs['schema'] = schema
+
+        # Create New Object
+        data = copy.copy(data)
+
+        # Setup file_obj
+        if file_obj is None:
+            src_path = os.path.abspath("{:s}".format(data['path']))
+            src_file = open(src_path, 'rb')
+            file_obj = werkzeug.datastructures.FileStorage(stream=src_file, filename=data['name'])
+
+        # Setup data
+        data['name'] = str(file_obj.filename)
+        data['path'] = ""
+
+        # Get Type
+        typ = mimetypes.guess_type(file_obj.filename)
+        data['type'] = str(typ[0])
+        data['encoding'] = str(typ[1])
+
+        # Call Parent
+        fle = super(File, cls).from_new(data, **kwargs)
+
+        # Set Path
+        if dst is None:
+            fle['path'] = os.path.abspath("{:s}/{:s}".format(_FILES_DIR, repr(fle)))
+        else:
+            fle['path'] = os.path.abspath("{:s}".format(dst))
+
+        # Save File
+        try:
+            file_obj.save(fle['path'])
+        except IOError:
+            # Clean up on failure
+            fle._delete(force=True)
+            raise
+
+        # Return File
+        return fle
+
+    # Override Delete
+    def delete(self, force=False):
+        """Delete Object"""
+
+        # Delete File
+        try:
+            os.remove(self['path'])
+        except OSError:
+            if force:
+                pass
+            else:
+                raise
+
+        # Delete Self
+        super(File, self).delete()
+
+
+## File List Object ##
+class FileList(backend.Set):
+    """COGS File List Class"""
+    pass
+
+
+## Report Object ##
+class Report(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
+    """COGS Report Class"""
+    pass
+
+
+## Report List Object ##
+class ReportList(backend.Set):
+    """COGS Report List Class"""
+    pass
 
 
 ## Assignment Object ##
@@ -202,6 +302,8 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         # Setup Lists
         FileListFactory = backend.PrefixedFactory(FileList, prefix=self.full_key)
         self.files = FileListFactory.from_raw(key='files')
+        ReportListFactory = backend.PrefixedFactory(ReportList, prefix=self.full_key)
+        self.files = ReportListFactory.from_raw(key='reports')
 
     # Override from_new
     @classmethod
@@ -273,6 +375,16 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 
     def list_files(self):
         return self.files.get_set()
+
+    # Reports Methods
+    def add_reports(self, report_uuids):
+        return self.reports.add_vals(report_uuids)
+
+    def rem_reports(self, report_uuids):
+        return self.reports.del_vals(report_uuids)
+
+    def list_reports(self):
+        return self.reports.get_set()
 
 
 ## Test List Object ##
@@ -494,82 +606,5 @@ class RunList(backend.Set):
     """COGS Run List Class"""
     pass
 
-
-## File Object ##
-class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
-    """COGS File Class"""
-
-    # Override from_new
-    @classmethod
-    def from_new(cls, data, **kwargs):
-        """New Constructor"""
-
-        # Extract Args
-        file_obj = kwargs.pop('file_obj', None)
-        dst = kwargs.pop('dst', None)
-
-        # Set Schema
-        schema = set(_FILE_SCHEMA)
-        kwargs['schema'] = schema
-
-        # Create New Object
-        data = copy.copy(data)
-
-        # Setup file_obj
-        if file_obj is None:
-            src_path = os.path.abspath("{:s}".format(data['path']))
-            src_file = open(src_path, 'rb')
-            file_obj = werkzeug.datastructures.FileStorage(stream=src_file, filename=data['name'])
-
-        # Setup data
-        data['name'] = str(file_obj.filename)
-        data['path'] = ""
-
-        # Get Type
-        typ = mimetypes.guess_type(file_obj.filename)
-        data['type'] = str(typ[0])
-        data['encoding'] = str(typ[1])
-
-        # Call Parent
-        fle = super(File, cls).from_new(data, **kwargs)
-
-        # Set Path
-        if dst is None:
-            fle['path'] = os.path.abspath("{:s}/{:s}".format(_FILES_DIR, repr(fle)))
-        else:
-            fle['path'] = os.path.abspath("{:s}".format(dst))
-
-        # Save File
-        try:
-            file_obj.save(fle['path'])
-        except IOError:
-            # Clean up on failure
-            fle._delete(force=True)
-            raise
-
-        # Return File
-        return fle
-
-    # Override Delete
-    def delete(self, force=False):
-        """Delete Object"""
-
-        # Delete File
-        try:
-            os.remove(self['path'])
-        except OSError:
-            if force:
-                pass
-            else:
-                raise
-
-        # Delete Self
-        super(File, self).delete()
-
-
-## File List Object ##
-class FileList(backend.Set):
-    """COGS File List Class"""
-    pass
 
 #  LocalWords:  kwargs
