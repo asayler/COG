@@ -17,11 +17,13 @@ import backend_redis as backend
 from backend_redis import BackendError, FactoryError, PersistentObjectError, ObjectDNE
 import testrun
 
+import repmod_moodle
+
 
 ### Constants ###
 
 _FILE_SCHEMA = ['key', 'name', 'type', 'encoding', 'path']
-_REPORT_SCHEMA = ['reporter']
+_REPORTER_SCHEMA = ['mod']
 _ASSIGNMENT_SCHEMA = ['name', 'env']
 _TEST_SCHEMA = ['assignment', 'name', 'maxscore', 'tester']
 _SUBMISSION_SCHEMA = ['assignment']
@@ -46,7 +48,7 @@ class Server(object):
 
         # Setup Factories
         self.FileFactory = backend.UUIDFactory(File)
-        self.ReportFactory = backend.UUIDFactory(Report)
+        self.ReporterFactory = backend.UUIDFactory(Reporter)
         self.AssignmentFactory = backend.UUIDFactory(Assignment)
         self.SubmissionFactory = backend.UUIDFactory(Submission)
         self.TestFactory = backend.UUIDFactory(Test)
@@ -64,13 +66,13 @@ class Server(object):
     def list_files(self):
         return self.FileFactory.list_siblings()
 
-    # Report Methods
-    def create_report(self, data, owner=None):
-        return self.ReportFactory.from_new(data, owner=owner)
-    def get_report(self, uuid_hex):
-        return self.ReportFactory.from_existing(uuid_hex)
-    def list_reports(self):
-        return self.ReportFactory.list_siblings()
+    # Reporter Methods
+    def create_reporter(self, data, mod=None, owner=None):
+        return self.ReporterFactory.from_new(data, mod=mod, owner=owner)
+    def get_reporter(self, uuid_hex):
+        return self.ReporterFactory.from_existing(uuid_hex)
+    def list_reporters(self):
+        return self.ReporterFactory.list_siblings()
 
     # Assignment Methods
     def create_assignment(self, data, owner=None):
@@ -177,15 +179,53 @@ class FileList(backend.Set):
     pass
 
 
-## Report Object ##
-class Report(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
-    """COGS Report Class"""
-    pass
+## Reporter Object ##
+class Reporter(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
+    """COGS Reporter Class"""
+
+    # Override from_new
+    @classmethod
+    def from_new(cls, data, **kwargs):
+
+        # Process Args
+        mod = kwargs.pop('mod', None)
+        if not mod:
+            raise TypeError("mod required")
+
+        # Set Schema
+        schema = set(_REPORTER_SCHEMA)
+        if mod == 'moodle':
+            schema.update(set(repmod_moodle.EXTRA_REPORTER_SCHEMA))
+        else:
+            raise Exception("Unknown repmod")
+        kwargs['schema'] = schema
+
+        # Set Data
+        data = copy.copy(data)
+        data['mod'] = mod
+
+        # Call Parent
+        reporter = super(Reporter, cls).from_new(data, **kwargs)
+
+        # Return Reporter
+        return reporter
+
+    # Generate New Report
+    def file_reporter(self, user, grade, comments):
+
+        mod = self['mod']
+        if mod == 'moodle':
+            repmod = repmod_moodle
+        else:
+            raise Exception("Unknown repmod: {:s}".format(mod))
+
+        repmod = repmod.Reporter(self)
+        repmod.file_report(user, grade, comments)
 
 
-## Report List Object ##
-class ReportList(backend.Set):
-    """COGS Report List Class"""
+## Reporter List Object ##
+class ReporterList(backend.Set):
+    """COGS Reporter List Class"""
     pass
 
 
@@ -302,8 +342,8 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         # Setup Lists
         FileListFactory = backend.PrefixedFactory(FileList, prefix=self.full_key)
         self.files = FileListFactory.from_raw(key='files')
-        ReportListFactory = backend.PrefixedFactory(ReportList, prefix=self.full_key)
-        self.files = ReportListFactory.from_raw(key='reports')
+        ReporterListFactory = backend.PrefixedFactory(ReporterList, prefix=self.full_key)
+        self.files = ReporterListFactory.from_raw(key='reporters')
 
     # Override from_new
     @classmethod
@@ -376,15 +416,15 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
     def list_files(self):
         return self.files.get_set()
 
-    # Reports Methods
-    def add_reports(self, report_uuids):
-        return self.reports.add_vals(report_uuids)
+    # Reporters Methods
+    def add_reporters(self, reporter_uuids):
+        return self.reporters.add_vals(reporter_uuids)
 
-    def rem_reports(self, report_uuids):
-        return self.reports.del_vals(report_uuids)
+    def rem_reporters(self, reporter_uuids):
+        return self.reporters.del_vals(reporter_uuids)
 
-    def list_reports(self):
-        return self.reports.get_set()
+    def list_reporters(self):
+        return self.reporters.get_set()
 
 
 ## Test List Object ##

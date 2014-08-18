@@ -21,33 +21,68 @@ DUMMY_TESTDICT = {'key1': "val1",
 USER_TESTDICT = {}
 GROUP_TESTDICT = {'name': "testgroup"}
 FILE_TESTDICT  = {'key': "Test_File"}
+REPORTER_TESTDICT  = {}
 ASSIGNMENT_TESTDICT = {'name': "Test_Assignment", 'env': "local"}
 TEST_TESTDICT = {'name': "Test_Assignment",
                  'maxscore': "10",
                  'tester': "script"}
 SUBMISSION_TESTDICT = {}
 
-# Set Default Vals
+# Set Local Default Vals
 TEST_INPUT_PATH = os.path.realpath("{:s}/test_input".format(config.ROOT_PATH))
+TEST_REPMOD_MOODLE_ASN = "1"
+
+# Set Override Default Vals
 TEST_REDIS_HOST = "localhost"
 TEST_REDIS_PORT = 6379
 TEST_REDIS_DB = 5
+TEST_MOODLE_HOST = "https://moodle-test.cs.colorado.edu"
+TEST_MOODLE_SERVICE = "Grading_Serv"
+TEST_AUTHMOD_MOODLE_HOST = TEST_MOODLE_HOST
+TEST_AUTHMOD_MOODLE_SERVICE = TEST_MOODLE_SERVICE
+TEST_REPMOD_MOODLE_HOST = TEST_MOODLE_HOST
+TEST_REPMOD_MOODLE_SERVICE = TEST_MOODLE_SERVICE
+TEST_REPMOD_MOODLE_USERNAME = None
+TEST_REPMOD_MOODLE_PASSWORD = None
 
-# Get Test Vars
+# Get Local Test Env Vars
 TEST_INPUT_PATH = os.environ.get('COGS_TEST_INPUT_PATH', TEST_INPUT_PATH)
-MOODLE_USERNAME = os.environ.get('COGS_TEST_MOODLE_USERNAME', 'moodleuser')
-MOODLE_PASSWORD = os.environ.get('COGS_TEST_MOODLE_PASSWORD', 'moodlepass')
+MOODLE_USERNAME = os.environ.get('COGS_TEST_MOODLE_USERNAME', None)
+MOODLE_PASSWORD = os.environ.get('COGS_TEST_MOODLE_PASSWORD', None)
 ADMIN_AUTHMOD = os.environ.get('COGS_TEST_ADMIN_AUTHMOD', 'test')
 ADMIN_USERNAME = os.environ.get('COGS_TEST_ADMIN_USERNAME', 'adminuser')
 ADMIN_PASSWORD = os.environ.get('COGS_TEST_ADMIN_PASSWORD', 'adminpass')
+REPMOD_MOODLE_ASN = os.environ.get('COGS_TEST_REPMOD_MOODLE_ASN', TEST_REPMOD_MOODLE_ASN)
+
+# Get Override Test Env Vars
 REDIS_HOST = os.environ.get('COGS_TEST_REDIS_HOST', TEST_REDIS_HOST)
 REDIS_PORT = int(os.environ.get('COGS_TEST_REDIS_PORT', TEST_REDIS_PORT))
 REDIS_DB = int(os.environ.get('COGS_TEST_REDIS_DB', TEST_REDIS_DB))
+AUTHMOD_MOODLE_HOST = os.environ.get('COGS_TEST_AUTHMOD_MOODLE_HOST', TEST_AUTHMOD_MOODLE_HOST)
+AUTHMOD_MOODLE_SERVICE = os.environ.get('COGS_TEST_AUTHMOD_MOODLE_SERVICE', TEST_AUTHMOD_MOODLE_SERVICE)
+REPMOD_MOODLE_HOST = os.environ.get('COGS_TEST_REPMOD_MOODLE_HOST', TEST_REPMOD_MOODLE_HOST)
+REPMOD_MOODLE_SERVICE = os.environ.get('COGS_TEST_REPMOD_MOODLE_SERVICE', TEST_REPMOD_MOODLE_SERVICE)
+if TEST_REPMOD_MOODLE_USERNAME:
+    REPMOD_MOODLE_USERNAME = os.environ.get('COGS_TEST_REPMOD_MOODLE_USERNAME',
+                                            TEST_REPMOD_MOODLE_USERNAME)
+else:
+    REPMOD_MOODLE_USERNAME = os.environ['COGS_TEST_REPMOD_MOODLE_USERNAME']
+if TEST_REPMOD_MOODLE_PASSWORD:
+    REPMOD_MOODLE_PASSWORD = os.environ.get('COGS_TESTREPMOD_MOODLE_PASSWORD',
+                                            TEST_REPMOD_MOODLE_PASSWORD)
+else:
+    REPMOD_MOODLE_PASSWORD = os.environ['COGS_TEST_REPMOD_MOODLE_PASSWORD']
 
-# Set DB Vars
+# Set Override DB Vars
 os.environ['COGS_REDIS_HOST'] = REDIS_HOST
 os.environ['COGS_REDIS_PORT'] = str(REDIS_PORT)
 os.environ['COGS_REDIS_DB'] = str(REDIS_DB)
+os.environ['COGS_AUTHMOD_MOODLE_HOST'] = AUTHMOD_MOODLE_HOST
+os.environ['COGS_AUTHMOD_MOODLE_SERVICE'] = AUTHMOD_MOODLE_SERVICE
+os.environ['COGS_REPMOD_MOODLE_HOST'] = REPMOD_MOODLE_HOST
+os.environ['COGS_REPMOD_MOODLE_SERVICE'] = REPMOD_MOODLE_SERVICE
+os.environ['COGS_REPMOD_MOODLE_USERNAME'] = REPMOD_MOODLE_USERNAME
+os.environ['COGS_REPMOD_MOODLE_PASSWORD'] = REPMOD_MOODLE_PASSWORD
 reload(config)
 
 # Create DB
@@ -80,7 +115,7 @@ class CogsTestCase(unittest.TestCase):
 
         if type(sub) == dict:
             for k in sub:
-                self.assertEqual(sub[k], sup[k])
+                self.assertEqual(str(sub[k]), str(sup[k]))
         elif type(sub) == set:
             self.assertTrue(sub.issubset(sup))
         elif type(sub) == list:
