@@ -9,8 +9,9 @@ import env_local
 import tester_script
 import tester_io
 
+import auth
 
-def test(asn, sub, tst, run):
+def test(asn, sub, tst, run, rpts):
 
     try:
 
@@ -64,3 +65,11 @@ def test(asn, sub, tst, run):
         run['score'] = score
         run['output'] = output
         run['status'] = status # Must be set last to avoid race
+
+    # Report Results
+    a = auth.Auth()
+    user = a.get_user(run['owner'])
+    grade = run['score']
+    comments = run['output']
+    for rpt in rpts:
+        rpt.file_report(user, grade, comments)

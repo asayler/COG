@@ -575,7 +575,7 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 
         # Setup Factories
         self.SubmissionFactory = backend.UUIDFactory(Submission)
-
+        self.ReporterFactory = backend.UUIDFactory(Reporter)
 
     # Override from_new
     @classmethod
@@ -605,12 +605,17 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         data['retcode'] = ""
         data['output'] = ""
 
+        # Get Reporters
+        rpts = []
+        for rpt_uuid in tst.list_reporters():
+            rpts.append(self.ReporterFactory.from_existing(rpt_uuid))
+
         # Create Run
         run = super(Run, cls).from_new(data, **kwargs)
         run_uuid = str(run.uuid).lower()
 
         # Add Task to Pool
-        res = workers.apply_async(testrun.test, args=(asn, sub, tst, run))
+        res = workers.apply_async(testrun.test, args=(asn, sub, tst, run, rpts))
 
         # Return Run
         return run
