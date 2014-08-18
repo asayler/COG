@@ -486,11 +486,15 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertEqual(float(run['score']), 10)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 10)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_args_bad(self):
 
@@ -500,11 +504,15 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertLess(float(run['score']), 10)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertLess(float(run['score']), 10)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_stdin_good(self):
 
@@ -514,11 +522,15 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertEqual(float(run['score']), 10)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 10)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_stdin_bad(self):
 
@@ -528,11 +540,15 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertLess(float(run['score']), 10)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertLess(float(run['score']), 10)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_parallel(self):
 
@@ -549,16 +565,17 @@ class RunTestCaseScript(test_common_backend.SubMixin,
             while not run.is_complete():
                 time.sleep(1)
 
-        # Check Output
+        # Check Output and Cleanup
         for run in runs:
-            self.assertEqual(run['status'], "complete")
-            self.assertEqual(int(run['retcode']), 0)
-            self.assertTrue(run['output'])
-            self.assertEqual(float(run['score']), 10)
-
-        # Cleanup
-        for run in runs:
-            run.delete()
+            try:
+                self.assertEqual(run['status'], "complete")
+                self.assertEqual(int(run['retcode']), 0)
+                self.assertTrue(run['output'])
+                self.assertEqual(float(run['score']), 10)
+            except AssertionError:
+                print("run = {:s}".format(run.get_dict()))
+            finally:
+                run.delete()
 
     def test_execute_run_hang(self):
 
@@ -568,10 +585,14 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 124)
-        self.assertFalse(run['output'])
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 124)
+            self.assertFalse(run['output'])
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_busy(self):
 
@@ -581,10 +602,14 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertNotEqual(int(run['retcode']), 0)
-        self.assertFalse(run['output'])
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertNotEqual(int(run['retcode']), 0)
+            self.assertFalse(run['output'])
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_fork(self):
 
@@ -594,10 +619,14 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertNotEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertNotEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
 
 class RunTestCaseIO(test_common_backend.SubMixin,
@@ -812,11 +841,15 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 124)
-        self.assertTrue(run['output'])
-        self.assertEqual(float(run['score']), 0)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 124)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_bad_busy(self):
 
@@ -828,11 +861,15 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertGreater(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertEqual(float(run['score']), 0)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertGreater(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_bad_fork(self):
 
@@ -844,11 +881,15 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 124)
-        self.assertTrue(run['output'])
-        self.assertEqual(float(run['score']), 0)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 124)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_hello_good(self):
 
@@ -858,11 +899,15 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertEqual(float(run['score']), 10)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 10)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_hello_wrong(self):
 
@@ -872,11 +917,15 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertEqual(float(run['score']), 0)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_hello_hang(self):
 
@@ -887,11 +936,15 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertEqual(float(run['score']), 0)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_hello_busy(self):
 
@@ -902,11 +955,15 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertEqual(float(run['score']), 0)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_hello_fork(self):
 
@@ -917,11 +974,15 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertEqual(float(run['score']), 0)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_add_good(self):
 
@@ -931,11 +992,15 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertEqual(float(run['score']), 10)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 10)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_add_wrong(self):
 
@@ -945,11 +1010,15 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertLess(float(run['score']), 10)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertLess(float(run['score']), 10)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_add_hang(self):
 
@@ -960,11 +1029,15 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertEqual(float(run['score']), 0)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_add_busy(self):
 
@@ -975,11 +1048,15 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertEqual(float(run['score']), 0)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
     def test_execute_run_add_fork(self):
 
@@ -990,11 +1067,15 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
-        self.assertEqual(run['status'], "complete")
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertTrue(run['output'])
-        self.assertEqual(float(run['score']), 0)
-        run.delete()
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+        finally:
+            run.delete()
 
 
 # Main
