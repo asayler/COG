@@ -271,7 +271,20 @@ class TestTestCase(test_common_backend.SubMixin,
             self.files.add(str(self.srv.create_file(data, file_obj=file_obj, owner=self.testuser).uuid))
         file_obj.close()
 
+        # Create Reporters
+        mod = "moodle"
+        data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['asn_id'] = test_common.REPMOD_MOODLE_ASN
+        self.reporters = set([])
+        for i in range(10):
+            self.reporters.add(str(self.srv.create_reporter(data, mod=mod, owner=self.testuser).uuid))
+
     def tearDown(self):
+
+        # Delete Reporters
+        for rpt_uuid in self.reporters:
+            rpt = self.srv.get_reporter(rpt_uuid)
+            rpt.delete()
 
         # Delete Files
         for fle_uuid in self.files:
@@ -305,6 +318,12 @@ class TestTestCase(test_common_backend.SubMixin,
     def test_files(self):
         tst = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.testuser)
         self.subSetReferenceHelper(tst.add_files, tst.rem_files, tst.list_files, self.files)
+        tst.delete()
+
+    def test_reporters(self):
+        tst = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.testuser)
+        self.subSetReferenceHelper(tst.add_reporters, tst.rem_reporters,
+                                   tst.list_reporters, self.reporters)
         tst.delete()
 
 

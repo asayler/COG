@@ -343,7 +343,7 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         FileListFactory = backend.PrefixedFactory(FileList, prefix=self.full_key)
         self.files = FileListFactory.from_raw(key='files')
         ReporterListFactory = backend.PrefixedFactory(ReporterList, prefix=self.full_key)
-        self.files = ReporterListFactory.from_raw(key='reporters')
+        self.reporters = ReporterListFactory.from_raw(key='reporters')
 
     # Override from_new
     @classmethod

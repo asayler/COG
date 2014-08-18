@@ -4,9 +4,11 @@
 # Summer 2014
 # Univerity of Colorado
 
+
 import env_local
 import tester_script
 import tester_io
+
 
 def test(asn, sub, tst, run):
 
@@ -39,15 +41,19 @@ def test(asn, sub, tst, run):
             status = 'complete'
 
     except Exception as e:
+
         retcode = ""
         score = 0
         output = str(e)
         status = "complete-exception"
         raise
+
     else:
+
         retcode = str(ret)
         score = str(score)
         output = str(output)
+
     finally:
 
         # Cleanup
