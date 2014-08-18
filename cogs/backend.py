@@ -6,6 +6,7 @@
 
 import abc
 
+
 _ENCODING = 'utf-8'
 _FIELD_SEP = ':'
 _TYPE_SEP = '+'

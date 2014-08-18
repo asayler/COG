@@ -13,7 +13,9 @@ import copy
 
 import config
 
+
 KEY_SCRIPT = 'script'
+
 
 class Tester(object):
 

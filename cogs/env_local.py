@@ -8,14 +8,15 @@ import os
 import shutil
 import copy
 
-_LOC_DIR = "/tmp/cogs/"
-_TST_DIR = "test"
-_SUB_DIR = "submission"
-
 import config
 
 import backend_redis as backend
 import structs
+
+
+_TST_DIR = "test"
+_SUB_DIR = "submission"
+
 
 class Env(object):
 
@@ -31,9 +32,9 @@ class Env(object):
         tst_files = [FileFactory.from_existing(file_uuid) for file_uuid in tst_file_uuids]
 
         # Setup Directories
-        self.wd = os.path.abspath("{:s}/{:s}/".format(_LOC_DIR, str(run).lower()))
-        self.wd_tst = "{:s}\{:s}".format(self.wd, _TST_DIR)
-        self.wd_sub = "{:s}\{:s}".format(self.wd, _SUB_DIR)
+        self.wd = os.path.abspath("{:s}/{:s}/".format(config.ENV_LOCAL_TMP_PATH, str(run).lower()))
+        self.wd_tst = "{:s}/{:s}".format(self.wd, _TST_DIR)
+        self.wd_sub = "{:s}/{:s}".format(self.wd, _SUB_DIR)
         os.makedirs(self.wd)
         os.makedirs(self.wd_tst)
         os.makedirs(self.wd_sub)

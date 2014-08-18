@@ -13,6 +13,8 @@ import time
 import werkzeug
 import mimetypes
 
+import config
+
 import backend_redis as backend
 from backend_redis import BackendError, FactoryError, PersistentObjectError, ObjectDNE
 import testrun
@@ -29,9 +31,6 @@ _TEST_SCHEMA = ['assignment', 'name', 'maxscore', 'tester']
 _SUBMISSION_SCHEMA = ['assignment']
 _RUN_SCHEMA = ['submission', 'test', 'status', 'score', 'retcode', 'output']
 
-_DEFAULT_FILES_DIR = "./files/"
-_FILES_DIR = os.environ.get('COGS_UPLOADED_FILES_PATH', _DEFAULT_FILES_DIR)
-
 
 ### COGS Core Objects ###
 
@@ -45,6 +44,9 @@ class Server(object):
 
         # Call Parent Construtor
         super(Server, self).__init__()
+
+        # Call Setups
+        File.setup()
 
         # Setup Factories
         self.FileFactory = backend.UUIDFactory(File)
@@ -105,6 +107,14 @@ class Server(object):
 class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
     """COGS File Class"""
 
+    @classmethod
+    def setup(cls):
+
+        # Create File Path Directory if not existing
+        file_dir = os.path.abspath("{:s}".format(config.FILE_PATH))
+        if not os.path.isdir(file_dir):
+            os.makedirs(file_dir)
+
     # Override from_new
     @classmethod
     def from_new(cls, data, **kwargs):
@@ -141,7 +151,7 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 
         # Set Path
         if dst is None:
-            fle['path'] = os.path.abspath("{:s}/{:s}".format(_FILES_DIR, repr(fle)))
+            fle['path'] = os.path.abspath("{:s}/{:s}".format(config.FILE_PATH, repr(fle)))
         else:
             fle['path'] = os.path.abspath("{:s}".format(dst))
 
