@@ -318,7 +318,7 @@ class User(backend.SchemaHash, backend.TSHash, backend.Hash):
         token = auth.token_map.generate_token(user_uuid)
         user['token'] = token
 
-        # Return Submission
+        # Return User
         return user
 
     # Override Delete
