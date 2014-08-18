@@ -9,6 +9,7 @@ import moodle.ws
 import config
 
 EXTRA_REPORTER_SCHEMA = ['asn_id']
+_MAX_COMMENT_LEN = 2000
 
 class RepModMoodleError(Exception):
     """Base class for RepMod Moodle Exceptions"""
@@ -44,6 +45,12 @@ class Reporter(object):
 
         if user['auth'] != 'moodle':
             raise RepModMoodleError("Repmod requires users with authmod 'moodle'")
+
+        warning = "\nWARNING: Output Truncated"
+        max_len = (_MAX_COMMENT_LEN - len(warning))
+        if len(comment) > max_len:
+            comment = comment[:max_len]
+            comment += warning
 
         asn_id = self.asn_id
         usr_id = user['moodle_id']
