@@ -33,18 +33,28 @@ def test(asn, sub, tst, run):
         try:
             ret, score, output = tester.test()
         except:
-            run['status'] = 'complete-error'
+            status = 'complete-error'
             raise
         else:
-            run['status'] = 'complete'
+            status = 'complete'
 
     except Exception as e:
-        run['status'] = "complete-exception"
-        run['output'] = str(e)
+        retcode = ""
+        score = 0
+        output = str(e)
+        status = "complete-exception"
         raise
     else:
-        run['retcode'] = str(ret)
-        run['score'] = str(score)
-        run['output'] = str(output)
+        retcode = str(ret)
+        score = str(score)
+        output = str(output)
     finally:
+
+        # Cleanup
         env.close()
+
+        # Update Run
+        run['retcode'] = retcode
+        run['score'] = score
+        run['output'] = output
+        run['status'] = status # Must be set last to avoid race
