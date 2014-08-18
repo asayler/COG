@@ -6,8 +6,7 @@
 
 import moodle.ws
 
-MOODLE_ADDRESS = "https://moodle-test.cs.colorado.edu"
-MOODLE_SERVICE = "Grading_Serv"
+import config
 
 EXTRA_USER_SCHEMA = ['moodle_id', 'moodle_token']
 
@@ -19,8 +18,8 @@ class Authenticator(object):
         super(Authenticator, self).__init__()
 
         # Setup Vars
-        self.host = MOODLE_ADDRESS
-        self.service = MOODLE_SERVICE
+        self.host = config.AUTHMOD_MOODLE_HOST
+        self.service = config.AUTHMOD_MOODLE_SERVICE
 
     def auth_user(self, username, password):
         moodlews = moodle.ws.WS(self.host)
