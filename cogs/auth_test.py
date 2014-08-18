@@ -204,8 +204,8 @@ class MoodleUserTestCase(TestUserTestCase):
 
     def setUp(self):
         super(MoodleUserTestCase, self).setUp()
-        self.username = test_common.MOODLE_USERNAME
-        self.password = test_common.MOODLE_PASSWORD
+        self.username = test_common.AUTHMOD_MOODLE_STUDENT_USERNAME
+        self.password = test_common.AUTHMOD_MOODLE_STUDNET_PASSWORD
         self.authmod = 'moodle'
 
     def tearDown(self):

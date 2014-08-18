@@ -37,7 +37,7 @@ class Reporter(object):
         # Setup WS
         self.ws = moodle.ws.WS(self.host)
         self.ws.authenticate(config.REPMOD_MOODLE_USERNAME,
-                             config.REPMOD_MOODLE_USERPASSWORD,
+                             config.REPMOD_MOODLE_PASSWORD,
                              config.REPMOD_MOODLE_SERVICE)
 
     def file_report(self, user, grade, comment):

@@ -211,7 +211,7 @@ class Reporter(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Ha
         return reporter
 
     # Generate New Report
-    def file_reporter(self, user, grade, comments):
+    def file_report(self, user, grade, comments):
 
         mod = self['mod']
         if mod == 'moodle':
