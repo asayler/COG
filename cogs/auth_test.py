@@ -133,8 +133,8 @@ class AuthTestCase(test_common_backend.SubMixin, BaseTestCase):
     def test_auth_userpass(self):
 
         # Create Test User
-        username = test_common.MOODLE_USERNAME
-        password = test_common.MOODLE_PASSWORD
+        username = test_common.AUTHMOD_MOODLE_STUDENT_USERNAME
+        password = test_common.AUTHMOD_MOODLE_STUDENT_PASSWORD
         user_in = self.auth.create_user(test_common.USER_TESTDICT,
                                         username=username, password=password,
                                         authmod='moodle')
@@ -205,7 +205,7 @@ class MoodleUserTestCase(TestUserTestCase):
     def setUp(self):
         super(MoodleUserTestCase, self).setUp()
         self.username = test_common.AUTHMOD_MOODLE_STUDENT_USERNAME
-        self.password = test_common.AUTHMOD_MOODLE_STUDNET_PASSWORD
+        self.password = test_common.AUTHMOD_MOODLE_STUDENT_PASSWORD
         self.authmod = 'moodle'
 
     def tearDown(self):
