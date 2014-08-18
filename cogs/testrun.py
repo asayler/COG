@@ -11,7 +11,7 @@ import tester_io
 
 import auth
 
-def test(asn, sub, tst, run, rpts):
+def test(asn, sub, tst, run):
 
     try:
 
@@ -34,16 +34,26 @@ def test(asn, sub, tst, run, rpts):
         # Run Test
         run['status'] = 'running'
         try:
-            ret, score, output = tester.test()
-        except:
+            retcode, score, output = tester.test()
+        except Exception as e:
+            retcode = -1
+            score = 0
+            output = str(e)
             status = 'complete-error'
-            raise
         else:
             status = 'complete'
 
+        # Report Results
+        a = auth.Auth()
+        user = a.get_user(sub['owner'])
+        grade = score
+        comments = output
+        for rpt in tst.get_reporters():
+            rpt.file_report(user, grade, comments)
+
     except Exception as e:
 
-        retcode = ""
+        retcode = -1
         score = 0
         output = str(e)
         status = "complete-exception"
@@ -51,7 +61,7 @@ def test(asn, sub, tst, run, rpts):
 
     else:
 
-        retcode = str(ret)
+        retcode = str(retcode)
         score = str(score)
         output = str(output)
 
@@ -65,11 +75,3 @@ def test(asn, sub, tst, run, rpts):
         run['score'] = score
         run['output'] = output
         run['status'] = status # Must be set last to avoid race
-
-    # Report Results
-    a = auth.Auth()
-    user = a.get_user(run['owner'])
-    grade = run['score']
-    comments = run['output']
-    for rpt in rpts:
-        rpt.file_report(user, grade, comments)

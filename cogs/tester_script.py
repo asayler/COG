@@ -60,7 +60,9 @@ class Tester(object):
             stdout, stderr = p.communicate()
             ret = p.returncode
         except Exception as e:
-            ret = str(e)
+            stdout = "0"
+            stderr = str(e)
+            retcode = -1
 
         # Change Back to OWD
         try:
@@ -76,7 +78,7 @@ class Tester(object):
             except Exception as e:
                 score = str(e)
         else:
-            score = ""
+            score = 0
 
         # Return
         return ret, score, stderr

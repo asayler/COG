@@ -452,27 +452,44 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         self.sub_file_bad = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
+        # Create Reporter
+        mod = "moodle"
+        data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['asn_id'] = test_common.REPMOD_MOODLE_ASN
+        self.rpt_moodle = self.srv.create_reporter(data, mod=mod, owner=self.testuser)
+
         # Create Assignment
         self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.testuser)
 
         # Create Tests
         self.tst_args = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.testuser)
         self.tst_args.add_files([str(self.tst_file_args.uuid)])
+        self.tst_args.add_reporters([str(self.rpt_moodle.uuid)])
         self.tst_stdin = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.testuser)
         self.tst_stdin.add_files([str(self.tst_file_stdin.uuid)])
+        self.tst_stdin.add_reporters([str(self.rpt_moodle.uuid)])
         self.tst_hang = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.testuser)
         self.tst_hang.add_files([str(self.pgm_hang.uuid)])
+        self.tst_hang.add_reporters([str(self.rpt_moodle.uuid)])
         self.tst_busy = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.testuser)
         self.tst_busy.add_files([str(self.pgm_busy.uuid)])
+        self.tst_busy.add_reporters([str(self.rpt_moodle.uuid)])
         self.tst_fork = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.testuser)
         self.tst_fork.add_files([str(self.pgm_fork.uuid)])
+        self.tst_fork.add_reporters([str(self.rpt_moodle.uuid)])
+
+        # Create Submission User
+        self.student = self.auth.create_user(test_common.USER_TESTDICT,
+                                             username=test_common.AUTHMOD_MOODLE_STUDENT_USERNAME,
+                                             password=test_common.AUTHMOD_MOODLE_STUDENT_PASSWORD,
+                                             authmod="moodle")
 
         # Create Submissions
-        self.sub_good = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.testuser)
+        self.sub_good = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.student)
         self.sub_good.add_files([str(self.sub_file_good.uuid)])
-        self.sub_bad = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.testuser)
+        self.sub_bad = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.student)
         self.sub_bad.add_files([str(self.sub_file_bad.uuid)])
-        self.sub_null = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.testuser)
+        self.sub_null = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.student)
 
     def tearDown(self):
 
@@ -480,12 +497,14 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         self.sub_null.delete()
         self.sub_bad.delete()
         self.sub_good.delete()
+        self.student.delete()
         self.tst_fork.delete()
         self.tst_busy.delete()
         self.tst_hang.delete()
         self.tst_stdin.delete()
         self.tst_args.delete()
         self.asn.delete()
+        self.rpt_moodle.delete()
         self.sub_file_bad.delete()
         self.sub_file_good.delete()
         self.pgm_hang.delete()
@@ -512,6 +531,7 @@ class RunTestCaseScript(test_common_backend.SubMixin,
             self.assertEqual(float(run['score']), 10)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -530,6 +550,7 @@ class RunTestCaseScript(test_common_backend.SubMixin,
             self.assertLess(float(run['score']), 10)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -548,6 +569,7 @@ class RunTestCaseScript(test_common_backend.SubMixin,
             self.assertEqual(float(run['score']), 10)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -566,6 +588,7 @@ class RunTestCaseScript(test_common_backend.SubMixin,
             self.assertLess(float(run['score']), 10)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -593,6 +616,7 @@ class RunTestCaseScript(test_common_backend.SubMixin,
                 self.assertEqual(float(run['score']), 10)
             except AssertionError:
                 print("run = {:s}".format(run.get_dict()))
+                raise
             finally:
                 run.delete()
 
@@ -610,6 +634,7 @@ class RunTestCaseScript(test_common_backend.SubMixin,
             self.assertFalse(run['output'])
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -627,6 +652,7 @@ class RunTestCaseScript(test_common_backend.SubMixin,
             self.assertFalse(run['output'])
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -644,6 +670,7 @@ class RunTestCaseScript(test_common_backend.SubMixin,
             self.assertTrue(run['output'])
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -867,6 +894,7 @@ class RunTestCaseIO(test_common_backend.SubMixin,
             self.assertEqual(float(run['score']), 0)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -887,6 +915,7 @@ class RunTestCaseIO(test_common_backend.SubMixin,
             self.assertEqual(float(run['score']), 0)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -907,6 +936,7 @@ class RunTestCaseIO(test_common_backend.SubMixin,
             self.assertEqual(float(run['score']), 0)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -925,6 +955,7 @@ class RunTestCaseIO(test_common_backend.SubMixin,
             self.assertEqual(float(run['score']), 10)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -943,6 +974,7 @@ class RunTestCaseIO(test_common_backend.SubMixin,
             self.assertEqual(float(run['score']), 0)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -962,6 +994,7 @@ class RunTestCaseIO(test_common_backend.SubMixin,
             self.assertEqual(float(run['score']), 0)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -981,6 +1014,7 @@ class RunTestCaseIO(test_common_backend.SubMixin,
             self.assertEqual(float(run['score']), 0)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -1000,6 +1034,7 @@ class RunTestCaseIO(test_common_backend.SubMixin,
             self.assertEqual(float(run['score']), 0)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -1036,6 +1071,7 @@ class RunTestCaseIO(test_common_backend.SubMixin,
             self.assertLess(float(run['score']), 10)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -1055,6 +1091,7 @@ class RunTestCaseIO(test_common_backend.SubMixin,
             self.assertEqual(float(run['score']), 0)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -1074,6 +1111,7 @@ class RunTestCaseIO(test_common_backend.SubMixin,
             self.assertEqual(float(run['score']), 0)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
@@ -1093,6 +1131,7 @@ class RunTestCaseIO(test_common_backend.SubMixin,
             self.assertEqual(float(run['score']), 0)
         except AssertionError:
             print("run = {:s}".format(run.get_dict()))
+            raise
         finally:
             run.delete()
 
