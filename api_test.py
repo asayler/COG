@@ -47,6 +47,8 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
         # Call Parent
         super(CogsApiTestCase, self).tearDown()
 
+    ## Auth Helpers ##
+
     def open_auth(self, method, url, username=None, password=None, **kwargs):
 
         headers = kwargs.pop('headers', {})
@@ -70,6 +72,8 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
             username = None
 
         return self.open_auth(method, url, username=username, **kwargs)
+
+    ## Object Helpers ##
 
     def create_objects(self, url, key, data, user=None):
         data = json.dumps(data)
@@ -99,89 +103,58 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
 
     def get_object(self, url, obj_uuid, user=None):
         res = self.open_user('GET', '{:s}{:s}/'.format(url, obj_uuid), user=user)
-        self.assertEqual(res.status_code, 200)
-        res_obj = json.loads(res.data)
-        self.assertTrue(res_obj)
-        res_keys = res_obj.keys()
-        self.assertEqual(len(res_keys), 1)
-        self.assertEqual(res_keys[0], obj_uuid)
-        res_hash = res_obj[obj_uuid]
-        self.assertTrue(res_hash)
-        return res_hash
+        if (res.status_code == 200):
+            self.assertEqual(res.status_code, 200)
+            res_obj = json.loads(res.data)
+            self.assertTrue(res_obj)
+            res_keys = res_obj.keys()
+            self.assertEqual(len(res_keys), 1)
+            self.assertEqual(res_keys[0], obj_uuid)
+            res_hash = res_obj[obj_uuid]
+            self.assertTrue(res_hash)
+            return res_hash
+        elif (res.status_code == 404):
+            return None
+        else:
+            self.fail("Bad HTTP status code {:d}".format(res.status_code))
 
-class CogsApiAssignmentHelpers(CogsApiTestCase):
-
-    def setUp(self):
-        super(CogsApiAssignmentHelpers, self).setUp()
-
-    def tearDown(self):
-        super(CogsApiAssignmentHelpers, self).tearDown()
-
-
-    def set_assignment(self, asn_uuid, d=cogs.test_common.ASSIGNMENT_TESTDICT):
-        # Set Assignment
-        ds = json.dumps(d)
-        res = self.app.put('/assignments/{:s}/'.format(asn_uuid), data=ds)
-        self.assertEqual(res.status_code, 200)
-        asn_out = json.loads(res.data)
-        asn_out_uuid = uuid.UUID(asn_out.keys()[0])
-        self.assertEqual(asn_uuid, asn_out_uuid)
-        return asn_out
-
-    def delete_assignment(self, asn_uuid):
-        res = self.app.delete('/assignments/{:s}/'.format(asn_uuid))
-        self.assertEqual(res.status_code, 200)
+    def set_object(self, url, obj_uuid, data, user=None):
+        data = json.dumps(data)
+        res = self.open_user('PUT', '{:s}{:s}/'.format(url, obj_uuid), user=user, data=data)
+        if (res.status_code == 200):
+            self.assertEqual(res.status_code, 200)
+            res_obj = json.loads(res.data)
+            self.assertTrue(res_obj)
+            res_keys = res_obj.keys()
+            self.assertEqual(len(res_keys), 1)
+            self.assertEqual(res_keys[0], obj_uuid)
+            res_hash = res_obj[obj_uuid]
+            self.assertTrue(res_hash)
+            return res_hash
+        elif (res.status_code == 404):
+            return None
+        else:
+            self.fail("Bad HTTP status code {:d}".format(res.status_code))
 
 
-class CogsApiTestHelpers(CogsApiAssignmentHelpers):
+    def delete_object(self, url, obj_uuid, user=None):
+        res = self.open_user('DELETE', '{:s}{:s}/'.format(url, obj_uuid), user=user)
+        if (res.status_code == 200):
+            self.assertEqual(res.status_code, 200)
+            res_obj = json.loads(res.data)
+            self.assertTrue(res_obj)
+            res_keys = res_obj.keys()
+            self.assertEqual(len(res_keys), 1)
+            self.assertEqual(res_keys[0], obj_uuid)
+            res_hash = res_obj[obj_uuid]
+            self.assertTrue(res_hash)
+            return res_hash
+        elif (res.status_code == 404):
+            return None
+        else:
+            self.fail("Bad HTTP status code {:d}".format(res.status_code))
 
-    def setUp(self):
-        super(CogsApiTestHelpers, self).setUp()
-
-    def tearDown(self):
-        super(CogsApiTestHelpers, self).tearDown()
-
-    def lst_tests(self):
-        # List Tests
-        res = self.app.get('/assignments/{:s}/tests/'.format(self.asn_uuid))
-        self.assertEqual(res.status_code, 200)
-        tst_lst = json.loads(res.data)[api._TESTS_KEY]
-        return set(tst_lst)
-
-    def create_test(self, d=cogs.test_common.TEST_TESTDICT):
-        # Create Test
-        ds = json.dumps(d)
-        res = self.app.post('/assignments/{:s}/tests/'.format(self.asn_uuid), data=ds)
-        self.assertEqual(res.status_code, 200)
-        tst_lst = json.loads(res.data)[api._TESTS_KEY]
-        self.assertEqual(len(tst_lst), 1)
-        tst_uuid = uuid.UUID(tst_lst[0])
-        self.assertTrue(tst_uuid)
-        return tst_uuid
-
-    def get_test(self, tst_uuid):
-        # Get Test
-        res = self.app.get('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid))
-        self.assertEqual(res.status_code, 200)
-        tst_out = json.loads(res.data)
-        tst_out_uuid = uuid.UUID(tst_out.keys()[0])
-        self.assertEqual(tst_uuid, tst_out_uuid)
-        return tst_out
-
-    def set_test(self, tst_uuid, d=cogs.test_common.TEST_TESTDICT):
-        # Set Test
-        ds = json.dumps(d)
-        res = self.app.put('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid), data=ds)
-        self.assertEqual(res.status_code, 200)
-        tst_out = json.loads(res.data)
-        tst_out_uuid = uuid.UUID(tst_out.keys()[0])
-        self.assertEqual(tst_uuid, tst_out_uuid)
-        return tst_out
-
-    def delete_test(self, tst_uuid):
-        res = self.app.delete('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid))
-        self.assertEqual(res.status_code, 200)
-
+    ## Operation Helpers ##
 
 ## Root Tests ##
 class CogsApiRootTestCase(CogsApiTestCase):
@@ -198,7 +171,7 @@ class CogsApiRootTestCase(CogsApiTestCase):
         self.assertEqual(res.data, api._MSG_ROOT)
 
 ## Assignment Tests ##
-class CogsApiAssignmentTestCase(CogsApiAssignmentHelpers):
+class CogsApiAssignmentTestCase(CogsApiTestCase):
 
     def setUp(self):
         super(CogsApiAssignmentTestCase, self).setUp()
@@ -231,14 +204,23 @@ class CogsApiAssignmentTestCase(CogsApiAssignmentHelpers):
         assignments_out = self.lst_objects(self.url, self.key, user=self.user)
         self.assertEqual(assignments_in, assignments_out)
 
-        # # Delete Assignments
-        # for i in range(5):
-        #     rmv_uuid = assignments_in.pop()
-        #     self.delete_assignment(rmv_uuid)
+        # Delete Some Assignments
+        for i in range(5):
+            asn_uuid = assignments_in.pop()
+            self.delete_object(self.url, asn_uuid, user=self.user)
 
-        # # Get Assignments
-        # assignments_out = self.lst_assignments()
-        # self.assertEqual(assignments_in, assignments_out)
+        # Get Assignments
+        assignments_out = self.lst_objects(self.url, self.key, user=self.user)
+        self.assertEqual(assignments_in, assignments_out)
+
+        # Delete Remaining Assignments
+        for asn_uuid in list(assignments_in):
+            assignments_in.remove(asn_uuid)
+            self.delete_object(self.url, asn_uuid, user=self.user)
+
+        # Get Assignments
+        assignments_out = self.lst_objects(self.url, self.key, user=self.user)
+        self.assertEqual(assignments_in, assignments_out)
 
     def test_get_assignment(self):
 
@@ -249,39 +231,38 @@ class CogsApiAssignmentTestCase(CogsApiAssignmentHelpers):
         asn = self.get_object(self.url, asn_uuid, user=self.admin)
         self.assertSubset(self.data, asn)
 
-#     def test_set_assignment(self):
+    def test_set_assignment(self):
 
-#         # Create Assignment
-#         asn_uuid = self.create_assignment(cogs.test_common.ASSIGNMENT_TESTDICT)
+        # Create Assignment
+        asn_uuid = self.create_objects(self.url, self.key, self.data, user=self.admin)
 
-#         # Update Assignment
-#         d = copy.deepcopy(cogs.test_common.ASSIGNMENT_TESTDICT)
-#         for k in d:
-#             d[k] = d[k] + "_update"
-#         self.assertNotEqual(cogs.test_common.ASSIGNMENT_TESTDICT, d)
-#         asn = self.set_assignment(asn_uuid, d)
-#         self.assertSubset(d, asn[str(asn_uuid)])
+        # Update Assignment
+        data = copy.copy(self.data)
+        for key in data:
+            data[key] = data[key] + "_updated"
+        self.assertNotEqual(self.data, data)
+        asn = self.set_object(self.url, asn_uuid, data, user=self.admin)
+        self.assertSubset(data, asn)
 
-#         # Get Assignment
-#         asn = self.get_assignment(asn_uuid)
-#         self.assertSubset(d, asn[str(asn_uuid)])
+        # Get Assignment
+        asn = self.get_object(self.url, asn_uuid, user=self.admin)
+        self.assertSubset(data, asn)
 
-#     def test_delete_assignment(self):
+    def test_delete_assignment(self):
 
-#         # Create Assignment
-#         asn_uuid = self.create_assignment(cogs.test_common.ASSIGNMENT_TESTDICT)
+        # Create Assignment
+        asn_uuid = self.create_objects(self.url, self.key, self.data, user=self.admin)
 
-#         # Get Assignment
-#         res = self.app.get('/assignments/{:s}/'.format(asn_uuid))
-#         self.assertEqual(res.status_code, 200)
+        # Get Assignment
+        asn = self.get_object(self.url, asn_uuid, user=self.admin)
+        self.assertSubset(self.data, asn)
 
-#         # Delete Assignment
-#         self.delete_assignment(asn_uuid)
+        # Delete Assignment
+        self.delete_object(self.url, asn_uuid, user=self.user)
 
-#         # Get Assignment
-#         res = self.app.get('/assignments/{:s}/'.format(asn_uuid))
-#         self.assertEqual(res.status_code, 404)
-
+        # Get Assignment
+        asn = self.get_object(self.url, asn_uuid, user=self.admin)
+        self.assertIsNone(asn)
 
 
 # ## Assignment Test Tests
