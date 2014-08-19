@@ -5,6 +5,8 @@
 # Summer 2014
 # Univerity of Colorado
 
+### Imports ###
+
 import time
 import os
 
@@ -16,6 +18,7 @@ import redis
 import cogs.auth
 import cogs.structs
 
+
 ### Constants ###
 
 _MSG_ROOT = "Welcome to the CU CS Online Grading System API\n"
@@ -26,12 +29,14 @@ _SUBMISSIONS_KEY = "submissions"
 _FILES_KEY = "files"
 _RUNS_KEY = "runs"
 
+
 ### Global Setup ###
 
 app = flask.Flask(__name__)
 httpauth = flask.ext.httpauth.HTTPBasicAuth()
 srv = cogs.structs.Server()
 auth = cogs.auth.Auth()
+
 
 ### Functions ###
 
@@ -71,15 +76,14 @@ def verify_login(username, password):
 
 def process_objects(func_list, func_create, key):
 
-    # Process
+    # List Objects
     if flask.request.method == 'GET':
 
-        # Get Objects
         lst = {key: list(func_list())}
 
+    # Create Object
     elif flask.request.method == 'POST':
 
-        # Create Objects
         data = flask.request.get_json(force=True)
         try:
             obj = func_create(data, owner=flask.g.user)
@@ -92,11 +96,54 @@ def process_objects(func_list, func_create, key):
         else:
             lst = {key: list([str(obj.uuid)])}
 
+    # Bad Method
     else:
         raise Exception("Unhandled Method")
 
-    # Return Assignment List
+    # Return List
     return flask.jsonify(lst)
+
+def process_object(func_get, obj_uuid):
+
+    # Get Assignment
+    try:
+        obj = func_get(obj_uuid)
+    except cogs.structs.ObjectDNE as e:
+        err = { 'status': 404,
+                'message': str(e) }
+        err_res = flask.jsonify(err)
+        err_res.status_code = err['status']
+        return err_res
+
+    # Get Assignment
+    if flask.request.method == 'GET':
+        out = {str(obj.uuid): obj.get_dict()}
+
+    # Update Assignment
+    elif flask.request.method == 'PUT':
+        data = flask.request.get_json(force=True)
+        try:
+            obj.set_dict(data)
+        except KeyError as e:
+            err = { 'status': 400,
+                    'message': str(e) }
+            err_res = flask.jsonify(err)
+            err_res.status_code = err['status']
+            return err_res
+        else:
+            out = {str(obj.uuid): obj.get_dict()}
+
+    # Delete Assignment
+    elif flask.request.method == 'DELETE':
+        out = {str(obj.uuid): obj.get_dict()}
+        obj.delete()
+
+    # Bad Method
+    else:
+        raise Exception("Unhandled Method")
+
+    # Return Assignment
+    return flask.jsonify(out)
 
 
 ### Endpoints ###
@@ -117,57 +164,17 @@ def get_root():
 
 ## Assignment Endpoints ##
 
-@app.route("/assignments/",
-           methods=['GET', 'POST'])
+@app.route("/assignments/", methods=['GET', 'POST'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_assignments():
     return process_objects(srv.list_assignments, srv.create_assignment, _ASSIGNMENTS_KEY)
 
-@app.route("/assignments/<uuid_hex>/",
-           methods=['GET', 'PUT', 'DELETE'])
+@app.route("/assignments/<obj_uuid>/", methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
 @auth.requires_auth_route()
-def process_assignment(uuid_hex):
-
-    # Get Assignment
-    try:
-        a = s.get_assignment(uuid_hex)
-    except cogs.structs.ObjectDNE as e:
-        err = { 'status': 404,
-                'message': str(e) }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Process
-    if flask.request.method == 'GET':
-        # Get Assignment
-        out = {str(a.uuid): a.get_dict()}
-    elif flask.request.method == 'PUT':
-        # Update Assignment
-        d = flask.request.get_json(force=True)
-        try:
-            a.set_dict(d)
-        except KeyError as e:
-            err = { 'status': 400,
-                    'message': str(e) }
-            err_res = flask.jsonify(err)
-            err_res.status_code = err['status']
-            return err_res
-        else:
-            out = {str(a.uuid): a.get_dict()}
-    elif flask.request.method == 'DELETE':
-        # Delete Assignment
-        out = {str(a.uuid): a.get_dict()}
-        a.delete()
-    else:
-        raise Exception("Unhandled Method")
-
-    # Return Assignment
-    res = flask.jsonify(out)
-    return res
-
+def process_assignment(obj_uuid):
+    return process_object(srv.get_assignment, obj_uuid)
 
 ## Test Endpoints ##
 

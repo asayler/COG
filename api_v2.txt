@@ -4,7 +4,9 @@ GET     /                                               Welcome Message
 
 GET     /assignments/                                   List Assignments
 POST    /assignments/                                   Create New Assignment
-
+GET     /assignments/<ID>/                              Show Assignment
+PUT     /assignments/<ID>/                              Update Assignment
+DELETE  /assignments/<ID>/                              Delete Assignment
 
 ### In Progress:
 
@@ -27,9 +29,6 @@ GET     /groups/<ID>/members/                           List Group Members
 PUT     /groups/<ID>/members/                           Add Group Members
 DELETE  /groups/<ID>/members/                           Remove Group Members
 
-GET     /assignments/<ID>/                              Show Assignment
-PUT     /assignments/<ID>/                              Update Assignment
-DELETE  /assignments/<ID>/                              Delete Assignment
 GET     /assignments/<ID>/tests/                        List Assignment Grading Tests
 POST    /assignments/<ID>/tests/                        Create New Assignment Grading Test
 GET     /assignments/<ID>/submissions/                  List Assignment Submissions

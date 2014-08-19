@@ -87,7 +87,7 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
         return res_uuid
 
     def lst_objects(self, url, key, user=None):
-        res = self.open_auth('GET', url, user['token'])
+        res = self.open_user('GET', url, user=user)
         self.assertEqual(res.status_code, 200)
         res_obj = json.loads(res.data)
         self.assertTrue(res_obj)
@@ -97,6 +97,17 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
         res_lst = res_obj[key]
         return set(res_lst)
 
+    def get_object(self, url, obj_uuid, user=None):
+        res = self.open_user('GET', '{:s}{:s}/'.format(url, obj_uuid), user=user)
+        self.assertEqual(res.status_code, 200)
+        res_obj = json.loads(res.data)
+        self.assertTrue(res_obj)
+        res_keys = res_obj.keys()
+        self.assertEqual(len(res_keys), 1)
+        self.assertEqual(res_keys[0], obj_uuid)
+        res_hash = res_obj[obj_uuid]
+        self.assertTrue(res_hash)
+        return res_hash
 
 class CogsApiAssignmentHelpers(CogsApiTestCase):
 
@@ -106,14 +117,6 @@ class CogsApiAssignmentHelpers(CogsApiTestCase):
     def tearDown(self):
         super(CogsApiAssignmentHelpers, self).tearDown()
 
-    def get_assignment(self, asn_uuid, user=None):
-        # Get Assignment
-        res = self.open_user('GET', '/assignments/{:s}'.format(asn_uuid), user=user)
-        self.assertEqual(res.status_code, 200)
-        asn_out = json.loads(res.data)
-        asn_out_uuid = uuid.UUID(asn_out.keys()[0])
-        self.assertEqual(asn_uuid, asn_out_uuid)
-        return asn_out[asn_uuid]
 
     def set_assignment(self, asn_uuid, d=cogs.test_common.ASSIGNMENT_TESTDICT):
         # Set Assignment
@@ -237,15 +240,14 @@ class CogsApiAssignmentTestCase(CogsApiAssignmentHelpers):
         # assignments_out = self.lst_assignments()
         # self.assertEqual(assignments_in, assignments_out)
 
+    def test_get_assignment(self):
 
-    # def test_get_assignment(self):
+        # Create Assignment
+        asn_uuid = self.create_objects(self.url, self.key, self.data, user=self.admin)
 
-    #     # Create Assignment
-    #     asn_uuid = self.create_assignment(data=cogs.test_common.ASSIGNMENT_TESTDICT, user=self.admin)
-
-    #     # Get Assignment
-    #     asn = self.get_assignment(asn_uuid, user=self.admin)
-    #     self.assertSubset(cogs.test_common.ASSIGNMENT_TESTDICT, asn)
+        # Get Assignment
+        asn = self.get_object(self.url, asn_uuid, user=self.admin)
+        self.assertSubset(self.data, asn)
 
 #     def test_set_assignment(self):
 
