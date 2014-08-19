@@ -180,6 +180,20 @@ def get_root():
 
 # ToDo: All of Them...
 
+## File Endpoints ##
+
+@app.route("/files/", methods=['GET', 'POST'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_files():
+    return process_objects(srv.list_files, srv.create_file, _FILES_KEY, create_stub=create_stub_file)
+
+@app.route("/files/<obj_uuid>/", methods=['GET', 'DELETE'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_file(obj_uuid):
+    return process_object(srv.get_file, obj_uuid, update_stub=None)
+
 ## Assignment Endpoints ##
 
 @app.route("/assignments/", methods=['GET', 'POST'])
