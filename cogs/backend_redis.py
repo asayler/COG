@@ -364,6 +364,14 @@ class SchemaHash(Hash):
             msg = "{:s} not in {:s}".format(key, schema)
             raise KeyError(msg)
 
-    def set_dict(self, d):
+    def set_dict(self, data):
         """Set Full Dict"""
-        raise NotImplementedError("set_dict not allowed on SchemaHash")
+
+        schema = self.schema.get_set()
+
+        keys = set(data.keys())
+        if not (keys <= schema):
+            msg = "{:s} do not match {:s}".format(keys, schema)
+            raise KeyError(msg)
+
+        return super(SchemaHash, self).set_dict(data)
