@@ -89,9 +89,12 @@ def process_assignments():
 
     # Process
     if flask.request.method == 'GET':
+
         # Get Assignments
         out = {_ASSIGNMENTS_KEY: list(srv.list_assignments())}
+
     elif flask.request.method == 'POST':
+
         # Create Assignment
         data = flask.request.get_json(force=True)
         try:
@@ -104,6 +107,7 @@ def process_assignments():
             return err_res
         else:
             out = {_ASSIGNMENTS_KEY: list([str(asn.uuid)])}
+
     else:
         raise Exception("Unhandled Method")
 
