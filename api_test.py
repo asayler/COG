@@ -73,6 +73,8 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
 
         return self.open_auth(method, url, username=username, **kwargs)
 
+class CogsApiObjectBase(object):
+
     ## Object Helpers ##
 
     def create_objects(self, url, key, data, user=None):
@@ -136,7 +138,6 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
         else:
             self.fail("Bad HTTP status code {:d}".format(res.status_code))
 
-
     def delete_object(self, url, obj_uuid, user=None):
         res = self.open_user('DELETE', '{:s}{:s}/'.format(url, obj_uuid), user=user)
         if (res.status_code == 200):
@@ -154,7 +155,90 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
         else:
             self.fail("Bad HTTP status code {:d}".format(res.status_code))
 
-    ## Operation Helpers ##
+    ## Object Tests ##
+
+    def test_create_object(self):
+
+        obj_uuid = self.create_objects(self.url, self.key, self.data, user=self.user)
+        self.assertTrue(obj_uuid)
+
+    def test_list_objects(self):
+
+        objects_in = set([])
+
+        # Get Object List (Empty)
+        objects_out = self.lst_objects(self.url, self.key, user=self.user)
+        self.assertEqual(objects_in, objects_out)
+
+        # Create Objects
+        for i in range(10):
+            obj_uuid = self.create_objects(self.url, self.key, self.data, user=self.user)
+            objects_in.add(obj_uuid)
+
+        # Get Object List
+        objects_out = self.lst_objects(self.url, self.key, user=self.user)
+        self.assertEqual(objects_in, objects_out)
+
+        # Delete Some Objects
+        for i in range(5):
+            obj_uuid = objects_in.pop()
+            self.delete_object(self.url, obj_uuid, user=self.user)
+
+        # Get Objects
+        objects_out = self.lst_objects(self.url, self.key, user=self.user)
+        self.assertEqual(objects_in, objects_out)
+
+        # Delete Remaining Objects
+        for obj_uuid in list(objects_in):
+            objects_in.remove(obj_uuid)
+            self.delete_object(self.url, obj_uuid, user=self.user)
+
+        # Get Objects
+        objects_out = self.lst_objects(self.url, self.key, user=self.user)
+        self.assertEqual(objects_in, objects_out)
+
+    def test_get_object(self):
+
+        # Create Object
+        obj_uuid = self.create_objects(self.url, self.key, self.data, user=self.admin)
+
+        # Get Object
+        obj = self.get_object(self.url, obj_uuid, user=self.admin)
+        self.assertSubset(self.data, obj)
+
+    def test_set_object(self):
+
+        # Create Object
+        obj_uuid = self.create_objects(self.url, self.key, self.data, user=self.admin)
+
+        # Update Object
+        data = copy.copy(self.data)
+        for key in data:
+            data[key] = data[key] + "_updated"
+        self.assertNotEqual(self.data, data)
+        obj = self.set_object(self.url, obj_uuid, data, user=self.admin)
+        self.assertSubset(data, obj)
+
+        # Get Object
+        obj = self.get_object(self.url, obj_uuid, user=self.admin)
+        self.assertSubset(data, obj)
+
+    def test_delete_object(self):
+
+        # Create Object
+        obj_uuid = self.create_objects(self.url, self.key, self.data, user=self.admin)
+
+        # Get Object
+        obj = self.get_object(self.url, obj_uuid, user=self.admin)
+        self.assertSubset(self.data, obj)
+
+        # Delete Object
+        self.delete_object(self.url, obj_uuid, user=self.user)
+
+        # Get Object
+        obj = self.get_object(self.url, obj_uuid, user=self.admin)
+        self.assertIsNone(obj)
+
 
 ## Root Tests ##
 class CogsApiRootTestCase(CogsApiTestCase):
@@ -170,8 +254,9 @@ class CogsApiRootTestCase(CogsApiTestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data, api._MSG_ROOT)
 
+
 ## Assignment Tests ##
-class CogsApiAssignmentTestCase(CogsApiTestCase):
+class CogsApiAssignmentTestCase(CogsApiObjectBase, CogsApiTestCase):
 
     def setUp(self):
         super(CogsApiAssignmentTestCase, self).setUp()
@@ -183,86 +268,6 @@ class CogsApiAssignmentTestCase(CogsApiTestCase):
     def tearDown(self):
         super(CogsApiAssignmentTestCase, self).tearDown()
 
-    def test_create_assignment(self):
-        asn_uuid = self.create_objects(self.url, self.key, self.data, user=self.admin)
-        self.assertTrue(asn_uuid)
-
-    def test_list_assignments(self):
-
-        assignments_in = set([])
-
-        # Get Assignment List (Empty)
-        assignments_out = self.lst_objects(self.url, self.key, user=self.user)
-        self.assertEqual(assignments_in, assignments_out)
-
-        # Create Assignments
-        for i in range(10):
-            asn_uuid = self.create_objects(self.url, self.key, self.data, user=self.user)
-            assignments_in.add(asn_uuid)
-
-        # Get Assignment List
-        assignments_out = self.lst_objects(self.url, self.key, user=self.user)
-        self.assertEqual(assignments_in, assignments_out)
-
-        # Delete Some Assignments
-        for i in range(5):
-            asn_uuid = assignments_in.pop()
-            self.delete_object(self.url, asn_uuid, user=self.user)
-
-        # Get Assignments
-        assignments_out = self.lst_objects(self.url, self.key, user=self.user)
-        self.assertEqual(assignments_in, assignments_out)
-
-        # Delete Remaining Assignments
-        for asn_uuid in list(assignments_in):
-            assignments_in.remove(asn_uuid)
-            self.delete_object(self.url, asn_uuid, user=self.user)
-
-        # Get Assignments
-        assignments_out = self.lst_objects(self.url, self.key, user=self.user)
-        self.assertEqual(assignments_in, assignments_out)
-
-    def test_get_assignment(self):
-
-        # Create Assignment
-        asn_uuid = self.create_objects(self.url, self.key, self.data, user=self.admin)
-
-        # Get Assignment
-        asn = self.get_object(self.url, asn_uuid, user=self.admin)
-        self.assertSubset(self.data, asn)
-
-    def test_set_assignment(self):
-
-        # Create Assignment
-        asn_uuid = self.create_objects(self.url, self.key, self.data, user=self.admin)
-
-        # Update Assignment
-        data = copy.copy(self.data)
-        for key in data:
-            data[key] = data[key] + "_updated"
-        self.assertNotEqual(self.data, data)
-        asn = self.set_object(self.url, asn_uuid, data, user=self.admin)
-        self.assertSubset(data, asn)
-
-        # Get Assignment
-        asn = self.get_object(self.url, asn_uuid, user=self.admin)
-        self.assertSubset(data, asn)
-
-    def test_delete_assignment(self):
-
-        # Create Assignment
-        asn_uuid = self.create_objects(self.url, self.key, self.data, user=self.admin)
-
-        # Get Assignment
-        asn = self.get_object(self.url, asn_uuid, user=self.admin)
-        self.assertSubset(self.data, asn)
-
-        # Delete Assignment
-        self.delete_object(self.url, asn_uuid, user=self.user)
-
-        # Get Assignment
-        asn = self.get_object(self.url, asn_uuid, user=self.admin)
-        self.assertIsNone(asn)
 
 
 # ## Assignment Test Tests
