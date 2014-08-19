@@ -89,6 +89,13 @@ def create_stub_json(func_create, key):
     lst = {key: list([str(obj.uuid)])}
     return lst
 
+def update_stub_json(obj):
+
+    data = flask.request.get_json(force=True)
+    obj.set_dict(data)
+    out = {str(obj.uuid): obj.get_dict()}
+    return out
+
 def process_objects(func_list, func_create, key, create_stub=create_stub_json):
 
     # List Objects
@@ -110,37 +117,26 @@ def process_objects(func_list, func_create, key, create_stub=create_stub_json):
     # Return List
     return flask.jsonify(lst)
 
-def process_object(func_get, obj_uuid):
+def process_object(func_get, obj_uuid, update_stub=update_stub_json):
 
-    # Get Assignment
+    # Lookup Object
     try:
         obj = func_get(obj_uuid)
     except cogs.structs.ObjectDNE as e:
-        err = { 'status': 404,
-                'message': str(e) }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
+        return error_response(e, 404)
 
-    # Get Assignment
+    # Get Object
     if flask.request.method == 'GET':
         out = {str(obj.uuid): obj.get_dict()}
 
-    # Update Assignment
+    # Update Object
     elif flask.request.method == 'PUT':
-        data = flask.request.get_json(force=True)
         try:
-            obj.set_dict(data)
+            out = update_stub(obj)
         except KeyError as e:
-            err = { 'status': 400,
-                    'message': str(e) }
-            err_res = flask.jsonify(err)
-            err_res.status_code = err['status']
-            return err_res
-        else:
-            out = {str(obj.uuid): obj.get_dict()}
+            return error_response(e, 400)
 
-    # Delete Assignment
+    # Delete Object
     elif flask.request.method == 'DELETE':
         out = {str(obj.uuid): obj.get_dict()}
         obj.delete()
@@ -149,7 +145,7 @@ def process_object(func_get, obj_uuid):
     else:
         raise Exception("Unhandled Method")
 
-    # Return Assignment
+    # Return Object
     return flask.jsonify(out)
 
 
