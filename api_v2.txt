@@ -37,10 +37,11 @@ POST    /assignments/<ID>/submissions/                  Create New Assignment Su
 GET     /submissions/                                   List All Submissions
 GET     /submissions/<ID>/                              Show Submission
 DELETE  /submissions/<ID>/                              Delete Submission
+GET     /submissions/<ID>/runs/                         List Test Runs
+POST    /submissions/<ID>/runs/                         Execute New Test Run
 GET     /submissions/<ID>/files/                        List Submission Files
 PUT     /submissions/<ID>/files/                        Add Submission File
 DELETE  /submissions/<ID>/files/                        Remove Submission File
-POST    /submissions/<ID>/runs/                         Execute New Test Run
 
 GET     /tests/                                         List All Tests
 GET     /tests/<ID>/                                    Show Grading Test
@@ -48,6 +49,10 @@ DELETE  /tests/<ID>/                                    Delete Grading Test
 GET     /tests/<ID>/files/                              List Test Files
 PUT     /tests/<ID>/files/                              Add Test File
 DELETE  /tests/<ID>/files/                              Remove Test File
+GET     /tests/<ID>/reporters/                          List Test Reporters
+PUT     /tests/<ID>/reporters/                          Add Test Reporter
+DELETE  /tests/<ID>/reporters/                          Remove Test Reporter
+
 
 GET     /runs/                                          List All Test Runs
 GET     /runs/<ID>/                                     Show Test Run Results
@@ -57,3 +62,8 @@ GET     /files/                                         List All Files
 POST    /files/                                         Create New File
 GET     /files/<ID>/                                    Show File
 DELETE  /files/<ID>/                                    Delete File
+
+GET     /reporters/                                     List All Reporters
+POST    /reporters/                                     Create New Reporter
+GET     /reporters/<ID>/                                Show Reporter
+DELETE  /reporters/<ID>/                                Delete Reporter
