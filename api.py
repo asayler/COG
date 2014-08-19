@@ -83,6 +83,8 @@ def get_root():
 
 @app.route("/assignments/",
            methods=['GET', 'POST'])
+@httpauth.login_required
+@auth.requires_auth_route()
 def process_assignments():
 
     # Process
@@ -91,9 +93,9 @@ def process_assignments():
         out = {_ASSIGNMENTS_KEY: list(srv.list_assignments())}
     elif flask.request.method == 'POST':
         # Create Assignment
-        d = flask.request.get_json(force=True)
+        data = flask.request.get_json(force=True)
         try:
-            asn = srv.create_assignment(d)
+            asn = srv.create_assignment(data, owner=flask.g.user)
         except KeyError as e:
             err = { 'status': 400,
                     'message': str(e) }
@@ -111,6 +113,8 @@ def process_assignments():
 
 @app.route("/assignments/<uuid_hex>/",
            methods=['GET', 'PUT', 'DELETE'])
+@httpauth.login_required
+@auth.requires_auth_route()
 def process_assignment(uuid_hex):
 
     # Get Assignment

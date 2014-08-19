@@ -1,9 +1,12 @@
 ### Implemented:
 
+GET     /                                               Welcome Message
+
+GET     /assignments/                                   List Assignments
+POST    /assignments/                                   Create New Assignment
+
 
 ### In Progress:
-
-GET     /                                               <UNDEFINED>
 
 GET     */allow/<method>/                               List Allowed Groups (Specify Method)
 PUT     */allow/<method>/                               Add Allowed Groups (Specify Method)
@@ -24,8 +27,6 @@ GET     /groups/<ID>/members/                           List Group Members
 PUT     /groups/<ID>/members/                           Add Group Members
 DELETE  /groups/<ID>/members/                           Remove Group Members
 
-GET     /assignments/                                   List Assignments
-POST    /assignments/                                   Create New Assignment
 GET     /assignments/<ID>/                              Show Assignment
 PUT     /assignments/<ID>/                              Update Assignment
 DELETE  /assignments/<ID>/                              Delete Assignment

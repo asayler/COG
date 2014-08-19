@@ -11,6 +11,7 @@ import copy
 import os
 import hashlib
 import uuid
+import functools
 
 import flask
 
@@ -211,14 +212,12 @@ class Auth(object):
 
         def _decorator(func):
 
+            @functools.wraps(func)
             def _wrapper(*args, **kwargs):
 
                 user = flask.g.user
                 path = flask.request.path
                 method = flask.request.method
-                print("user = {:s}".format(user))
-                print("path = {:s}".format(path))
-                print("meth = {:s}".format(method))
 
                 user_uuid = str(user.uuid).lower()
                 owner_uuid = None
