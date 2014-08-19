@@ -74,7 +74,22 @@ def verify_login(username, password):
 
 ## Helper Functions ##
 
-def process_objects(func_list, func_create, key):
+def error_response(e, status):
+
+    err = { 'status': status,
+            'message': str(e) }
+    err_res = flask.jsonify(err)
+    err_res.status_code = err['status']
+    return err_res
+
+def create_stub_json(func_create, key):
+
+    data = flask.request.get_json(force=True)
+    obj = func_create(data, owner=flask.g.user)
+    lst = {key: list([str(obj.uuid)])}
+    return lst
+
+def process_objects(func_list, func_create, key, create_stub=create_stub_json):
 
     # List Objects
     if flask.request.method == 'GET':
@@ -83,18 +98,10 @@ def process_objects(func_list, func_create, key):
 
     # Create Object
     elif flask.request.method == 'POST':
-
-        data = flask.request.get_json(force=True)
         try:
-            obj = func_create(data, owner=flask.g.user)
+            lst = create_stub(func_create, key)
         except KeyError as e:
-            err = { 'status': 400,
-                    'message': str(e) }
-            err_res = flask.jsonify(err)
-            err_res.status_code = err['status']
-            return err_res
-        else:
-            lst = {key: list([str(obj.uuid)])}
+            return error_response(e, 400)
 
     # Bad Method
     else:
