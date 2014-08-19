@@ -33,6 +33,10 @@ httpauth = flask.ext.httpauth.HTTPBasicAuth()
 srv = cogs.structs.Server()
 auth = cogs.auth.Auth()
 
+### Functions ###
+
+## Authentication Functions ##
+
 @httpauth.verify_password
 def verify_login(username, password):
 
@@ -63,6 +67,38 @@ def verify_login(username, password):
         else:
             return False
 
+## Helper Functions ##
+
+def process_objects(func_list, func_create, key):
+
+    # Process
+    if flask.request.method == 'GET':
+
+        # Get Objects
+        lst = {key: list(func_list())}
+
+    elif flask.request.method == 'POST':
+
+        # Create Objects
+        data = flask.request.get_json(force=True)
+        try:
+            obj = func_create(data, owner=flask.g.user)
+        except KeyError as e:
+            err = { 'status': 400,
+                    'message': str(e) }
+            err_res = flask.jsonify(err)
+            err_res.status_code = err['status']
+            return err_res
+        else:
+            lst = {key: list([str(obj.uuid)])}
+
+    else:
+        raise Exception("Unhandled Method")
+
+    # Return Assignment List
+    return flask.jsonify(lst)
+
+
 ### Endpoints ###
 
 ## Root Endpoints ##
@@ -86,34 +122,7 @@ def get_root():
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_assignments():
-
-    # Process
-    if flask.request.method == 'GET':
-
-        # Get Assignments
-        out = {_ASSIGNMENTS_KEY: list(srv.list_assignments())}
-
-    elif flask.request.method == 'POST':
-
-        # Create Assignment
-        data = flask.request.get_json(force=True)
-        try:
-            asn = srv.create_assignment(data, owner=flask.g.user)
-        except KeyError as e:
-            err = { 'status': 400,
-                    'message': str(e) }
-            err_res = flask.jsonify(err)
-            err_res.status_code = err['status']
-            return err_res
-        else:
-            out = {_ASSIGNMENTS_KEY: list([str(asn.uuid)])}
-
-    else:
-        raise Exception("Unhandled Method")
-
-    # Return Assignment List
-    res = flask.jsonify(out)
-    return res
+    return process_objects(srv.list_assignments, srv.create_assignment, _ASSIGNMENTS_KEY)
 
 @app.route("/assignments/<uuid_hex>/",
            methods=['GET', 'PUT', 'DELETE'])

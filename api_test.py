@@ -71,7 +71,7 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
 
         return self.open_auth(method, url, username=username, **kwargs)
 
-    def create_objects(self, url, data, user=None):
+    def create_objects(self, url, key, data, user=None):
         data = json.dumps(data)
         res = self.open_user('POST', url, user=user, data=data)
         self.assertEqual(res.status_code, 200)
@@ -79,20 +79,22 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
         self.assertTrue(res_obj)
         res_keys = res_obj.keys()
         self.assertEqual(len(res_keys), 1)
-        res_lst = res_obj[res_keys[0]]
+        self.assertEqual(res_keys[0], key)
+        res_lst = res_obj[key]
         self.assertEqual(len(res_lst), 1)
         res_uuid = res_lst[0]
         self.assertTrue(res_uuid)
         return res_uuid
 
-    def lst_objects(self, url, user=None):
+    def lst_objects(self, url, key, user=None):
         res = self.open_auth('GET', url, user['token'])
         self.assertEqual(res.status_code, 200)
         res_obj = json.loads(res.data)
         self.assertTrue(res_obj)
         res_keys = res_obj.keys()
         self.assertEqual(len(res_keys), 1)
-        res_lst = res_obj[res_keys[0]]
+        self.assertEqual(res_keys[0], key)
+        res_lst = res_obj[key]
         return set(res_lst)
 
 
@@ -199,13 +201,14 @@ class CogsApiAssignmentTestCase(CogsApiAssignmentHelpers):
         super(CogsApiAssignmentTestCase, self).setUp()
         self.user = self.admin
         self.url = '/assignments/'
+        self.key = 'assignments'
         self.data = copy.copy(cogs.test_common.ASSIGNMENT_TESTDICT)
 
     def tearDown(self):
         super(CogsApiAssignmentTestCase, self).tearDown()
 
     def test_create_assignment(self):
-        asn_uuid = self.create_objects(self.url, self.data, user=self.admin)
+        asn_uuid = self.create_objects(self.url, self.key, self.data, user=self.admin)
         self.assertTrue(asn_uuid)
 
     def test_list_assignments(self):
@@ -213,16 +216,16 @@ class CogsApiAssignmentTestCase(CogsApiAssignmentHelpers):
         assignments_in = set([])
 
         # Get Assignment List (Empty)
-        assignments_out = self.lst_objects(self.url, user=self.user)
+        assignments_out = self.lst_objects(self.url, self.key, user=self.user)
         self.assertEqual(assignments_in, assignments_out)
 
         # Create Assignments
         for i in range(10):
-            asn_uuid = self.create_objects(self.url, self.data, user=self.user)
+            asn_uuid = self.create_objects(self.url, self.key, self.data, user=self.user)
             assignments_in.add(asn_uuid)
 
         # Get Assignment List
-        assignments_out = self.lst_objects(self.url, user=self.user)
+        assignments_out = self.lst_objects(self.url, self.key, user=self.user)
         self.assertEqual(assignments_in, assignments_out)
 
         # # Delete Assignments
