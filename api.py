@@ -82,31 +82,43 @@ def error_response(e, status):
     err_res.status_code = err['status']
     return err_res
 
-def create_stub_json(func_create, key):
+def create_stub_json(func_create):
 
     data = flask.request.get_json(force=True)
     obj = func_create(data, owner=flask.g.user)
-    lst = {key: list([str(obj.uuid)])}
+    obj_lst = list([str(obj.uuid)])
+    return obj_lst
+
+def create_stub_file(func_create):
+
+    obj_lst = []
+    files = flask.request.files
+    for key in files:
+        data = {}
+        data['key'] = str(key)
+        file_obj = files[key]
+        obj = func_create(data, file_obj=file_obj, owner=flask.g.user)
+        obj_lst.append([str(obj.uuid)])
     return lst
 
 def update_stub_json(obj):
 
     data = flask.request.get_json(force=True)
     obj.set_dict(data)
-    out = {str(obj.uuid): obj.get_dict()}
-    return out
+    obj_dict = obj.get_dict()
+    return obj_dict
 
 def process_objects(func_list, func_create, key, create_stub=create_stub_json):
 
     # List Objects
     if flask.request.method == 'GET':
 
-        lst = {key: list(func_list())}
+        obj_lst = list(func_list())
 
     # Create Object
     elif flask.request.method == 'POST':
         try:
-            lst = create_stub(func_create, key)
+            obj_lst = create_stub(func_create)
         except KeyError as e:
             return error_response(e, 400)
 
@@ -114,8 +126,9 @@ def process_objects(func_list, func_create, key, create_stub=create_stub_json):
     else:
         raise Exception("Unhandled Method")
 
-    # Return List
-    return flask.jsonify(lst)
+    # Return Object List
+    out = {key: obj_lst}
+    return flask.jsonify(out)
 
 def process_object(func_get, obj_uuid, update_stub=update_stub_json):
 
@@ -127,18 +140,18 @@ def process_object(func_get, obj_uuid, update_stub=update_stub_json):
 
     # Get Object
     if flask.request.method == 'GET':
-        out = {str(obj.uuid): obj.get_dict()}
+        obj_dict = obj.get_dict()
 
     # Update Object
     elif flask.request.method == 'PUT':
         try:
-            out = update_stub(obj)
+            obj_dict = update_stub(obj)
         except KeyError as e:
             return error_response(e, 400)
 
     # Delete Object
     elif flask.request.method == 'DELETE':
-        out = {str(obj.uuid): obj.get_dict()}
+        obj_dict = obj.get_dict()
         obj.delete()
 
     # Bad Method
@@ -146,6 +159,7 @@ def process_object(func_get, obj_uuid, update_stub=update_stub_json):
         raise Exception("Unhandled Method")
 
     # Return Object
+    out = {str(obj.uuid): obj_dict}
     return flask.jsonify(out)
 
 
@@ -164,6 +178,7 @@ def get_root():
 
 ## Access Control Endpoints ##
 
+# ToDo: All of Them...
 
 ## Assignment Endpoints ##
 
