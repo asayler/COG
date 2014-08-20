@@ -291,7 +291,7 @@ class Assignment(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
         # Remove Submission Objects
         for sub_uuid in self.list_submissions():
             sub = self.SubmissionFactory.from_existing(sub_uuid)
-            sub._delete()
+            sub.delete()
         assert(not self.list_submissions())
 
         # Remove Submission List
