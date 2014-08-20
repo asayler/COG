@@ -22,7 +22,7 @@ DUMMY_TESTDICT = {'key1': "val1",
 USER_TESTDICT = {}
 GROUP_TESTDICT = {'name': "testgroup"}
 FILE_TESTDICT  = {'key': "Test_File"}
-REPORTER_TESTDICT  = {}
+REPORTER_TESTDICT  = {'mod': "moodle"}
 ASSIGNMENT_TESTDICT = {'name': "Test_Assignment", 'env': "local"}
 TEST_TESTDICT = {'name': "Test_Assignment",
                  'maxscore': "10",
