@@ -2,6 +2,11 @@
 
 GET     /                                               Welcome Message
 
+GET     /files/                                         List All Files
+POST    /files/                                         Create New File
+GET     /files/<ID>/                                    Show File
+DELETE  /files/<ID>/                                    Delete File
+
 GET     /assignments/                                   List Assignments
 POST    /assignments/                                   Create New Assignment
 GET     /assignments/<ID>/                              Show Assignment
@@ -57,11 +62,6 @@ DELETE  /tests/<ID>/reporters/                          Remove Test Reporter
 GET     /runs/                                          List All Test Runs
 GET     /runs/<ID>/                                     Show Test Run Results
 DELETE  /runs/<ID>/                                     Delete Test Run Results
-
-GET     /files/                                         List All Files
-POST    /files/                                         Create New File
-GET     /files/<ID>/                                    Show File
-DELETE  /files/<ID>/                                    Delete File
 
 GET     /reporters/                                     List All Reporters
 POST    /reporters/                                     Create New Reporter
