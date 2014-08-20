@@ -64,7 +64,6 @@ DELETE  /groups/<ID>/members/                           Remove Group Members
 GET     /submissions/<ID>/runs/                         List Test Runs
 POST    /submissions/<ID>/runs/                         Execute New Test Run
 
-
 GET     /runs/                                          List All Test Runs
 GET     /runs/<ID>/                                     Show Test Run Results
 DELETE  /runs/<ID>/                                     Delete Test Run Results
