@@ -13,8 +13,6 @@ import unittest
 import uuid
 import os
 
-import werkzeug
-
 import cogs.test_common
 
 import api
