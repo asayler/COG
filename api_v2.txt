@@ -1,4 +1,4 @@
-### Implemented:
+### Implemented ###
 
 GET     /                                               Welcome Message
 
@@ -17,6 +17,10 @@ POST    /assignments/                                   Create New Assignment
 GET     /assignments/<ID>/                              Show Assignment
 PUT     /assignments/<ID>/                              Update Assignment
 DELETE  /assignments/<ID>/                              Delete Assignment
+GET     /assignments/<ID>/tests/                        List Assignment Grading Tests
+POST    /assignments/<ID>/tests/                        Create New Assignment Grading Test
+GET     /assignments/<ID>/submissions/                  List Assignment Submissions
+POST    /assignments/<ID>/submissions/                  Create New Assignment Submission
 
 GET     /tests/                                         List All Tests
 GET     /tests/<ID>/                                    Show Grading Test
@@ -27,7 +31,7 @@ GET     /submissions/<ID>/                              Show Submission
 DELETE  /submissions/<ID>/                              Delete Submission
 
 
-### In Progress:
+### In Progress ###
 
 GET     */allow/<method>/                               List Allowed Groups (Specify Method)
 PUT     */allow/<method>/                               Add Allowed Groups (Specify Method)
@@ -48,16 +52,11 @@ GET     /groups/<ID>/members/                           List Group Members
 PUT     /groups/<ID>/members/                           Add Group Members
 DELETE  /groups/<ID>/members/                           Remove Group Members
 
-GET     /assignments/<ID>/tests/                        List Assignment Grading Tests
-POST    /assignments/<ID>/tests/                        Create New Assignment Grading Test
-GET     /assignments/<ID>/submissions/                  List Assignment Submissions
-POST    /assignments/<ID>/submissions/                  Create New Assignment Submission
-
-GET     /submissions/<ID>/runs/                         List Test Runs
-POST    /submissions/<ID>/runs/                         Execute New Test Run
 GET     /submissions/<ID>/files/                        List Submission Files
 PUT     /submissions/<ID>/files/                        Add Submission File
 DELETE  /submissions/<ID>/files/                        Remove Submission File
+GET     /submissions/<ID>/runs/                         List Test Runs
+POST    /submissions/<ID>/runs/                         Execute New Test Run
 
 GET     /tests/<ID>/files/                              List Test Files
 PUT     /tests/<ID>/files/                              Add Test File
@@ -65,7 +64,6 @@ DELETE  /tests/<ID>/files/                              Remove Test File
 GET     /tests/<ID>/reporters/                          List Test Reporters
 PUT     /tests/<ID>/reporters/                          Add Test Reporter
 DELETE  /tests/<ID>/reporters/                          Remove Test Reporter
-
 
 GET     /runs/                                          List All Test Runs
 GET     /runs/<ID>/                                     Show Test Run Results

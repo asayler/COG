@@ -133,17 +133,17 @@ def process_objects(func_list, func_create, key, create_stub=create_stub_json):
 
 def process_object(func_get, obj_uuid, update_stub=update_stub_json):
 
-    # Lookup Object
+    # Get Object
     try:
         obj = func_get(obj_uuid)
     except cogs.structs.ObjectDNE as e:
         return error_response(e, 404)
 
-    # Get Object
+    # Get Object Data
     if flask.request.method == 'GET':
         obj_dict = obj.get_dict()
 
-    # Update Object
+    # Update Object Data
     elif flask.request.method == 'PUT':
         try:
             obj_dict = update_stub(obj)
@@ -222,6 +222,34 @@ def process_assignments():
 @auth.requires_auth_route()
 def process_assignment(obj_uuid):
     return process_object(srv.get_assignment, obj_uuid)
+
+@app.route("/assignments/<obj_uuid>/tests/", methods=['GET', 'POST'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_assignment_tests(obj_uuid):
+
+    # Get Assignment
+    try:
+        asn = srv.get_assignment(obj_uuid)
+    except cogs.structs.ObjectDNE as e:
+        return error_response(e, 404)
+
+    # Process Tests
+    return process_objects(asn.list_tests, asn.create_test, _TESTS_KEY)
+
+@app.route("/assignments/<obj_uuid>/submissions/", methods=['GET', 'POST'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_assignment_submissions(obj_uuid):
+
+    # Get Assignment
+    try:
+        sub = srv.get_assignment(obj_uuid)
+    except cogs.structs.ObjectDNE as e:
+        return error_response(e, 404)
+
+    # Process Submissions
+    return process_objects(sub.list_submissions, sub.create_submission, _SUBMISSIONS_KEY)
 
 ## Test Endpoints ##
 
