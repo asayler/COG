@@ -13,6 +13,8 @@ import unittest
 import uuid
 import os
 
+import werkzeug
+
 import cogs.test_common
 
 import api
@@ -77,8 +79,9 @@ class CogsApiObjectBase(object):
 
     ## Object Helpers ##
 
-    def create_objects(self, url, key, data, user=None):
-        data = json.dumps(data)
+    def create_objects(self, url, key, data, json_data=True, user=None):
+        if json_data:
+            data = json.dumps(data)
         res = self.open_user('POST', url, user=user, data=data)
         self.assertEqual(res.status_code, 200)
         res_obj = json.loads(res.data)
@@ -120,8 +123,9 @@ class CogsApiObjectBase(object):
         else:
             self.fail("Bad HTTP status code {:d}".format(res.status_code))
 
-    def set_object(self, url, obj_uuid, data, user=None):
-        data = json.dumps(data)
+    def set_object(self, url, obj_uuid, data, json_data=True, user=None):
+        if json_data:
+            data = json.dumps(data)
         res = self.open_user('PUT', '{:s}{:s}/'.format(url, obj_uuid), user=user, data=data)
         if (res.status_code == 200):
             self.assertEqual(res.status_code, 200)
@@ -159,8 +163,14 @@ class CogsApiObjectBase(object):
 
     def test_create_object(self):
 
-        obj_uuid = self.create_objects(self.url, self.key, self.data, user=self.user)
+        # Create Object
+        obj_uuid = self.create_objects(self.url, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
         self.assertTrue(obj_uuid)
+
+        # Delete Object
+        obj = self.delete_object(self.url, obj_uuid, user=self.user)
+        self.assertIsNotNone(obj)
 
     def test_list_objects(self):
 
@@ -172,7 +182,8 @@ class CogsApiObjectBase(object):
 
         # Create Objects
         for i in range(10):
-            obj_uuid = self.create_objects(self.url, self.key, self.data, user=self.user)
+            obj_uuid = self.create_objects(self.url, self.key, self.data,
+                                           json_data=self.json_data, user=self.user)
             objects_in.add(obj_uuid)
 
         # Get Object List
@@ -182,61 +193,76 @@ class CogsApiObjectBase(object):
         # Delete Some Objects
         for i in range(5):
             obj_uuid = objects_in.pop()
-            self.delete_object(self.url, obj_uuid, user=self.user)
+            obj = self.delete_object(self.url, obj_uuid, user=self.user)
+            self.assertIsNotNone(obj)
 
-        # Get Objects
+        # Get Object List
         objects_out = self.lst_objects(self.url, self.key, user=self.user)
         self.assertEqual(objects_in, objects_out)
 
         # Delete Remaining Objects
         for obj_uuid in list(objects_in):
             objects_in.remove(obj_uuid)
-            self.delete_object(self.url, obj_uuid, user=self.user)
+            obj = self.delete_object(self.url, obj_uuid, user=self.user)
+            self.assertIsNotNone(obj)
 
-        # Get Objects
+        # Get Object List
         objects_out = self.lst_objects(self.url, self.key, user=self.user)
         self.assertEqual(objects_in, objects_out)
 
     def test_get_object(self):
 
         # Create Object
-        obj_uuid = self.create_objects(self.url, self.key, self.data, user=self.admin)
+        obj_uuid = self.create_objects(self.url, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
 
         # Get Object
-        obj = self.get_object(self.url, obj_uuid, user=self.admin)
+        obj = self.get_object(self.url, obj_uuid, user=self.user)
         self.assertSubset(self.data, obj)
+
+        # Delete Object
+        obj = self.delete_object(self.url, obj_uuid, user=self.user)
+        self.assertIsNotNone(obj)
 
     def test_set_object(self):
 
         # Create Object
-        obj_uuid = self.create_objects(self.url, self.key, self.data, user=self.admin)
+        obj_uuid = self.create_objects(self.url, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
 
         # Update Object
         data = copy.copy(self.data)
         for key in data:
             data[key] = data[key] + "_updated"
         self.assertNotEqual(self.data, data)
-        obj = self.set_object(self.url, obj_uuid, data, user=self.admin)
+        obj = self.set_object(self.url, obj_uuid, data,
+                              json_data=self.json_data, user=self.user)
         self.assertSubset(data, obj)
 
         # Get Object
-        obj = self.get_object(self.url, obj_uuid, user=self.admin)
+        obj = self.get_object(self.url, obj_uuid, user=self.user)
         self.assertSubset(data, obj)
+
+        # Delete Object
+        obj = self.delete_object(self.url, obj_uuid, user=self.user)
+        self.assertIsNotNone(obj)
 
     def test_delete_object(self):
 
         # Create Object
-        obj_uuid = self.create_objects(self.url, self.key, self.data, user=self.admin)
+        obj_uuid = self.create_objects(self.url, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
 
         # Get Object
-        obj = self.get_object(self.url, obj_uuid, user=self.admin)
-        self.assertSubset(self.data, obj)
+        obj = self.get_object(self.url, obj_uuid, user=self.user)
+        self.assertIsNotNone(obj)
 
         # Delete Object
-        self.delete_object(self.url, obj_uuid, user=self.user)
+        obj = self.delete_object(self.url, obj_uuid, user=self.user)
+        self.assertIsNotNone(obj)
 
         # Get Object
-        obj = self.get_object(self.url, obj_uuid, user=self.admin)
+        obj = self.get_object(self.url, obj_uuid, user=self.user)
         self.assertIsNone(obj)
 
 
@@ -255,6 +281,60 @@ class CogsApiRootTestCase(CogsApiTestCase):
         self.assertEqual(res.data, api._MSG_ROOT)
 
 
+## File Tests ##
+class CogsApiFileTestCase(CogsApiObjectBase, CogsApiTestCase):
+
+    def setUp(self):
+        super(CogsApiFileTestCase, self).setUp()
+        self.user = self.admin
+        self.url = '/files/'
+        self.key = 'files'
+        self.file_name = "test.txt"
+        self.file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, self.file_name)
+        self.file_key = "test_file"
+        self.data = {self.file_key: (self.file_path, self.file_name)}
+        self.json_data = False
+
+    def tearDown(self):
+        super(CogsApiFileTestCase, self).tearDown()
+
+    # Override default test_get_object
+    def test_get_object(self):
+
+        # Create Object
+        obj_uuid = self.create_objects(self.url, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
+
+        # Get Object
+        obj = self.get_object(self.url, obj_uuid, user=self.user)
+        self.assertEqual(self.file_key, obj['key'])
+        self.assertEqual(self.file_name, obj['name'])
+        self.assertEqual(str(self.user.uuid), obj['owner'])
+
+        # Delete Object
+        obj = self.delete_object(self.url, obj_uuid, user=self.user)
+        self.assertIsNotNone(obj)
+
+    # Override default test_set_object
+    def test_set_object(self):
+
+        # Create Object
+        obj_uuid = self.create_objects(self.url, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
+
+        # Update Object (Not Allowed on Files - Should Fail with a 405 Error)
+        try:
+            obj = self.set_object(self.url, obj_uuid, self.data,
+                                  json_data=self.json_data, user=self.user)
+        except AssertionError as e:
+            if int(str(e).split()[-1]) != 405:
+                raise
+
+        # Delete Object
+        obj = self.delete_object(self.url, obj_uuid, user=self.user)
+        self.assertIsNotNone(obj)
+
+
 ## Assignment Tests ##
 class CogsApiAssignmentTestCase(CogsApiObjectBase, CogsApiTestCase):
 
@@ -264,104 +344,11 @@ class CogsApiAssignmentTestCase(CogsApiObjectBase, CogsApiTestCase):
         self.url = '/assignments/'
         self.key = 'assignments'
         self.data = copy.copy(cogs.test_common.ASSIGNMENT_TESTDICT)
+        self.json_data = True
 
     def tearDown(self):
         super(CogsApiAssignmentTestCase, self).tearDown()
 
-
-
-# ## Assignment Test Tests
-# class CogsApiTestTestCase(CogsApiTestHelpers):
-
-#     def setUp(self):
-
-#         # Call Parent setUp()
-#         super(CogsApiTestTestCase, self).setUp()
-
-#         # Create Assignment
-#         self.asn_uuid = self.create_assignment()
-
-#     def tearDown(self):
-
-#         # Call Parent tearDown()
-#         super(CogsApiTestTestCase, self).tearDown()
-
-#     def test_create_test(self):
-
-#         # Create Test
-#         tst_uuid = self.create_test()
-#         self.assertTrue(tst_uuid)
-
-#     def test_get_test(self):
-
-#         # Create Test
-#         tst_uuid = self.create_test(cogs.test_common.TEST_TESTDICT)
-
-#         # Get Test
-#         tst = self.get_test(tst_uuid)
-#         self.assertSubset(cogs.test_common.TEST_TESTDICT, tst[str(tst_uuid)])
-
-#     def test_set_test(self):
-
-#         # Create Test
-#         tst_uuid = self.create_test(cogs.test_common.TEST_TESTDICT)
-
-#         # Update Test
-#         d = copy.deepcopy(cogs.test_common.TEST_TESTDICT)
-#         for k in d:
-#             d[k] = d[k] + "_update"
-#         self.assertNotEqual(cogs.test_common.TEST_TESTDICT, d)
-#         tst = self.set_test(tst_uuid, d)
-#         self.assertSubset(d, tst[str(tst_uuid)])
-
-#         # Get Test
-#         tst = self.get_test(tst_uuid)
-#         self.assertSubset(d, tst[str(tst_uuid)])
-
-#     def test_delete_test(self):
-
-#         # Create Test
-#         tst_uuid = self.create_test(cogs.test_common.TEST_TESTDICT)
-
-#         # Get Test
-#         res = self.app.get('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid))
-#         self.assertEqual(res.status_code, 200)
-
-#         # Delete Test
-#         self.delete_test(tst_uuid)
-
-#         # Get Test
-#         res = self.app.get('/assignments/{:s}/tests/{:s}/'.format(self.asn_uuid, tst_uuid))
-#         self.assertEqual(res.status_code, 404)
-
-#     def test_list_tests(self):
-
-#         tests_in = set([])
-
-#         # Get Tests (Empty)
-#         tests_out = self.lst_tests()
-#         self.assertEqual(tests_in, tests_out)
-
-#         # Create Tests
-#         for i in range(10):
-#             d = copy.deepcopy(cogs.test_common.TEST_TESTDICT)
-#             for k in d:
-#                 d[k] = d[k] + "_{:02d}".format(i)
-#             tst_uuid = self.create_test(d)
-#             tests_in.add(str(tst_uuid))
-
-#         # Get Tests
-#         tests_out = self.lst_tests()
-#         self.assertEqual(tests_in, tests_out)
-
-#         # Delete Tests
-#         for i in range(5):
-#             rmv_uuid = tests_in.pop()
-#             self.delete_test(rmv_uuid)
-
-#         # Get Tests
-#         tests_out = self.lst_tests()
-#         self.assertEqual(tests_in, tests_out)
 
 ### Main
 if __name__ == '__main__':

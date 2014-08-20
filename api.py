@@ -98,8 +98,8 @@ def create_stub_file(func_create):
         data['key'] = str(key)
         file_obj = files[key]
         obj = func_create(data, file_obj=file_obj, owner=flask.g.user)
-        obj_lst.append([str(obj.uuid)])
-    return lst
+        obj_lst.append(str(obj.uuid))
+    return obj_lst
 
 def update_stub_json(obj):
 
