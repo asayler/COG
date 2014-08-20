@@ -28,6 +28,9 @@ DELETE  /tests/<ID>/                                    Delete Grading Test
 GET     /tests/<ID>/files/                              List Test Files
 PUT     /tests/<ID>/files/                              Add Test File
 DELETE  /tests/<ID>/files/                              Remove Test File
+GET     /tests/<ID>/reporters/                          List Test Reporters
+PUT     /tests/<ID>/reporters/                          Add Test Reporter
+DELETE  /tests/<ID>/reporters/                          Remove Test Reporter
 
 GET     /submissions/                                   List All Submissions
 GET     /submissions/<ID>/                              Show Submission
@@ -61,9 +64,6 @@ DELETE  /submissions/<ID>/files/                        Remove Submission File
 GET     /submissions/<ID>/runs/                         List Test Runs
 POST    /submissions/<ID>/runs/                         Execute New Test Run
 
-GET     /tests/<ID>/reporters/                          List Test Reporters
-PUT     /tests/<ID>/reporters/                          Add Test Reporter
-DELETE  /tests/<ID>/reporters/                          Remove Test Reporter
 
 GET     /runs/                                          List All Test Runs
 GET     /runs/<ID>/                                     Show Test Run Results
