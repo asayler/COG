@@ -10,6 +10,7 @@ DELETE  /files/<ID>/                                    Delete File
 GET     /reporters/                                     List All Reporters
 POST    /reporters/                                     Create New Reporter
 GET     /reporters/<ID>/                                Show Reporter
+PUT     /reporters/<ID>/                                Update Reporter
 DELETE  /reporters/<ID>/                                Delete Reporter
 
 GET     /assignments/                                   List Assignments
@@ -24,6 +25,7 @@ POST    /assignments/<ID>/submissions/                  Create New Assignment Su
 
 GET     /tests/                                         List All Tests
 GET     /tests/<ID>/                                    Show Grading Test
+PUT     /tests/<ID>/                                    Update Grading Test
 DELETE  /tests/<ID>/                                    Delete Grading Test
 GET     /tests/<ID>/files/                              List Test Files
 PUT     /tests/<ID>/files/                              Add Test File
@@ -34,10 +36,17 @@ DELETE  /tests/<ID>/reporters/                          Remove Test Reporter
 
 GET     /submissions/                                   List All Submissions
 GET     /submissions/<ID>/                              Show Submission
+PUT     /submissions/<ID>/                              Update Submission
 DELETE  /submissions/<ID>/                              Delete Submission
 GET     /submissions/<ID>/files/                        List Submission Files
 PUT     /submissions/<ID>/files/                        Add Submission File
 DELETE  /submissions/<ID>/files/                        Remove Submission File
+GET     /submissions/<ID>/runs/                         List Test Runs
+POST    /submissions/<ID>/runs/                         Execute New Test Run
+
+GET     /runs/                                          List All Test Runs
+GET     /runs/<ID>/                                     Show Test Run Results
+DELETE  /runs/<ID>/                                     Delete Test Run Results
 
 
 ### In Progress ###
@@ -60,10 +69,3 @@ DELETE  /groups/<ID>/                                   Delete Group
 GET     /groups/<ID>/members/                           List Group Members
 PUT     /groups/<ID>/members/                           Add Group Members
 DELETE  /groups/<ID>/members/                           Remove Group Members
-
-GET     /submissions/<ID>/runs/                         List Test Runs
-POST    /submissions/<ID>/runs/                         Execute New Test Run
-
-GET     /runs/                                          List All Test Runs
-GET     /runs/<ID>/                                     Show Test Run Results
-DELETE  /runs/<ID>/                                     Delete Test Run Results

@@ -603,6 +603,79 @@ class CogsApiSubmissionTestCase(CogsApiObjectBase, CogsApiTestCase):
         for file_uuid in file_lst:
             self.delete_object('/files/', file_uuid, user=self.user)
 
+## Run Tests ##
+class CogsApiRunTestCase(CogsApiObjectBase, CogsApiTestCase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(CogsApiRunTestCase, self).setUp()
+
+        # Set User
+        self.user = self.admin
+
+        # Create Assignment
+        asn_key = 'assignments'
+        asn_url = "/{:s}/".format(asn_key)
+        self.asn_uuid = self.create_objects(asn_url, asn_key,
+                                            cogs.test_common.ASSIGNMENT_TESTDICT,
+                                            json_data=True, user=self.user)
+
+        # Create Test
+        tst_key = 'tests'
+        tst_url = "/{:s}/{:s}/{:s}/".format(asn_key, self.asn_uuid, tst_key)
+        self.tst_uuid = self.create_objects(tst_url, tst_key,
+                                            cogs.test_common.TEST_TESTDICT,
+                                            json_data=True, user=self.user)
+
+        # Create Submission
+        sub_key = 'submissions'
+        sub_url = "/{:s}/{:s}/{:s}/".format(asn_key, self.asn_uuid, sub_key)
+        self.sub_uuid = self.create_objects(sub_url, sub_key,
+                                            cogs.test_common.SUBMISSION_TESTDICT,
+                                            json_data=True, user=self.user)
+
+        # Set Params
+        self.key = 'runs'
+        self.url_lst = '/{:s}/{:s}/{:s}/'.format(sub_key, self.sub_uuid, self.key)
+        self.url_obj = '/{:s}/'.format(self.key)
+        self.data = copy.copy(cogs.test_common.RUN_TESTDICT)
+        self.data['test'] = self.tst_uuid
+        self.json_data = True
+
+    def tearDown(self):
+
+        # Delete Submission
+        self.delete_object('/submissions/', self.sub_uuid, user=self.user)
+
+        # Delete Test
+        self.delete_object('/tests/', self.tst_uuid, user=self.user)
+
+        # Delete Assignment
+        self.delete_object('/assignments/', self.asn_uuid, user=self.user)
+
+        # Call Parent
+        super(CogsApiRunTestCase, self).tearDown()
+
+    # Override default test_set_object
+    def test_set_object(self):
+
+        # Create Object
+        obj_uuid = self.create_objects(self.url_lst, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
+
+        # Update Object (Not Allowed on Runs - Should Fail with a 405 Error)
+        try:
+            obj = self.set_object(self.url_obj, obj_uuid, self.data,
+                                  json_data=self.json_data, user=self.user)
+        except AssertionError as e:
+            if int(str(e).split()[-1]) != 405:
+                raise
+
+        # Delete Object
+        obj = self.delete_object(self.url_obj, obj_uuid, user=self.user)
+        self.assertIsNotNone(obj)
+
 
 ### Main
 if __name__ == '__main__':

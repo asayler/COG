@@ -10,6 +10,7 @@
 import time
 import os
 import uuid
+import multiprocessing
 
 import flask
 import flask.ext.httpauth
@@ -38,7 +39,7 @@ app = flask.Flask(__name__)
 httpauth = flask.ext.httpauth.HTTPBasicAuth()
 srv = cogs.structs.Server()
 auth = cogs.auth.Auth()
-
+workers = multiprocessing.Pool(10)
 
 ### Functions ###
 
@@ -84,14 +85,14 @@ def error_response(e, status):
     err_res.status_code = err['status']
     return err_res
 
-def create_stub_json(func_create):
+def create_stub_json(func_create, **kwargs):
 
     data = flask.request.get_json(force=True)
-    obj = func_create(data, owner=flask.g.user)
+    obj = func_create(data, owner=flask.g.user, **kwargs)
     obj_lst = list([str(obj.uuid)])
     return obj_lst
 
-def create_stub_file(func_create):
+def create_stub_file(func_create, **kwargs):
 
     obj_lst = []
     files = flask.request.files
@@ -99,7 +100,7 @@ def create_stub_file(func_create):
         data = {}
         data['key'] = str(key)
         file_obj = files[key]
-        obj = func_create(data, file_obj=file_obj, owner=flask.g.user)
+        obj = func_create(data, file_obj=file_obj, owner=flask.g.user, **kwargs)
         obj_lst.append(str(obj.uuid))
     return obj_lst
 
@@ -110,7 +111,7 @@ def update_stub_json(obj):
     obj_dict = obj.get_dict()
     return obj_dict
 
-def process_objects(func_list, func_create, key, create_stub=create_stub_json):
+def process_objects(func_list, func_create, key, create_stub=create_stub_json, **kwargs):
 
     # List Objects
     if flask.request.method == 'GET':
@@ -120,7 +121,7 @@ def process_objects(func_list, func_create, key, create_stub=create_stub_json):
     # Create Object
     elif flask.request.method == 'POST':
         try:
-            obj_lst = create_stub(func_create)
+            obj_lst = create_stub(func_create, **kwargs)
         except KeyError as e:
             return error_response(e, 400)
 
@@ -290,12 +291,12 @@ def process_assignment_submissions(obj_uuid):
 
     # Get Assignment
     try:
-        sub = srv.get_assignment(obj_uuid)
+        asn = srv.get_assignment(obj_uuid)
     except cogs.structs.ObjectDNE as e:
         return error_response(e, 404)
 
     # Process Submissions
-    return process_objects(sub.list_submissions, sub.create_submission, _SUBMISSIONS_KEY)
+    return process_objects(asn.list_submissions, asn.create_submission, _SUBMISSIONS_KEY)
 
 ## Test Endpoints ##
 
@@ -367,111 +368,36 @@ def process_submission_files(obj_uuid):
     # Process Files
     return process_uuid_list(sub.list_files, sub.add_files, sub.rem_files, _FILES_KEY)
 
+@app.route("/submissions/<obj_uuid>/runs/", methods=['GET', 'POST'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_submission_runs(obj_uuid):
+
+    # Get Submission
+    try:
+        sub = srv.get_submission(obj_uuid)
+    except cogs.structs.ObjectDNE as e:
+        return error_response(e, 404)
+
+    # Process Runs
+    return process_objects(sub.list_runs, sub.execute_run, _RUNS_KEY, workers=workers)
 
 ## Run Endpoints ##
 
-@app.route("/assignments/<asn_uuid>/submissions/<sub_uuid>/runs/",
-           methods=['GET', 'POST'])
-def process_runs(asn_uuid, sub_uuid):
+@app.route("/runs/", methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_runs():
+    return process_objects(srv.list_runs, None, _RUNS_KEY)
 
-    # Get Assignment
-    try:
-        asn = srv.get_assignment(asn_uuid)
-    except cogs.structs.ObjectDNE as e:
-        err = { 'status': 404,
-                'message': str(e) }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Get Submission
-    try:
-        sub = asn.get_submission(sub_uuid)
-    except cogs.structs.ObjectDNE as e:
-        err = { 'status': 404,
-                'message': str(e) }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Process
-    if flask.request.method == 'GET':
-        # Get Runs
-        run_lst = list(sub.list_runs())
-    elif flask.request.method == 'POST':
-        # Execute Runs
-        run_lst = []
-        for tst_uuid in asn.list_tests():
-            tst = asn.get_test(tst_uuid)
-            try:
-                run = sub.execute_run(tst, sub)
-            except KeyError as e:
-                err = { 'status': 400,
-                        'message': str(e) }
-                err_res = flask.jsonify(err)
-                err_res.status_code = err['status']
-                return err_res
-            else:
-                run_lst.append(str(run.uuid))
-    else:
-        raise Exception("Unhandled Method")
-
-    # Return Run List
-    out = {_RUNS_KEY: run_lst}
-    res = flask.jsonify(out)
-    return res
-
-@app.route("/assignments/<asn_uuid>/submissions/<sub_uuid>/runs/<run_uuid>/",
-           methods=['GET', 'DELETE'])
-def process_run(asn_uuid, sub_uuid, run_uuid):
-
-    # Get Assignment
-    try:
-        asn = srv.get_assignment(asn_uuid)
-    except cogs.structs.ObjectDNE as e:
-        err = { 'status': 404,
-                'message': str(e) }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Get Submission
-    try:
-        sub = asn.get_submission(sub_uuid)
-    except cogs.structs.ObjectDNE as e:
-        err = { 'status': 404,
-                'message': str(e) }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Get Run
-    try:
-        run = sub.get_run(run_uuid)
-    except cogs.structs.ObjectDNE as e:
-        err = { 'status': 404,
-                'message': str(e) }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Process
-    if flask.request.method == 'GET':
-        # Get Run
-        out = {str(run.uuid): run.get_dict()}
-    elif flask.request.method == 'DELETE':
-        # Delete Assignment
-        out = {str(run.uuid): run.get_dict()}
-        run.delete()
-    else:
-        raise Exception("Unhandled Method")
-
-    # Return Test
-    res = flask.jsonify(out)
-    return res
+@app.route("/runs/<obj_uuid>/", methods=['GET', 'DELETE'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_run(obj_uuid):
+    return process_object(srv.get_run, obj_uuid)
 
 
-### Exceptions
+### Exceptions ###
 
 @app.errorhandler(cogs.auth.UserNotAuthorizedError)
 def not_authorized(error):
