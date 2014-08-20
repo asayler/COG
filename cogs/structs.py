@@ -137,8 +137,9 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
             src_file = open(src_path, 'rb')
             file_obj = werkzeug.datastructures.FileStorage(stream=src_file, filename=data['name'])
 
-        # Setup data
+        # Setup + Clean Name/Path
         name = os.path.basename(file_obj.filename)
+        name = werkzeug.utils.secure_filename(name)
         if not name:
             raise KeyError("Valid filename required")
         data['name'] = str(name)
