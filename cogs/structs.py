@@ -302,16 +302,16 @@ class Assignment(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
         super(Assignment, self).delete()
 
     # Public Test Methods
-    def create_test(self, dictionary, owner=None):
-        tst = self.TestFactory.from_new(dictionary, asn=self, owner=owner)
+    def create_test(self, data, owner=None):
+        tst = self.TestFactory.from_new(data, asn=self, owner=owner)
         self._add_tests([str(tst.uuid)])
         return tst
     def list_tests(self):
         return self._list_tests()
 
     # Public Submission Methods
-    def create_submission(self, dictionary, owner=None):
-        sub = self.SubmissionFactory.from_new(dictionary, asn=self, owner=owner)
+    def create_submission(self, data, owner=None):
+        sub = self.SubmissionFactory.from_new(data, asn=self, owner=owner)
         self._add_submissions([str(sub.uuid)])
         return sub
     def list_submissions(self):
