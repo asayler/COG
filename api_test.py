@@ -574,6 +574,35 @@ class CogsApiSubmissionTestCase(CogsApiObjectBase, CogsApiTestCase):
         # Call Parent
         super(CogsApiSubmissionTestCase, self).tearDown()
 
+    def test_list_uuids_files(self):
+
+        # Create Files
+        file_lst = []
+        file_key = "test_file"
+        file_name = "test.txt"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, file_name)
+        for i in range(10):
+            file_uuid = self.create_objects('/files/', 'files',
+                                            {file_key: (file_path, file_name)},
+                                            json_data=False, user=self.user)
+            file_lst.append(file_uuid)
+
+        # Create Submission
+        sub_uuid = self.create_objects(self.url_lst, self.key,
+                                       cogs.test_common.SUBMISSION_TESTDICT,
+                                       json_data=True, user=self.user)
+
+        # Test File List/Add/Remove
+        url = '/submissions/{:s}/files/'.format(sub_uuid)
+        self.list_uuids_test(url, 'files', file_lst)
+
+        # Delete Submission
+        self.delete_object(self.url_obj, sub_uuid, user=self.user)
+
+        # Delete Files
+        for file_uuid in file_lst:
+            self.delete_object('/files/', file_uuid, user=self.user)
+
 
 ### Main
 if __name__ == '__main__':

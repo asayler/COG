@@ -353,6 +353,20 @@ def process_submissions():
 def process_submission(obj_uuid):
     return process_object(srv.get_submission, obj_uuid)
 
+@app.route("/submissions/<obj_uuid>/files/", methods=['GET', 'PUT', 'DELETE'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_submission_files(obj_uuid):
+
+    # Get Submission
+    try:
+        sub = srv.get_submission(obj_uuid)
+    except cogs.structs.ObjectDNE as e:
+        return error_response(e, 404)
+
+    # Process Files
+    return process_uuid_list(sub.list_files, sub.add_files, sub.rem_files, _FILES_KEY)
+
 
 ## Run Endpoints ##
 
