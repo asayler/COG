@@ -29,7 +29,7 @@ _REPORTER_SCHEMA = ['mod']
 _ASSIGNMENT_SCHEMA = ['name', 'env']
 _TEST_SCHEMA = ['assignment', 'name', 'maxscore', 'tester']
 _SUBMISSION_SCHEMA = ['assignment']
-_RUN_SCHEMA = ['submission', 'test', 'status', 'score', 'retcode', 'output']
+_RUN_SCHEMA = ['submission', 'test', 'assignment', 'status', 'score', 'retcode', 'output']
 
 
 ### COGS Core Objects ###
@@ -555,10 +555,11 @@ class Submission(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
         return self.files.get_set()
 
     # Run Methods
-    def execute_run(self, tst, workers=None, owner=None):
-        asn = self.AssignmentFactory.from_existing(self['assignment'])
-        sub = self
-        run = self.RunFactory.from_new(asn, sub, tst, workers=workers, owner=owner)
+    def execute_run(self, data, workers=None, owner=None):
+        data = copy.copy(data)
+        data['submission'] = str(self.uuid)
+        data['assignment'] = self['assignment']
+        run = self.RunFactory.from_new(data, workers=workers, owner=owner)
         self._add_runs([str(run.uuid)])
         return run
     def list_runs(self):
@@ -591,31 +592,49 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         super(Run, self).__init__(*args, **kwargs)
 
         # Setup Factories
+        self.AssignmentFactory = backend.UUIDFactory(Assignment)
         self.SubmissionFactory = backend.UUIDFactory(Submission)
+        self.TestFactory = backend.UUIDFactory(Test)
 
     # Override from_new
     @classmethod
-    def from_new(cls, asn, sub, tst, **kwargs):
+    def from_new(cls, data, **kwargs):
         """New Constructor"""
 
+        # Process Args
         workers = kwargs.pop('workers')
         if not workers:
             raise TypeError("Requires Workers")
+        asn_uuid = data.get('assignment', None)
+        if not asn_uuid:
+            raise KeyError("Requires assignment")
+        tst_uuid = data.get('test', None)
+        if not tst_uuid:
+            raise KeyError("Requires test")
+        sub_uuid = data.get('submission', None)
+        if not sub_uuid:
+            raise KeyError("Requires submission")
 
-        # Check Input
-        assert(str(asn.uuid).lower() == tst['assignment'])
-        assert(str(asn.uuid).lower() == sub['assignment'])
+        # Get Objects
+        AssignmentFactory = backend.UUIDFactory(Assignment)
+        SubmissionFactory = backend.UUIDFactory(Submission)
+        TestFactory = backend.UUIDFactory(Test)
+        tst = TestFactory.from_existing(tst_uuid)
+        sub = SubmissionFactory.from_existing(sub_uuid)
+        asn = AssignmentFactory.from_existing(asn_uuid)
+
+        # Check Invariants
+        assert(str(asn.uuid).lower() == tst['assignment'].lower())
+        assert(str(asn.uuid).lower() == sub['assignment'].lower())
 
         # Set Schema
         schema = set(_RUN_SCHEMA)
         kwargs['schema'] = schema
 
         # Create New Object
-        data = {}
+        data = copy.copy(data)
 
         # Setup Dict
-        data['submission'] = str(sub.uuid)
-        data['test'] = str(tst.uuid)
         data['status'] = "queued"
         data['score'] = ""
         data['retcode'] = ""

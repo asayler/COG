@@ -519,7 +519,9 @@ class RunTestCaseScript(test_common_backend.SubMixin,
     def test_execute_run_args_good(self):
 
         # Test Good
-        run = self.sub_good.execute_run(self.tst_args, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_args.uuid)
+        run = self.sub_good.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -538,7 +540,9 @@ class RunTestCaseScript(test_common_backend.SubMixin,
     def test_execute_run_args_bad(self):
 
         # Test Bad
-        run = self.sub_bad.execute_run(self.tst_args, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_args.uuid)
+        run = self.sub_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -557,7 +561,9 @@ class RunTestCaseScript(test_common_backend.SubMixin,
     def test_execute_run_stdin_good(self):
 
         # Test Good
-        run = self.sub_good.execute_run(self.tst_stdin, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_stdin.uuid)
+        run = self.sub_good.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -576,7 +582,9 @@ class RunTestCaseScript(test_common_backend.SubMixin,
     def test_execute_run_stdin_bad(self):
 
         # Test Bad
-        run = self.sub_bad.execute_run(self.tst_stdin, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_stdin.uuid)
+        run = self.sub_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -597,7 +605,9 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         # Start Runs
         runs = []
         for i in range(25):
-            run = self.sub_good.execute_run(self.tst_args, workers=self.workers, owner=self.testuser)
+            data = copy.copy(test_common.RUN_TESTDICT)
+            data['test'] = str(self.tst_args.uuid)
+            run = self.sub_good.execute_run(data, workers=self.workers, owner=self.testuser)
             self.assertTrue(run)
             self.assertNotEqual(run['status'], "complete")
             runs.append(run)
@@ -623,7 +633,9 @@ class RunTestCaseScript(test_common_backend.SubMixin,
     def test_execute_run_hang(self):
 
         # Test Hang
-        run = self.sub_null.execute_run(self.tst_hang, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_hang.uuid)
+        run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -641,7 +653,9 @@ class RunTestCaseScript(test_common_backend.SubMixin,
     def test_execute_run_busy(self):
 
         # Test Busy
-        run = self.sub_null.execute_run(self.tst_busy, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_busy.uuid)
+        run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -659,7 +673,9 @@ class RunTestCaseScript(test_common_backend.SubMixin,
     def test_execute_run_fork(self):
 
         # Test Fork
-        run = self.sub_null.execute_run(self.tst_fork, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_fork.uuid)
+        run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -882,7 +898,9 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         # Test Hanging Reference Solution
         self.pgm_hang['key'] = 'solution'
         self.file_null['key'] = 'submission'
-        run = self.sub_null.execute_run(self.tst_bad, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_bad.uuid)
+        run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -903,7 +921,9 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         # Test Busy Wait Reference Solution
         self.pgm_busy['key'] = 'solution'
         self.file_null['key'] = 'submission'
-        run = self.sub_null.execute_run(self.tst_bad, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_bad.uuid)
+        run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -924,7 +944,9 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         # Test Fork Bomb Reference Solution
         self.pgm_fork['key'] = 'solution'
         self.file_null['key'] = 'submission'
-        run = self.sub_null.execute_run(self.tst_bad, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_bad.uuid)
+        run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -943,7 +965,9 @@ class RunTestCaseIO(test_common_backend.SubMixin,
     def test_execute_run_hello_good(self):
 
         # Test Good
-        run = self.sub_hello_good.execute_run(self.tst_hello, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_hello.uuid)
+        run = self.sub_hello_good.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -962,7 +986,9 @@ class RunTestCaseIO(test_common_backend.SubMixin,
     def test_execute_run_hello_wrong(self):
 
         # Test Wrong
-        run = self.sub_hello_wrong.execute_run(self.tst_hello, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_hello.uuid)
+        run = self.sub_hello_wrong.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -982,7 +1008,9 @@ class RunTestCaseIO(test_common_backend.SubMixin,
 
         # Test Hang
         self.pgm_hang['key'] = 'submission'
-        run = self.sub_hello_bad.execute_run(self.tst_hello, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_hello.uuid)
+        run = self.sub_hello_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -1002,7 +1030,9 @@ class RunTestCaseIO(test_common_backend.SubMixin,
 
         # Test Busy
         self.pgm_busy['key'] = 'submission'
-        run = self.sub_hello_bad.execute_run(self.tst_hello, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_hello.uuid)
+        run = self.sub_hello_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -1022,7 +1052,9 @@ class RunTestCaseIO(test_common_backend.SubMixin,
 
         # Test Fork Bomb
         self.pgm_fork['key'] = 'submission'
-        run = self.sub_hello_bad.execute_run(self.tst_hello, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_hello.uuid)
+        run = self.sub_hello_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -1041,7 +1073,9 @@ class RunTestCaseIO(test_common_backend.SubMixin,
     def test_execute_run_add_good(self):
 
         # Test Good
-        run = self.sub_add_good.execute_run(self.tst_add, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_add.uuid)
+        run = self.sub_add_good.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -1059,7 +1093,9 @@ class RunTestCaseIO(test_common_backend.SubMixin,
     def test_execute_run_add_wrong(self):
 
         # Test Bad
-        run = self.sub_add_wrong.execute_run(self.tst_add, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_add.uuid)
+        run = self.sub_add_wrong.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -1079,7 +1115,9 @@ class RunTestCaseIO(test_common_backend.SubMixin,
 
         # Test Hang
         self.pgm_hang['key'] = 'submission'
-        run = self.sub_add_bad.execute_run(self.tst_add, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_add.uuid)
+        run = self.sub_add_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -1099,7 +1137,9 @@ class RunTestCaseIO(test_common_backend.SubMixin,
 
         # Test Busy
         self.pgm_busy['key'] = 'submission'
-        run = self.sub_add_bad.execute_run(self.tst_add, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_add.uuid)
+        run = self.sub_add_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
@@ -1119,7 +1159,9 @@ class RunTestCaseIO(test_common_backend.SubMixin,
 
         # Test Frok Bomb
         self.pgm_fork['key'] = 'submission'
-        run = self.sub_add_bad.execute_run(self.tst_add, workers=self.workers, owner=self.testuser)
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_add.uuid)
+        run = self.sub_add_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
         self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():

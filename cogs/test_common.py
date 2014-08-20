@@ -28,6 +28,7 @@ TEST_TESTDICT = {'name': "Test_Assignment",
                  'maxscore': "10",
                  'tester': "script"}
 SUBMISSION_TESTDICT = {}
+RUN_TESTDICT = {}
 
 # Set Local Default Vals
 TEST_INPUT_PATH = os.path.realpath("{:s}/test_input".format(config.ROOT_PATH))
