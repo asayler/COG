@@ -198,7 +198,7 @@ def process_uuid_list(func_list, func_add, func_remove, key):
             rem_lst = sanitize_uuid_list(in_lst)
         except ValueError as e:
             return (None, error_response(e, 400))
-        func_rem(rem_lst)
+        func_remove(rem_lst)
         out_lst = list(func_list())
 
     # Bad Method
@@ -311,7 +311,7 @@ def process_tests():
 def process_test(obj_uuid):
     return process_object(srv.get_test, obj_uuid)
 
-@app.route("/tests/<obj_uuid>/files/", methods=['GET', 'PUT', 'DEL'])
+@app.route("/tests/<obj_uuid>/files/", methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_test_files(obj_uuid):

@@ -105,7 +105,7 @@ class CogsApiObjectBase(object):
         return set(res_lst)
 
     def add_objects(self, url, key, lst, user=None):
-        data = {str(key): list(lst)}
+        data = json.dumps({str(key): list(lst)})
         res = self.open_user('PUT', url, data=data, user=user)
         self.assertEqual(res.status_code, 200)
         res_obj = json.loads(res.data)
@@ -114,11 +114,11 @@ class CogsApiObjectBase(object):
         self.assertEqual(len(res_keys), 1)
         self.assertEqual(res_keys[0], key)
         res_lst = res_obj[key]
-        self.assertSubset(lst, res_lst)
+        self.assertSubset(set(lst), set(res_lst))
         return set(res_lst)
 
     def rem_objects(self, url, key, lst, user=None):
-        data = {str(key): list(lst)}
+        data = json.dumps({str(key): list(lst)})
         res = self.open_user('DELETE', url, data=data, user=user)
         self.assertEqual(res.status_code, 200)
         res_obj = json.loads(res.data)
@@ -127,7 +127,7 @@ class CogsApiObjectBase(object):
         self.assertEqual(len(res_keys), 1)
         self.assertEqual(res_keys[0], key)
         res_lst = res_obj[key]
-        self.assertSubset(res_lst, lst)
+        self.assertTrue((set(lst) - set(res_lst)) == set(lst))
         return set(res_lst)
 
     def get_object(self, url, obj_uuid, user=None):
@@ -182,6 +182,41 @@ class CogsApiObjectBase(object):
             return None
         else:
             self.fail("Bad HTTP status code {:d}".format(res.status_code))
+
+    def list_uuids_test(self, url, key, lst):
+
+        # Get UUID List (Empty)
+        uuids_out = self.lst_objects(url, key, user=self.user)
+        self.assertEqual(set([]), uuids_out)
+
+        # Add UUID List
+        uuids_in = set(lst)
+        uuids_out = self.add_objects(url, key, uuids_in, user=self.user)
+        self.assertEqual(uuids_in, uuids_out)
+
+        # Get UUID List
+        uuids_out = self.lst_objects(url, key, user=self.user)
+        self.assertEqual(uuids_in, uuids_out)
+
+        # Delete Some UUIDs
+        for i in range(5):
+            uuids_rem = set([uuids_in.pop()])
+            uuids_out = self.rem_objects(url, key, uuids_rem, user=self.user)
+            self.assertEqual(uuids_in, uuids_out)
+
+        # Get UUID List
+        uuids_out = self.lst_objects(url, key, user=self.user)
+        self.assertEqual(uuids_in, uuids_out)
+
+        # Delete Remaining UUIDs
+        uuids_rem = set(uuids_in)
+        uuids_in = set([])
+        uuids_out = self.rem_objects(url, key, uuids_rem, user=self.user)
+        self.assertEqual(uuids_in, uuids_out)
+
+        # Get UUID List
+        uuids_out = self.lst_objects(url, key, user=self.user)
+        self.assertEqual(uuids_in, uuids_out)
 
     ## Object Tests ##
 
@@ -433,16 +468,6 @@ class CogsApiTestTestCase(CogsApiObjectBase, CogsApiTestCase):
                                             cogs.test_common.ASSIGNMENT_TESTDICT,
                                             json_data=True, user=self.user)
 
-        # Create Files
-        self.file_lst = []
-        file_key = "test_file"
-        file_name = "test.txt"
-        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, file_name)
-        for i in range(10):
-            file_uuid = self.create_objects('/files/', 'files',
-                                            {file_key: (file_path, file_name)},
-                                            json_data=False, user=self.user)
-            self.file_lst.append(file_uuid)
 
         # Set Params
         self.url_lst = '/assignments/{:s}/tests/'.format(self.asn_uuid)
@@ -451,15 +476,7 @@ class CogsApiTestTestCase(CogsApiObjectBase, CogsApiTestCase):
         self.data = copy.copy(cogs.test_common.TEST_TESTDICT)
         self.json_data = True
 
-        self.uuid_lst = None
-        self.uuid_key = None
-        self.uuid_url = None
-
     def tearDown(self):
-
-        # Delete Files
-        for file_uuid in self.file_lst:
-            self.delete_object('/files/', file_uuid, user=self.user)
 
         # Delete Assignment
         self.delete_object('/assignments/', self.asn_uuid, user=self.user)
@@ -467,44 +484,34 @@ class CogsApiTestTestCase(CogsApiObjectBase, CogsApiTestCase):
         # Call Parent
         super(CogsApiTestTestCase, self).tearDown()
 
-    # def test_list_uuids(self):
+    def test_list_uuids_files(self):
 
-    #     # Set URLs
-    #     url = getattr(self, 'url', None)
-    #     url_lst = getattr(self, 'url_lst', url)
+        # Create Files
+        file_lst = []
+        file_key = "test_file"
+        file_name = "test.txt"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, file_name)
+        for i in range(10):
+            file_uuid = self.create_objects('/files/', 'files',
+                                            {file_key: (file_path, file_name)},
+                                            json_data=False, user=self.user)
+            file_lst.append(file_uuid)
 
-    #     # Get UUID List (Empty)
-    #     uuids_out = self.lst_objects(url_lst, self.key, user=self.user)
-    #     self.assertEqual(set([]), uuids_out)
+        # Create Test
+        tst_uuid = self.create_objects(self.url_lst, self.key,
+                                       cogs.test_common.TEST_TESTDICT,
+                                       json_data=True, user=self.user)
 
-    #     # Add UUID List
-    #     uuids_in = set(self.lst)
-    #     uuids_out = self.add_objects(url_lst, self.key, uuids_in, user=self.user)
-    #     self.assertEqual(uuids_in, uuids_out)
+        # Test File List/Add/Remove
+        url = '/tests/{:s}/files/'.format(tst_uuid)
+        self.list_uuids_test(url, 'files', file_lst)
 
-    #     # Get UUID List
-    #     uuids_out = self.lst_objects(url_lst, self.key, user=self.user)
-    #     self.assertEqual(uuids_in, uuids_out)
+        # Delete Test
+        self.delete_object(self.url_obj, tst_uuid, user=self.user)
 
-    #     # Delete Some UUIDs
-    #     for i in range(5):
-    #         uuids_rem = set([uuids_in.pop()])
-    #         uuids_out = self.rem_object(url_lst, self.key, uuids_rem, user=self.user)
-    #         self.assertEqual(uuids_in, uuids_out)
-
-    #     # Get Uuid List
-    #     uuids_out = self.lst_objects(url_lst, self.key, user=self.user)
-    #     self.assertEqual(uuids_in, uuids_out)
-
-    #     # Delete Remaining UUIDs
-    #     uuids_rem = set([uuids_in])
-    #     uuids_in = set([])
-    #     uuids_out = self.rem_object(url_lst, self.key, uuids_rem, user=self.user)
-    #     self.assertEqual(uuids_in, uuids_out)
-
-    #     # Get Uuid List
-    #     uuids_out = self.lst_uuids(url_lst, self.key, user=self.user)
-    #     self.assertEqual(uuids_in, uuids_out)
+        # Delete Files
+        for file_uuid in file_lst:
+            self.delete_object('/files/', file_uuid, user=self.user)
 
 
 ## Submission Tests ##
