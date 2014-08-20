@@ -74,7 +74,7 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
 
         return self.open_auth(method, url, username=username, **kwargs)
 
-class CogsApiObjectBase(object):
+class CogsApiObjectHelpers(object):
 
     ## Object Helpers ##
 
@@ -218,6 +218,9 @@ class CogsApiObjectBase(object):
         # Get UUID List
         uuids_out = self.lst_objects(url, key, user=self.user)
         self.assertEqual(uuids_in, uuids_out)
+
+
+class CogsApiObjectTests(CogsApiObjectHelpers):
 
     ## Object Tests ##
 
@@ -368,7 +371,7 @@ class CogsApiRootTestCase(CogsApiTestCase):
 
 
 ## File Tests ##
-class CogsApiFileTestCase(CogsApiObjectBase, CogsApiTestCase):
+class CogsApiFileTestCase(CogsApiObjectTests, CogsApiTestCase):
 
     def setUp(self):
         super(CogsApiFileTestCase, self).setUp()
@@ -422,7 +425,7 @@ class CogsApiFileTestCase(CogsApiObjectBase, CogsApiTestCase):
 
 
 ## Reporter Tests ##
-class CogsApiReporterTestCase(CogsApiObjectBase, CogsApiTestCase):
+class CogsApiReporterTestCase(CogsApiObjectTests, CogsApiTestCase):
 
     def setUp(self):
         super(CogsApiReporterTestCase, self).setUp()
@@ -439,7 +442,7 @@ class CogsApiReporterTestCase(CogsApiObjectBase, CogsApiTestCase):
 
 
 ## Assignment Tests ##
-class CogsApiAssignmentTestCase(CogsApiObjectBase, CogsApiTestCase):
+class CogsApiAssignmentTestCase(CogsApiObjectTests, CogsApiTestCase):
 
     def setUp(self):
         super(CogsApiAssignmentTestCase, self).setUp()
@@ -454,7 +457,7 @@ class CogsApiAssignmentTestCase(CogsApiObjectBase, CogsApiTestCase):
 
 
 ## Test Tests ##
-class CogsApiTestTestCase(CogsApiObjectBase, CogsApiTestCase):
+class CogsApiTestTestCase(CogsApiObjectTests, CogsApiTestCase):
 
     def setUp(self):
 
@@ -545,7 +548,7 @@ class CogsApiTestTestCase(CogsApiObjectBase, CogsApiTestCase):
 
 
 ## Submission Tests ##
-class CogsApiSubmissionTestCase(CogsApiObjectBase, CogsApiTestCase):
+class CogsApiSubmissionTestCase(CogsApiObjectTests, CogsApiTestCase):
 
     def setUp(self):
 
@@ -605,7 +608,7 @@ class CogsApiSubmissionTestCase(CogsApiObjectBase, CogsApiTestCase):
             self.delete_object('/files/', file_uuid, user=self.user)
 
 ## Run Tests ##
-class CogsApiRunTestCase(CogsApiObjectBase, CogsApiTestCase):
+class CogsApiRunTestCase(CogsApiObjectTests, CogsApiTestCase):
 
     def setUp(self):
 
@@ -616,29 +619,29 @@ class CogsApiRunTestCase(CogsApiObjectBase, CogsApiTestCase):
         self.user = self.admin
 
         # Create Assignment
-        asn_key = 'assignments'
-        asn_url = "/{:s}/".format(asn_key)
-        self.asn_uuid = self.create_objects(asn_url, asn_key,
+        self.asn_key = 'assignments'
+        self.asn_url = "/{:s}/".format(self.asn_key)
+        self.asn_uuid = self.create_objects(self.asn_url, self.asn_key,
                                             cogs.test_common.ASSIGNMENT_TESTDICT,
                                             json_data=True, user=self.user)
 
         # Create Test
-        tst_key = 'tests'
-        tst_url = "/{:s}/{:s}/{:s}/".format(asn_key, self.asn_uuid, tst_key)
-        self.tst_uuid = self.create_objects(tst_url, tst_key,
+        self.tst_key = 'tests'
+        self.tst_url = "/{:s}/{:s}/{:s}/".format(self.asn_key, self.asn_uuid, self.tst_key)
+        self.tst_uuid = self.create_objects(self.tst_url, self.tst_key,
                                             cogs.test_common.TEST_TESTDICT,
                                             json_data=True, user=self.user)
 
         # Create Submission
-        sub_key = 'submissions'
-        sub_url = "/{:s}/{:s}/{:s}/".format(asn_key, self.asn_uuid, sub_key)
-        self.sub_uuid = self.create_objects(sub_url, sub_key,
+        self.sub_key = 'submissions'
+        self.sub_url = "/{:s}/{:s}/{:s}/".format(self.asn_key, self.asn_uuid, self.sub_key)
+        self.sub_uuid = self.create_objects(self.sub_url, self.sub_key,
                                             cogs.test_common.SUBMISSION_TESTDICT,
                                             json_data=True, user=self.user)
 
         # Set Params
         self.key = 'runs'
-        self.url_lst = '/{:s}/{:s}/{:s}/'.format(sub_key, self.sub_uuid, self.key)
+        self.url_lst = '/{:s}/{:s}/{:s}/'.format(self.sub_key, self.sub_uuid, self.key)
         self.url_obj = '/{:s}/'.format(self.key)
         self.data = copy.copy(cogs.test_common.RUN_TESTDICT)
         self.data['test'] = self.tst_uuid
@@ -677,29 +680,280 @@ class CogsApiRunTestCase(CogsApiObjectBase, CogsApiTestCase):
         obj = self.delete_object(self.url_obj, obj_uuid, user=self.user)
         self.assertIsNotNone(obj)
 
+## Run Execute Tests ##
+class CogsApiRunExecuteTestCase(CogsApiObjectHelpers, CogsApiTestCase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(CogsApiRunExecuteTestCase, self).setUp()
+
+        # Set User
+        self.user = self.admin
+
+        # Create Assignment
+        self.asn_key = 'assignments'
+        self.asn_url = "/{:s}/".format(self.asn_key)
+        self.asn_uuid = self.create_objects(self.asn_url, self.asn_key,
+                                            cogs.test_common.ASSIGNMENT_TESTDICT,
+                                            json_data=True, user=self.user)
+
+        # Create Test
+        self.tst_key = 'tests'
+        self.tst_url = "/{:s}/{:s}/{:s}/".format(self.asn_key, self.asn_uuid, self.tst_key)
+        self.tst_uuid = self.create_objects(self.tst_url, self.tst_key,
+                                            cogs.test_common.TEST_TESTDICT,
+                                            json_data=True, user=self.user)
+
+        # Create Submission
+        self.sub_key = 'submissions'
+        self.sub_url = "/{:s}/{:s}/{:s}/".format(self.asn_key, self.asn_uuid, self.sub_key)
+        self.sub_uuid = self.create_objects(self.sub_url, self.sub_key,
+                                            cogs.test_common.SUBMISSION_TESTDICT,
+                                            json_data=True, user=self.user)
+
+        # Set Params
+        self.key = 'runs'
+        self.url_lst = '/{:s}/{:s}/{:s}/'.format(self.sub_key, self.sub_uuid, self.key)
+        self.url_obj = '/{:s}/'.format(self.key)
+        self.data = copy.copy(cogs.test_common.RUN_TESTDICT)
+        self.data['test'] = self.tst_uuid
+        self.json_data = True
+
+    def tearDown(self):
+
+        # Delete Submission
+        self.delete_object('/submissions/', self.sub_uuid, user=self.user)
+
+        # Delete Test
+        self.delete_object('/tests/', self.tst_uuid, user=self.user)
+
+        # Delete Assignment
+        self.delete_object('/assignments/', self.asn_uuid, user=self.user)
+
+        # Call Parent
+        super(CogsApiRunExecuteTestCase, self).tearDown()
+
     def test_run_script_no_files(self):
 
-        # Create Object
-        obj_uuid = self.create_objects(self.url_lst, self.key, self.data,
-                                       json_data=self.json_data, user=self.user)
-        self.assertTrue(obj_uuid)
+        # Update Test
+        data = copy.copy(cogs.test_common.TEST_TESTDICT)
+        data['tester'] = 'script'
+        tst = self.set_object('/tests/', self.tst_uuid, data,
+                              json_data=True, user=self.user)
+        self.assertTrue(tst)
 
-        # Wait for Completion
-        obj = None
+        # Create Run
+        run_uuid = self.create_objects(self.url_lst, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
+        self.assertTrue(run_uuid)
+
+        # Wait for Run Completion
+        run = None
         status = ""
         while not status.startswith('complete'):
-            obj = self.get_object(self.url_obj, obj_uuid, user=self.user)
-            self.assertTrue(obj)
-            self.assertTrue(obj['status'])
-            status = obj['status']
+            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            self.assertTrue(run)
+            self.assertTrue(run['status'])
+            status = run['status']
             time.sleep(1)
 
         # Check Object
-        self.assertEqual(obj['status'], 'complete-error')
+        self.assertEqual(run['status'], 'complete-error')
+        self.assertEqual(float(run['retcode']), -1)
+        self.assertEqual(float(run['score']), 0)
+        self.assertTrue(run['output'])
 
         # Delete Object
-        obj = self.delete_object(self.url_obj, obj_uuid, user=self.user)
-        self.assertIsNotNone(obj)
+        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        self.assertIsNotNone(run)
+
+    def test_run_script_no_submission(self):
+
+        # Update Test
+        data = copy.copy(cogs.test_common.TEST_TESTDICT)
+        data['tester'] = 'script'
+        tst = self.set_object('/tests/', self.tst_uuid, data,
+                              json_data=True, user=self.user)
+        self.assertTrue(tst)
+
+        # Upload Script File and Attach to Test
+        file_key = "script"
+        file_name = "grade_add_args.py"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, file_name)
+        url = '/files/'
+        fle_uuid = self.create_objects(url, 'files',
+                                       {file_key: (file_path, file_name)},
+                                       json_data=False, user=self.user)
+        self.assertTrue(fle_uuid)
+        url = '/tests/{:s}/files/'.format(self.tst_uuid)
+        fle_lst = self.add_objects(url, 'files', [fle_uuid], user=self.user)
+        self.assertTrue(fle_lst)
+
+        # Create Run
+        run_uuid = self.create_objects(self.url_lst, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
+        self.assertTrue(run_uuid)
+
+        # Wait for Run Completion
+        run = None
+        status = ""
+        while not status.startswith('complete'):
+            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            self.assertTrue(run)
+            self.assertTrue(run['status'])
+            status = run['status']
+            time.sleep(1)
+
+        # Check Object
+        self.assertEqual(run['status'], 'complete')
+        self.assertEqual(float(run['retcode']), 0)
+        self.assertEqual(float(run['score']), 0)
+        self.assertTrue(run['output'])
+
+        # Delete Run
+        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        self.assertIsNotNone(run)
+
+        # Delete File
+        fle = self.delete_object('/files/', fle_uuid, user=self.user)
+        self.assertIsNotNone(fle)
+
+    def test_run_script_good(self):
+
+        # Update Test
+        data = copy.copy(cogs.test_common.TEST_TESTDICT)
+        data['tester'] = 'script'
+        tst = self.set_object('/tests/', self.tst_uuid, data,
+                              json_data=True, user=self.user)
+        self.assertTrue(tst)
+
+        # Upload Script File and Attach to Test
+        file_key = "script"
+        file_name = "grade_add_args.py"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, file_name)
+        url = '/files/'
+        fle_uuid_script = self.create_objects(url, 'files',
+                                              {file_key: (file_path, file_name)},
+                                              json_data=False, user=self.user)
+        self.assertTrue(fle_uuid_script)
+        url = '/tests/{:s}/files/'.format(self.tst_uuid)
+        fle_lst_tst = self.add_objects(url, 'files', [fle_uuid_script], user=self.user)
+        self.assertTrue(fle_lst_tst)
+
+        # Upload Submission File and Attach to Submission
+        file_key = "submission"
+        file_name = "add.py"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, "add_good.py")
+        url = '/files/'
+        fle_uuid_sub = self.create_objects(url, 'files',
+                                           {file_key: (file_path, file_name)},
+                                           json_data=False, user=self.user)
+        self.assertTrue(fle_uuid_sub)
+        url = '/submissions/{:s}/files/'.format(self.sub_uuid)
+        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.user)
+        self.assertTrue(fle_lst_sub)
+
+        # Create Run
+        run_uuid = self.create_objects(self.url_lst, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
+        self.assertTrue(run_uuid)
+
+        # Wait for Run Completion
+        run = None
+        status = ""
+        while not status.startswith('complete'):
+            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            self.assertTrue(run)
+            self.assertTrue(run['status'])
+            status = run['status']
+            time.sleep(1)
+
+        # Check Object
+        self.assertEqual(run['status'], 'complete')
+        self.assertEqual(float(run['retcode']), 0)
+        self.assertEqual(float(run['score']), 10)
+        self.assertTrue(run['output'])
+
+        # Delete Run
+        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        self.assertIsNotNone(run)
+
+        # Delete Submission File
+        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.user)
+        self.assertIsNotNone(fle_sub)
+
+        # Delete Script File
+        fle_script = self.delete_object('/files/', fle_uuid_script, user=self.user)
+        self.assertIsNotNone(fle_script)
+
+    def test_run_script_bad(self):
+
+        # Update Test
+        data = copy.copy(cogs.test_common.TEST_TESTDICT)
+        data['tester'] = 'script'
+        tst = self.set_object('/tests/', self.tst_uuid, data,
+                              json_data=True, user=self.user)
+        self.assertTrue(tst)
+
+        # Upload Script File and Attach to Test
+        file_key = "script"
+        file_name = "grade_add_args.py"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, file_name)
+        url = '/files/'
+        fle_uuid_script = self.create_objects(url, 'files',
+                                              {file_key: (file_path, file_name)},
+                                              json_data=False, user=self.user)
+        self.assertTrue(fle_uuid_script)
+        url = '/tests/{:s}/files/'.format(self.tst_uuid)
+        fle_lst_tst = self.add_objects(url, 'files', [fle_uuid_script], user=self.user)
+        self.assertTrue(fle_lst_tst)
+
+        # Upload Submission File and Attach to Submission
+        file_key = "submission"
+        file_name = "add.py"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, "add_bad.py")
+        url = '/files/'
+        fle_uuid_sub = self.create_objects(url, 'files',
+                                           {file_key: (file_path, file_name)},
+                                           json_data=False, user=self.user)
+        self.assertTrue(fle_uuid_sub)
+        url = '/submissions/{:s}/files/'.format(self.sub_uuid)
+        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.user)
+        self.assertTrue(fle_lst_sub)
+
+        # Create Run
+        run_uuid = self.create_objects(self.url_lst, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
+        self.assertTrue(run_uuid)
+
+        # Wait for Run Completion
+        run = None
+        status = ""
+        while not status.startswith('complete'):
+            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            self.assertTrue(run)
+            self.assertTrue(run['status'])
+            status = run['status']
+            time.sleep(1)
+
+        # Check Object
+        self.assertEqual(run['status'], 'complete')
+        self.assertEqual(float(run['retcode']), 0)
+        self.assertLess(float(run['score']), 10)
+        self.assertTrue(run['output'])
+
+        # Delete Run
+        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        self.assertIsNotNone(run)
+
+        # Delete Submission File
+        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.user)
+        self.assertIsNotNone(fle_sub)
+
+        # Delete Script File
+        fle_script = self.delete_object('/files/', fle_uuid_script, user=self.user)
+        self.assertIsNotNone(fle_script)
 
 
 ### Main ###
