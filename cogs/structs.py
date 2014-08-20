@@ -70,7 +70,7 @@ class Server(object):
 
     # Reporter Methods
     def create_reporter(self, data, owner=None):
-        return self.ReporterFactory.from_new(data, mod=mod, owner=owner)
+        return self.ReporterFactory.from_new(data, owner=owner)
     def get_reporter(self, uuid_hex):
         return self.ReporterFactory.from_existing(uuid_hex)
     def list_reporters(self):
