@@ -164,7 +164,7 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
             file_obj.save(fle['path'])
         except IOError:
             # Clean up on failure
-            fle._delete(force=True)
+            fle.delete(force=True)
             raise
 
         # Return File
