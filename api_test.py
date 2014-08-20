@@ -760,7 +760,7 @@ class CogsApiRunExecuteTestCase(CogsApiObjectHelpers, CogsApiTestCase):
 
         # Check Object
         self.assertEqual(run['status'], 'complete-error')
-        self.assertEqual(float(run['retcode']), -1)
+        self.assertEqual(int(run['retcode']), -1)
         self.assertEqual(float(run['score']), 0)
         self.assertTrue(run['output'])
 
@@ -807,7 +807,7 @@ class CogsApiRunExecuteTestCase(CogsApiObjectHelpers, CogsApiTestCase):
 
         # Check Object
         self.assertEqual(run['status'], 'complete')
-        self.assertEqual(float(run['retcode']), 0)
+        self.assertEqual(int(run['retcode']), 0)
         self.assertEqual(float(run['score']), 0)
         self.assertTrue(run['output'])
 
@@ -871,7 +871,7 @@ class CogsApiRunExecuteTestCase(CogsApiObjectHelpers, CogsApiTestCase):
 
         # Check Object
         self.assertEqual(run['status'], 'complete')
-        self.assertEqual(float(run['retcode']), 0)
+        self.assertEqual(int(run['retcode']), 0)
         self.assertEqual(float(run['score']), 10)
         self.assertTrue(run['output'])
 
@@ -939,7 +939,7 @@ class CogsApiRunExecuteTestCase(CogsApiObjectHelpers, CogsApiTestCase):
 
         # Check Object
         self.assertEqual(run['status'], 'complete')
-        self.assertEqual(float(run['retcode']), 0)
+        self.assertEqual(int(run['retcode']), 0)
         self.assertLess(float(run['score']), 10)
         self.assertTrue(run['output'])
 
@@ -954,6 +954,329 @@ class CogsApiRunExecuteTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         # Delete Script File
         fle_script = self.delete_object('/files/', fle_uuid_script, user=self.user)
         self.assertIsNotNone(fle_script)
+
+    def test_run_io_no_files(self):
+
+        # Update Test
+        data = copy.copy(cogs.test_common.TEST_TESTDICT)
+        data['tester'] = 'io'
+        tst = self.set_object('/tests/', self.tst_uuid, data,
+                              json_data=True, user=self.user)
+        self.assertTrue(tst)
+
+        # Create Run
+        run_uuid = self.create_objects(self.url_lst, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
+        self.assertTrue(run_uuid)
+
+        # Wait for Run Completion
+        run = None
+        status = ""
+        while not status.startswith('complete'):
+            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            self.assertTrue(run)
+            self.assertTrue(run['status'])
+            status = run['status']
+            time.sleep(1)
+
+        # Check Object
+        self.assertEqual(run['status'], 'complete-error')
+        self.assertEqual(int(run['retcode']), -1)
+        self.assertEqual(float(run['score']), 0)
+        self.assertTrue(run['output'])
+
+        # Delete Object
+        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        self.assertIsNotNone(run)
+
+    def test_run_io_no_inputs_no_submission(self):
+
+        # Update Test
+        data = copy.copy(cogs.test_common.TEST_TESTDICT)
+        data['tester'] = 'io'
+        tst = self.set_object('/tests/', self.tst_uuid, data,
+                              json_data=True, user=self.user)
+        self.assertTrue(tst)
+
+        # Upload Solution File and Attach to Test
+        file_key = "solution"
+        file_name = "add.py"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, "add_good.py")
+        url = '/files/'
+        fle_uuid_sol = self.create_objects(url, 'files',
+                                           {file_key: (file_path, file_name)},
+                                           json_data=False, user=self.user)
+        self.assertTrue(fle_uuid_sol)
+        url = '/tests/{:s}/files/'.format(self.tst_uuid)
+        fle_lst = self.add_objects(url, 'files', [fle_uuid_sol], user=self.user)
+        self.assertTrue(fle_lst)
+
+        # Create Run
+        run_uuid = self.create_objects(self.url_lst, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
+        self.assertTrue(run_uuid)
+
+        # Wait for Run Completion
+        run = None
+        status = ""
+        while not status.startswith('complete'):
+            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            self.assertTrue(run)
+            self.assertTrue(run['status'])
+            status = run['status']
+            time.sleep(1)
+
+        # Check Object
+        self.assertEqual(run['status'], 'complete-error')
+        self.assertEqual(int(run['retcode']), -1)
+        self.assertEqual(float(run['score']), 0)
+        self.assertTrue(run['output'])
+
+        # Delete Run
+        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        self.assertIsNotNone(run)
+
+        # Delete File
+        fle_sol = self.delete_object('/files/', fle_uuid_sol, user=self.user)
+        self.assertIsNotNone(fle_sol)
+
+    def test_run_io_no_inputs(self):
+
+        # Update Test
+        data = copy.copy(cogs.test_common.TEST_TESTDICT)
+        data['tester'] = 'io'
+        tst = self.set_object('/tests/', self.tst_uuid, data,
+                              json_data=True, user=self.user)
+        self.assertTrue(tst)
+
+        # Upload Solution File and Attach to Test
+        file_key = "solution"
+        file_name = "add.py"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, "add_good.py")
+        url = '/files/'
+        fle_uuid_sol = self.create_objects(url, 'files',
+                                           {file_key: (file_path, file_name)},
+                                           json_data=False, user=self.user)
+        self.assertTrue(fle_uuid_sol)
+        url = '/tests/{:s}/files/'.format(self.tst_uuid)
+        fle_lst = self.add_objects(url, 'files', [fle_uuid_sol], user=self.user)
+        self.assertTrue(fle_lst)
+
+        # Upload Submission File and Attach to Submission
+        file_key = "submission"
+        file_name = "add.py"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, "add_good.py")
+        url = '/files/'
+        fle_uuid_sub = self.create_objects(url, 'files',
+                                           {file_key: (file_path, file_name)},
+                                           json_data=False, user=self.user)
+        self.assertTrue(fle_uuid_sub)
+        url = '/submissions/{:s}/files/'.format(self.sub_uuid)
+        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.user)
+        self.assertTrue(fle_lst_sub)
+
+        # Create Run
+        run_uuid = self.create_objects(self.url_lst, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
+        self.assertTrue(run_uuid)
+
+        # Wait for Run Completion
+        run = None
+        status = ""
+        while not status.startswith('complete'):
+            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            self.assertTrue(run)
+            self.assertTrue(run['status'])
+            status = run['status']
+            time.sleep(1)
+
+        # Check Object
+        self.assertEqual(run['status'], 'complete')
+        self.assertNotEqual(int(run['retcode']), 0)
+        self.assertEqual(float(run['score']), 0)
+        self.assertTrue(run['output'])
+
+        # Delete Run
+        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        self.assertIsNotNone(run)
+
+        # Delete Submission
+        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.user)
+        self.assertIsNotNone(fle_sub)
+
+        # Delete Solution
+        fle_sol = self.delete_object('/files/', fle_uuid_sol, user=self.user)
+        self.assertIsNotNone(fle_sol)
+
+    def test_run_io_good(self):
+
+        # Update Test
+        data = copy.copy(cogs.test_common.TEST_TESTDICT)
+        data['tester'] = 'io'
+        tst = self.set_object('/tests/', self.tst_uuid, data,
+                              json_data=True, user=self.user)
+        self.assertTrue(tst)
+
+        # Upload Solution File and Attach to Test
+        file_key = "solution"
+        file_name = "add.py"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, "add_good.py")
+        url = '/files/'
+        fle_uuid_sol = self.create_objects(url, 'files',
+                                           {file_key: (file_path, file_name)},
+                                           json_data=False, user=self.user)
+        self.assertTrue(fle_uuid_sol)
+        url = '/tests/{:s}/files/'.format(self.tst_uuid)
+        fle_lst = self.add_objects(url, 'files', [fle_uuid_sol], user=self.user)
+        self.assertTrue(fle_lst)
+
+        # Upload Input File
+        file_key = "input"
+        file_name = "add_input1.txt"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, file_name)
+        url = '/files/'
+        fle_uuid_in1 = self.create_objects(url, 'files',
+                                           {file_key: (file_path, file_name)},
+                                           json_data=False, user=self.user)
+        self.assertTrue(fle_uuid_in1)
+        url = '/tests/{:s}/files/'.format(self.tst_uuid)
+        fle_lst = self.add_objects(url, 'files', [fle_uuid_in1], user=self.user)
+        self.assertTrue(fle_lst)
+
+        # Upload Submission File and Attach to Submission
+        file_key = "submission"
+        file_name = "add.py"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, "add_good.py")
+        url = '/files/'
+        fle_uuid_sub = self.create_objects(url, 'files',
+                                           {file_key: (file_path, file_name)},
+                                           json_data=False, user=self.user)
+        self.assertTrue(fle_uuid_sub)
+        url = '/submissions/{:s}/files/'.format(self.sub_uuid)
+        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.user)
+        self.assertTrue(fle_lst_sub)
+
+        # Create Run
+        run_uuid = self.create_objects(self.url_lst, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
+        self.assertTrue(run_uuid)
+
+        # Wait for Run Completion
+        run = None
+        status = ""
+        while not status.startswith('complete'):
+            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            self.assertTrue(run)
+            self.assertTrue(run['status'])
+            status = run['status']
+            time.sleep(1)
+
+        # Check Object
+        self.assertEqual(run['status'], 'complete')
+        self.assertEqual(int(run['retcode']), 0)
+        self.assertEqual(float(run['score']), 10)
+        self.assertTrue(run['output'])
+
+        # Delete Run
+        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        self.assertIsNotNone(run)
+
+        # Delete Submission
+        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.user)
+        self.assertIsNotNone(fle_sub)
+
+        # Delete Input
+        fle_in1 = self.delete_object('/files/', fle_uuid_in1, user=self.user)
+        self.assertIsNotNone(fle_sub)
+
+        # Delete Solution
+        fle_sol = self.delete_object('/files/', fle_uuid_sol, user=self.user)
+        self.assertIsNotNone(fle_sol)
+
+    def test_run_io_bad(self):
+
+        # Update Test
+        data = copy.copy(cogs.test_common.TEST_TESTDICT)
+        data['tester'] = 'io'
+        tst = self.set_object('/tests/', self.tst_uuid, data,
+                              json_data=True, user=self.user)
+        self.assertTrue(tst)
+
+        # Upload Solution File and Attach to Test
+        file_key = "solution"
+        file_name = "add.py"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, "add_bad.py")
+        url = '/files/'
+        fle_uuid_sol = self.create_objects(url, 'files',
+                                           {file_key: (file_path, file_name)},
+                                           json_data=False, user=self.user)
+        self.assertTrue(fle_uuid_sol)
+        url = '/tests/{:s}/files/'.format(self.tst_uuid)
+        fle_lst = self.add_objects(url, 'files', [fle_uuid_sol], user=self.user)
+        self.assertTrue(fle_lst)
+
+        # Upload Input File
+        file_key = "input"
+        file_name = "add_input1.txt"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, file_name)
+        url = '/files/'
+        fle_uuid_in1 = self.create_objects(url, 'files',
+                                           {file_key: (file_path, file_name)},
+                                           json_data=False, user=self.user)
+        self.assertTrue(fle_uuid_in1)
+        url = '/tests/{:s}/files/'.format(self.tst_uuid)
+        fle_lst = self.add_objects(url, 'files', [fle_uuid_in1], user=self.user)
+        self.assertTrue(fle_lst)
+
+        # Upload Submission File and Attach to Submission
+        file_key = "submission"
+        file_name = "add.py"
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, "add_good.py")
+        url = '/files/'
+        fle_uuid_sub = self.create_objects(url, 'files',
+                                           {file_key: (file_path, file_name)},
+                                           json_data=False, user=self.user)
+        self.assertTrue(fle_uuid_sub)
+        url = '/submissions/{:s}/files/'.format(self.sub_uuid)
+        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.user)
+        self.assertTrue(fle_lst_sub)
+
+        # Create Run
+        run_uuid = self.create_objects(self.url_lst, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
+        self.assertTrue(run_uuid)
+
+        # Wait for Run Completion
+        run = None
+        status = ""
+        while not status.startswith('complete'):
+            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            self.assertTrue(run)
+            self.assertTrue(run['status'])
+            status = run['status']
+            time.sleep(1)
+
+        # Check Object
+        self.assertEqual(run['status'], 'complete')
+        self.assertEqual(int(run['retcode']), 0)
+        self.assertLess(float(run['score']), 10)
+        self.assertTrue(run['output'])
+
+        # Delete Run
+        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        self.assertIsNotNone(run)
+
+        # Delete Submission
+        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.user)
+        self.assertIsNotNone(fle_sub)
+
+        # Delete Input
+        fle_in1 = self.delete_object('/files/', fle_uuid_in1, user=self.user)
+        self.assertIsNotNone(fle_sub)
+
+        # Delete Solution
+        fle_sol = self.delete_object('/files/', fle_uuid_sol, user=self.user)
+        self.assertIsNotNone(fle_sol)
 
 
 ### Main ###
