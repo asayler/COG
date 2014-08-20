@@ -35,6 +35,9 @@ DELETE  /tests/<ID>/reporters/                          Remove Test Reporter
 GET     /submissions/                                   List All Submissions
 GET     /submissions/<ID>/                              Show Submission
 DELETE  /submissions/<ID>/                              Delete Submission
+GET     /submissions/<ID>/files/                        List Submission Files
+PUT     /submissions/<ID>/files/                        Add Submission File
+DELETE  /submissions/<ID>/files/                        Remove Submission File
 
 
 ### In Progress ###
@@ -58,9 +61,6 @@ GET     /groups/<ID>/members/                           List Group Members
 PUT     /groups/<ID>/members/                           Add Group Members
 DELETE  /groups/<ID>/members/                           Remove Group Members
 
-GET     /submissions/<ID>/files/                        List Submission Files
-PUT     /submissions/<ID>/files/                        Add Submission File
-DELETE  /submissions/<ID>/files/                        Remove Submission File
 GET     /submissions/<ID>/runs/                         List Test Runs
 POST    /submissions/<ID>/runs/                         Execute New Test Run
 
