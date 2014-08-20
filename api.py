@@ -9,6 +9,7 @@
 
 import time
 import os
+import uuid
 
 import flask
 import flask.ext.httpauth
@@ -163,6 +164,51 @@ def process_object(func_get, obj_uuid, update_stub=update_stub_json):
     out = {str(obj.uuid): obj_dict}
     return flask.jsonify(out)
 
+def process_uuid_list(func_list, func_add, func_remove, key):
+
+    # Sanitize Input
+    def sanitize_uuid_list(in_lst):
+        out_lst = []
+        for in_uuid in in_lst:
+            out_uuid = str(uuid.UUID(in_uuid))
+            out_lst.append(out_uuid)
+        return out_lst
+
+    # List Objects
+    if flask.request.method == 'GET':
+
+        out_lst = list(func_list())
+
+    # Add Objects
+    elif flask.request.method == 'PUT':
+        in_obj = flask.request.get_json(force=True)
+        in_lst = list(in_obj[key])
+        try:
+            add_lst = sanitize_uuid_list(in_lst)
+        except ValueError as e:
+            return (None, error_response(e, 400))
+        func_add(add_lst)
+        out_lst = list(func_list())
+
+    # Remove Objects
+    elif flask.request.method == 'DELETE':
+        in_obj = flask.request.get_json(force=True)
+        in_lst = list(in_obj[key])
+        try:
+            rem_lst = sanitize_uuid_list(in_lst)
+        except ValueError as e:
+            return (None, error_response(e, 400))
+        func_rem(rem_lst)
+        out_lst = list(func_list())
+
+    # Bad Method
+    else:
+        raise Exception("Unhandled Method")
+
+    # Return Object List
+    out_obj = {key: out_lst}
+    return flask.jsonify(out_obj)
+
 
 ### Endpoints ###
 
@@ -265,6 +311,20 @@ def process_tests():
 def process_test(obj_uuid):
     return process_object(srv.get_test, obj_uuid)
 
+@app.route("/tests/<obj_uuid>/files/", methods=['GET', 'PUT', 'DEL'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_test_files(obj_uuid):
+
+    # Get Test
+    try:
+        tst = srv.get_test(obj_uuid)
+    except cogs.structs.ObjectDNE as e:
+        return error_response(e, 404)
+
+    # Process Submissions
+    return process_uuid_list(tst.list_files, tst.add_files, tst.rem_files, _FILES_KEY)
+
 ## Submission Endpoints ##
 
 @app.route("/submissions/", methods=['GET'])
@@ -278,6 +338,7 @@ def process_submissions():
 @auth.requires_auth_route()
 def process_submission(obj_uuid):
     return process_object(srv.get_submission, obj_uuid)
+
 
 ## Run Endpoints ##
 
