@@ -12,6 +12,7 @@ import json
 import unittest
 import uuid
 import os
+import time
 
 import cogs.test_common
 
@@ -671,6 +672,30 @@ class CogsApiRunTestCase(CogsApiObjectBase, CogsApiTestCase):
         except AssertionError as e:
             if int(str(e).split()[-1]) != 405:
                 raise
+
+        # Delete Object
+        obj = self.delete_object(self.url_obj, obj_uuid, user=self.user)
+        self.assertIsNotNone(obj)
+
+    def test_run_script_no_files(self):
+
+        # Create Object
+        obj_uuid = self.create_objects(self.url_lst, self.key, self.data,
+                                       json_data=self.json_data, user=self.user)
+        self.assertTrue(obj_uuid)
+
+        # Wait for Completion
+        obj = None
+        status = ""
+        while not status.startswith('complete'):
+            obj = self.get_object(self.url_obj, obj_uuid, user=self.user)
+            self.assertTrue(obj)
+            self.assertTrue(obj['status'])
+            status = obj['status']
+            time.sleep(1)
+
+        # Check Object
+        self.assertEqual(obj['status'], 'complete-error')
 
         # Delete Object
         obj = self.delete_object(self.url_obj, obj_uuid, user=self.user)
