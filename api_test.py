@@ -333,6 +333,23 @@ class CogsApiFileTestCase(CogsApiObjectBase, CogsApiTestCase):
         self.assertIsNotNone(obj)
 
 
+## Reporter Tests ##
+class CogsApiReporterTestCase(CogsApiObjectBase, CogsApiTestCase):
+
+    def setUp(self):
+        super(CogsApiReporterTestCase, self).setUp()
+        self.user = self.admin
+        self.url = '/reporters/'
+        self.key = 'reporters'
+        self.data = copy.copy(cogs.test_common.REPORTER_TESTDICT)
+        self.data['mod'] = "moodle"
+        self.data['asn_id'] = cogs.test_common.REPMOD_MOODLE_ASN
+        self.json_data = True
+
+    def tearDown(self):
+        super(CogsApiReporterTestCase, self).tearDown()
+
+
 ## Assignment Tests ##
 class CogsApiAssignmentTestCase(CogsApiObjectBase, CogsApiTestCase):
 

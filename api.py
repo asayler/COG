@@ -23,10 +23,11 @@ import cogs.structs
 
 _MSG_ROOT = "Welcome to the CU CS Online Grading System API\n"
 
+_FILES_KEY = "files"
+_REPORTERS_KEY = "reporters"
 _ASSIGNMENTS_KEY = "assignments"
 _TESTS_KEY = "tests"
 _SUBMISSIONS_KEY = "submissions"
-_FILES_KEY = "files"
 _RUNS_KEY = "runs"
 
 
@@ -193,6 +194,20 @@ def process_files():
 @auth.requires_auth_route()
 def process_file(obj_uuid):
     return process_object(srv.get_file, obj_uuid, update_stub=None)
+
+## Reporter Endpoints ##
+
+@app.route("/reporters/", methods=['GET', 'POST'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_reporters():
+    return process_objects(srv.list_reporters, srv.create_reporter, _REPORTERS_KEY)
+
+@app.route("/reporters/<obj_uuid>/", methods=['GET', 'PUT', 'DELETE'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_reporter(obj_uuid):
+    return process_object(srv.get_reporter, obj_uuid)
 
 ## Assignment Endpoints ##
 
