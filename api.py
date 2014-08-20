@@ -322,8 +322,22 @@ def process_test_files(obj_uuid):
     except cogs.structs.ObjectDNE as e:
         return error_response(e, 404)
 
-    # Process Submissions
+    # Process Files
     return process_uuid_list(tst.list_files, tst.add_files, tst.rem_files, _FILES_KEY)
+
+@app.route("/tests/<obj_uuid>/reporters/", methods=['GET', 'PUT', 'DELETE'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_test_reporters(obj_uuid):
+
+    # Get Test
+    try:
+        tst = srv.get_test(obj_uuid)
+    except cogs.structs.ObjectDNE as e:
+        return error_response(e, 404)
+
+    # Process Reporters
+    return process_uuid_list(tst.list_reporters, tst.add_reporters, tst.rem_reporters, _REPORTERS_KEY)
 
 ## Submission Endpoints ##
 

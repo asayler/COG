@@ -513,6 +513,35 @@ class CogsApiTestTestCase(CogsApiObjectBase, CogsApiTestCase):
         for file_uuid in file_lst:
             self.delete_object('/files/', file_uuid, user=self.user)
 
+    def test_list_uuids_reporters(self):
+
+        # Create Reporters
+        reporter_lst = []
+        reporter_data = copy.copy(cogs.test_common.REPORTER_TESTDICT)
+        reporter_data['mod'] = "moodle"
+        reporter_data['asn_id'] = cogs.test_common.REPMOD_MOODLE_ASN
+        for i in range(10):
+            reporter_uuid = self.create_objects('/reporters/', 'reporters',
+                                                data=reporter_data,
+                                                json_data=True, user=self.user)
+            reporter_lst.append(reporter_uuid)
+
+        # Create Test
+        tst_uuid = self.create_objects(self.url_lst, self.key,
+                                       cogs.test_common.TEST_TESTDICT,
+                                       json_data=True, user=self.user)
+
+        # Test Reporter List/Add/Remove
+        url = '/tests/{:s}/reporters/'.format(tst_uuid)
+        self.list_uuids_test(url, 'reporters', reporter_lst)
+
+        # Delete Test
+        self.delete_object(self.url_obj, tst_uuid, user=self.user)
+
+        # Delete Reporters
+        for reporter_uuid in reporter_lst:
+            self.delete_object('/reporters/', reporter_uuid, user=self.user)
+
 
 ## Submission Tests ##
 class CogsApiSubmissionTestCase(CogsApiObjectBase, CogsApiTestCase):
