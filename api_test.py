@@ -677,6 +677,6 @@ class CogsApiRunTestCase(CogsApiObjectBase, CogsApiTestCase):
         self.assertIsNotNone(obj)
 
 
-### Main
+### Main ###
 if __name__ == '__main__':
     unittest.main()
