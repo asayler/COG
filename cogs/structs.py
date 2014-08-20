@@ -657,7 +657,7 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         if not force:
             while not self.is_complete():
                 print("Waiting for run to complete...")
-                time.sleep(5)
+                time.sleep(1)
 
         # Remove from submission
         run_uuid = str(self.uuid)
