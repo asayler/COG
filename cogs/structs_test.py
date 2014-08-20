@@ -82,12 +82,13 @@ class ServerTestCase(test_common_backend.SubMixin,
 
     def test_reporters(self):
         data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
         data['asn_id'] = test_common.REPMOD_MOODLE_ASN
         self.subHashDirectHelper(self.srv.create_reporter,
                                  self.srv.get_reporter,
                                  self.srv.list_reporters,
                                  data,
-                                 extra_kwargs={'mod': "moodle", 'owner': self.testuser})
+                                 extra_kwargs={'owner': self.testuser})
 
     def test_assignments(self):
         self.subHashDirectHelper(self.srv.create_assignment,
@@ -174,10 +175,9 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
 
         super(ReporterTestCase, self).setUp()
 
-        self.mod = "moodle"
         self.data = copy.copy(test_common.REPORTER_TESTDICT)
-        self.asn_id = test_common.REPMOD_MOODLE_ASN
-        self.data['asn_id'] = self.asn_id
+        self.data['mod'] = "moodle"
+        self.data['asn_id'] = test_common.REPMOD_MOODLE_ASN
 
         self.student = self.auth.create_user(test_common.USER_TESTDICT,
                                              username=test_common.AUTHMOD_MOODLE_STUDENT_USERNAME,
@@ -191,29 +191,29 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
     def test_create_reporter(self):
         self.hashCreateHelper(self.srv.create_reporter,
                               self.data,
-                              extra_kwargs={'mod': self.mod, 'owner': self.testuser})
+                              extra_kwargs={'owner': self.testuser})
 
     def test_get_reporter(self):
         self.hashGetHelper(self.srv.create_reporter,
                            self.srv.get_reporter,
                            self.data,
-                           extra_kwargs={'mod': self.mod, 'owner': self.testuser})
+                           extra_kwargs={'owner': self.testuser})
 
     def test_update_reporter(self):
         self.hashUpdateHelper(self.srv.create_reporter,
                               self.data,
-                              extra_kwargs={'mod': self.mod, 'owner': self.testuser})
+                              extra_kwargs={'owner': self.testuser})
 
     def test_delete_reporter(self):
         self.hashDeleteHelper(self.srv.create_reporter,
                               self.data,
-                              extra_kwargs={'mod': self.mod, 'owner': self.testuser})
+                              extra_kwargs={'owner': self.testuser})
 
     def test_file_report(self):
         grade = (random.randint(0,1000) / 100.0)
         comments = "Tested via test_file_report on {:s}.".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(grade)
-        reporter = self.srv.create_reporter(self.data, mod=self.mod, owner=self.testuser)
+        reporter = self.srv.create_reporter(self.data, owner=self.testuser)
         reporter.file_report(self.student, grade, comments)
         reporter.delete()
 
@@ -272,12 +272,12 @@ class TestTestCase(test_common_backend.SubMixin,
         file_obj.close()
 
         # Create Reporters
-        mod = "moodle"
         data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
         data['asn_id'] = test_common.REPMOD_MOODLE_ASN
         self.reporters = set([])
         for i in range(10):
-            self.reporters.add(str(self.srv.create_reporter(data, mod=mod, owner=self.testuser).uuid))
+            self.reporters.add(str(self.srv.create_reporter(data, owner=self.testuser).uuid))
 
     def tearDown(self):
 
@@ -453,10 +453,10 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         file_obj.close()
 
         # Create Reporter
-        mod = "moodle"
         data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
         data['asn_id'] = test_common.REPMOD_MOODLE_ASN
-        self.rpt_moodle = self.srv.create_reporter(data, mod=mod, owner=self.testuser)
+        self.rpt_moodle = self.srv.create_reporter(data, owner=self.testuser)
 
         # Create Assignment
         self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.testuser)

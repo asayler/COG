@@ -69,7 +69,7 @@ class Server(object):
         return self.FileFactory.list_siblings()
 
     # Reporter Methods
-    def create_reporter(self, data, mod=None, owner=None):
+    def create_reporter(self, data, owner=None):
         return self.ReporterFactory.from_new(data, mod=mod, owner=owner)
     def get_reporter(self, uuid_hex):
         return self.ReporterFactory.from_existing(uuid_hex)
@@ -202,21 +202,17 @@ class Reporter(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Ha
     def from_new(cls, data, **kwargs):
 
         # Process Args
-        mod = kwargs.pop('mod', None)
+        mod = data.get('mod', None)
         if not mod:
-            raise TypeError("mod required")
+            raise KeyError("mod required")
 
         # Set Schema
         schema = set(_REPORTER_SCHEMA)
         if mod == 'moodle':
             schema.update(set(repmod_moodle.EXTRA_REPORTER_SCHEMA))
         else:
-            raise Exception("Unknown repmod")
+            raise Exception("Unknown repmod {:s}".format(mod))
         kwargs['schema'] = schema
-
-        # Set Data
-        data = copy.copy(data)
-        data['mod'] = mod
 
         # Call Parent
         reporter = super(Reporter, cls).from_new(data, **kwargs)
