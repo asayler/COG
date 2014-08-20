@@ -225,187 +225,31 @@ def process_assignment(obj_uuid):
 
 ## Test Endpoints ##
 
-@app.route("/assignments/<asn_uuid>/tests/",
-           methods=['GET', 'POST'])
-def process_tests(asn_uuid):
+@app.route("/tests/", methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_tests():
+    return process_objects(srv.list_tests, None, _TESTS_KEY)
 
-    # Get Assignment
-    try:
-        asn = srv.get_assignment(asn_uuid)
-    except cogs.structs.ObjectDNE as e:
-        err = { 'status': 404,
-                'message': str(e) }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Process
-    if flask.request.method == 'GET':
-        # Get Tests
-        out = {_TESTS_KEY: list(asn.list_tests())}
-    elif flask.request.method == 'POST':
-        # Create Test
-        d = flask.request.get_json(force=True)
-        try:
-            tst = asn.create_test(d)
-        except KeyError as e:
-            err = { 'status': 400,
-                    'message': str(e) }
-            err_res = flask.jsonify(err)
-            err_res.status_code = err['status']
-            return err_res
-        else:
-            out = {_TESTS_KEY: list([str(tst.uuid)])}
-    else:
-        raise Exception("Unhandled Method")
-
-    # Return Test List
-    res = flask.jsonify(out)
-    return res
-
-@app.route("/assignments/<asn_uuid>/tests/<tst_uuid>/",
-           methods=['GET', 'PUT', 'DELETE'])
-def process_test(asn_uuid, tst_uuid):
-
-    # Get Assignment
-    try:
-        asn = srv.get_assignment(asn_uuid)
-    except cogs.structs.ObjectDNE as e:
-        err = { 'status': 404,
-                'message': str(e) }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Get Test
-    try:
-        tst = asn.get_test(tst_uuid)
-    except cogs.structs.ObjectDNE as e:
-        err = { 'status': 404,
-                'message': str(e) }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Process
-    if flask.request.method == 'GET':
-        # Get Assignment
-        out = {str(tst.uuid): tst.get_dict()}
-    elif flask.request.method == 'PUT':
-        # Update Assignment
-        d = flask.request.get_json(force=True)
-        try:
-            tst.set_dict(d)
-        except KeyError as e:
-            err = { 'status': 400,
-                    'message': str(e) }
-            err_res = flask.jsonify(err)
-            err_res.status_code = err['status']
-            return err_res
-        else:
-            out = {str(tst.uuid): tst.get_dict()}
-    elif flask.request.method == 'DELETE':
-        # Delete Assignment
-        out = {str(tst.uuid): tst.get_dict()}
-        tst.delete()
-    else:
-        raise Exception("Unhandled Method")
-
-    # Return Test
-    res = flask.jsonify(out)
-    return res
+@app.route("/tests/<obj_uuid>/", methods=['GET', 'PUT', 'DELETE'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_test(obj_uuid):
+    return process_object(srv.get_test, obj_uuid)
 
 ## Submission Endpoints ##
 
-@app.route("/assignments/<asn_uuid>/submissions/",
-           methods=['GET', 'POST'])
-def process_submissions(asn_uuid):
+@app.route("/submissions/", methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_submissions():
+    return process_objects(srv.list_submissions, None, _SUBMISSIONS_KEY)
 
-    # Get Assignment
-    try:
-        asn = srv.get_assignment(asn_uuid)
-    except cogs.structs.ObjectDNE as e:
-        err = { 'status': 404,
-                'message': str(e) }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Process
-    if flask.request.method == 'GET':
-        # Get Submissions
-        out = {_SUBMISSIONS_KEY: list(asn.list_submissions())}
-    elif flask.request.method == 'POST':
-        # Create Submission
-        d = flask.request.get_json(force=True)
-        try:
-            sub = asn.create_submission(d)
-        except KeyError as e:
-            err = { 'status': 400,
-                    'message': str(e) }
-            err_res = flask.jsonify(err)
-            err_res.status_code = err['status']
-            return err_res
-        else:
-            out = {_SUBMISSIONS_KEY: list([str(sub.uuid)])}
-    else:
-        raise Exception("Unhandled Method")
-
-    # Return Submission List
-    res = flask.jsonify(out)
-    return res
-
-@app.route("/assignments/<asn_uuid>/submissions/<sub_uuid>/",
-           methods=['GET', 'PUT', 'DELETE'])
-def process_submission(asn_uuid, sub_uuid):
-
-    # Get Assignment
-    try:
-        asn = srv.get_assignment(asn_uuid)
-    except cogs.structs.ObjectDNE as e:
-        err = { 'status': 404,
-                'message': str(e) }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Get Submission
-    try:
-        sub = asn.get_submission(sub_uuid)
-    except cogs.structs.ObjectDNE as e:
-        err = { 'status': 404,
-                'message': str(e) }
-        err_res = flask.jsonify(err)
-        err_res.status_code = err['status']
-        return err_res
-
-    # Process
-    if flask.request.method == 'GET':
-        # Get Assignment
-        out = {str(sub.uuid): sub.get_dict()}
-    elif flask.request.method == 'PUT':
-        # Update Assignment
-        d = flask.request.get_json(force=True)
-        try:
-            sub.set_dict(d)
-        except KeyError as e:
-            err = { 'status': 400,
-                    'message': str(e) }
-            err_res = flask.jsonify(err)
-            err_res.status_code = err['status']
-            return err_res
-        else:
-            out = {str(sub.uuid): sub.get_dict()}
-    elif flask.request.method == 'DELETE':
-        # Delete Assignment
-        out = {str(sub.uuid): sub.get_dict()}
-        sub.delete()
-    else:
-        raise Exception("Unhandled Method")
-
-    # Return Test
-    res = flask.jsonify(out)
-    return res
+@app.route("/submissions/<obj_uuid>/", methods=['GET', 'PUT', 'DELETE'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_submission(obj_uuid):
+    return process_object(srv.get_submission, obj_uuid)
 
 ## Run Endpoints ##
 

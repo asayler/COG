@@ -18,6 +18,15 @@ GET     /assignments/<ID>/                              Show Assignment
 PUT     /assignments/<ID>/                              Update Assignment
 DELETE  /assignments/<ID>/                              Delete Assignment
 
+GET     /tests/                                         List All Tests
+GET     /tests/<ID>/                                    Show Grading Test
+DELETE  /tests/<ID>/                                    Delete Grading Test
+
+GET     /submissions/                                   List All Submissions
+GET     /submissions/<ID>/                              Show Submission
+DELETE  /submissions/<ID>/                              Delete Submission
+
+
 ### In Progress:
 
 GET     */allow/<method>/                               List Allowed Groups (Specify Method)
@@ -44,18 +53,12 @@ POST    /assignments/<ID>/tests/                        Create New Assignment Gr
 GET     /assignments/<ID>/submissions/                  List Assignment Submissions
 POST    /assignments/<ID>/submissions/                  Create New Assignment Submission
 
-GET     /submissions/                                   List All Submissions
-GET     /submissions/<ID>/                              Show Submission
-DELETE  /submissions/<ID>/                              Delete Submission
 GET     /submissions/<ID>/runs/                         List Test Runs
 POST    /submissions/<ID>/runs/                         Execute New Test Run
 GET     /submissions/<ID>/files/                        List Submission Files
 PUT     /submissions/<ID>/files/                        Add Submission File
 DELETE  /submissions/<ID>/files/                        Remove Submission File
 
-GET     /tests/                                         List All Tests
-GET     /tests/<ID>/                                    Show Grading Test
-DELETE  /tests/<ID>/                                    Delete Grading Test
 GET     /tests/<ID>/files/                              List Test Files
 PUT     /tests/<ID>/files/                              Add Test File
 DELETE  /tests/<ID>/files/                              Remove Test File

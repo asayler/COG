@@ -365,6 +365,36 @@ class CogsApiAssignmentTestCase(CogsApiObjectBase, CogsApiTestCase):
         super(CogsApiAssignmentTestCase, self).tearDown()
 
 
+## Test Tests ##
+class CogsApiTestTestCase(CogsApiObjectBase, CogsApiTestCase):
+
+    def setUp(self):
+        super(CogsApiTestTestCase, self).setUp()
+        self.user = self.admin
+        self.url = '/tests/'
+        self.key = 'tests'
+        self.data = copy.copy(cogs.test_common.TEST_TESTDICT)
+        self.json_data = True
+
+    def tearDown(self):
+        super(CogsApiTestTestCase, self).tearDown()
+
+
+## Submission Tests ##
+class CogsApiSubmissionTestCase(CogsApiObjectBase, CogsApiTestCase):
+
+    def setUp(self):
+        super(CogsApiSubmissionTestCase, self).setUp()
+        self.user = self.admin
+        self.url = '/submissions/'
+        self.key = 'submissions'
+        self.data = copy.copy(cogs.test_common.SUBMISSION_TESTDICT)
+        self.json_data = True
+
+    def tearDown(self):
+        super(CogsApiSubmissionTestCase, self).tearDown()
+
+
 ### Main
 if __name__ == '__main__':
     unittest.main()
