@@ -36,8 +36,6 @@ _GROUP_ADMIN_DICT = {'name': "ADMIN"}
 _USERNAMEMAP_KEY = 'username_to_uuid'
 _TOKENMAP_KEY = 'token_to_uuid'
 
-_GROUP_LIST_SUFFIX = 'allowedgroups'
-
 
 ### Exceptions ###
 
@@ -140,14 +138,19 @@ class Auth(object):
         return admins.list_users()
 
     # Allowed Group Methods
+    def _allowed_groups_key(self, method, path):
+        return "{:s}_{:s}".format(method, path)
     def add_allowed_groups(self, method, path, group_uuids):
-        allowed_groups = self.AllowedGroupsFactory.from_raw(method, path)
+        key = self._allowed_groups_key(method, path)
+        allowed_groups = self.AllowedGroupsFactory.from_raw(key=key)
         return allowed_groups.add_vals(group_uuids)
     def rem_allowed_groups(self, method, path, group_uuids):
-        allowed_groups = self.AllowedGroupsFactory.from_raw(method, path)
+        key = self._allowed_groups_key(method, path)
+        allowed_groups = self.AllowedGroupsFactory.from_raw(key=key)
         return allowed_groups.del_vals(group_uuids)
     def list_allowed_groups(self, method, path):
-        allowed_groups = self.AllowedGroupsFactory.from_raw(method, path)
+        key = self._allowed_groups_key(method, path)
+        allowed_groups = self.AllowedGroupsFactory.from_raw(key=key)
         return allowed_groups.get_set()
 
     # Auth Methods
@@ -208,7 +211,7 @@ class Auth(object):
             raise Exception("Unknown auth_mod: {:s}".format(auth_mod))
 
     # Decorators
-    def requires_auth_route(self, pass_user=False, pass_owner=False):
+    def requires_auth_route(self):
 
         def _decorator(func):
 
@@ -480,10 +483,10 @@ class AllowedGroups(GroupList):
 
     # Override from_raw
     @classmethod
-    def from_raw(cls, method, path, *args, **kwargs):
+    def from_raw(cls, *args, **kwargs):
 
         # Set Key
-        kwargs['key'] = "{:s}_{:s}_{:s}".format(path, method, _GROUP_LIST_SUFFIX)
+        print(kwargs)
 
         # Call Parent
         return super(AllowedGroups, cls).from_raw(*args, **kwargs)
