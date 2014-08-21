@@ -4,6 +4,7 @@
 # Summer 2014
 # Univerity of Colorado
 
+import traceback
 
 import env_local
 import tester_script
@@ -14,6 +15,8 @@ import auth
 def test(asn, sub, tst, run):
 
     try:
+
+        print("Test Print")
 
         # Setup Env
         env_type = asn['env']
@@ -55,7 +58,7 @@ def test(asn, sub, tst, run):
 
         retcode = -1
         score = 0
-        output = str(e)
+        output = traceback.format_exc()
         status = "complete-exception"
         raise
 
