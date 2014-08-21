@@ -52,7 +52,7 @@ class Reporter(object):
         comment = comment.encode('ascii', 'replace')
         start = len(comment)/4 + len(comment)/8
         end = start + len(comment)/8
-        comment = comment[start:end].translate(string.maketrans("<>", "??"))
+        comment = comment[start:end].translate(string.maketrans("<", "?"))
 
         warning = "\nWARNING: Output Truncated"
         max_len = (_MAX_COMMENT_LEN - len(warning))
