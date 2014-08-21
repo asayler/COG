@@ -773,7 +773,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             self.assertEqual(float(run['score']), 0)
             self.assertTrue(run['output'])
         except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
+            print("run = {:s}".format(run))
             raise
 
         # Delete Object
@@ -824,7 +824,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             self.assertEqual(float(run['score']), 0)
             self.assertTrue(run['output'])
         except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
+            print("run = {:s}".format(run))
             raise
 
         # Delete Run
@@ -892,7 +892,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             self.assertEqual(float(run['score']), 10)
             self.assertTrue(run['output'])
         except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
+            print("run = {:s}".format(run))
             raise
 
         # Delete Run
@@ -964,7 +964,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             self.assertLess(float(run['score']), 10)
             self.assertTrue(run['output'])
         except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
+            print("run = {:s}".format(run))
             raise
 
         # Delete Run
@@ -1010,7 +1010,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             self.assertEqual(float(run['score']), 0)
             self.assertTrue(run['output'])
         except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
+            print("run = {:s}".format(run))
             raise
 
         # Delete Object
@@ -1061,7 +1061,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             self.assertEqual(float(run['score']), 0)
             self.assertTrue(run['output'])
         except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
+            print("run = {:s}".format(run))
             raise
 
         # Delete Run
@@ -1129,7 +1129,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             self.assertEqual(float(run['score']), 0)
             self.assertTrue(run['output'])
         except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
+            print("run = {:s}".format(run))
             raise
 
         # Delete Run
@@ -1214,7 +1214,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             self.assertEqual(float(run['score']), 10)
             self.assertTrue(run['output'])
         except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
+            print("run = {:s}".format(run))
             raise
 
         # Delete Run
@@ -1303,7 +1303,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             self.assertLess(float(run['score']), 10)
             self.assertTrue(run['output'])
         except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
+            print("run = {:s}".format(run))
             raise
 
         # Delete Run
