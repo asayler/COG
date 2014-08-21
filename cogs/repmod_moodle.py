@@ -36,12 +36,17 @@ class Reporter(object):
         self.host = config.REPMOD_MOODLE_HOST
 
         # Setup WS
+        print()
+        print("Creating WS...")
         self.ws = moodle.ws.WS(self.host)
         self.ws.authenticate(config.REPMOD_MOODLE_USERNAME,
                              config.REPMOD_MOODLE_PASSWORD,
                              config.REPMOD_MOODLE_SERVICE)
 
     def file_report(self, user, grade, comment):
+
+        print()
+        print("Filing Report...")
 
         if user['auth'] != 'moodle':
             raise RepModMoodleError("Repmod requires users with authmod 'moodle'")
