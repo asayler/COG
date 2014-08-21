@@ -680,11 +680,11 @@ class CogsApiRunTestCase(CogsApiObjectTests, CogsApiRunBase):
 
     def setUp(self):
 
-        # Set Default User
-        self.user = self.admin
-
         # Call Parent
         super(CogsApiRunTestCase, self).setUp()
+
+        # Set Default User
+        self.user = self.admin
 
     def tearDown(self):
 
