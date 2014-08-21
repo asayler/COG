@@ -50,6 +50,7 @@ class Reporter(object):
 
         # Clean Comment
         comment = comment.encode('ascii', 'replace')
+        comment = comment[:(len(comment)/2)]
 
         warning = "\nWARNING: Output Truncated"
         max_len = (_MAX_COMMENT_LEN - len(warning))
