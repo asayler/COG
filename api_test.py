@@ -607,8 +607,8 @@ class CogsApiSubmissionTestCase(CogsApiObjectTests, CogsApiTestCase):
         for file_uuid in file_lst:
             self.delete_object('/files/', file_uuid, user=self.user)
 
-## Run Tests ##
 
+## Run Tests Base ##
 class CogsApiRunBase(CogsApiObjectHelpers, CogsApiTestCase):
 
     def setUp(self):
@@ -616,15 +616,11 @@ class CogsApiRunBase(CogsApiObjectHelpers, CogsApiTestCase):
         # Call Parent
         super(CogsApiRunBase, self).setUp()
 
-        # Set Default User
-        self.user = self.admin
-
         # Setup Moodle Student
         self.student = api.auth.create_user(cogs.test_common.USER_TESTDICT,
                                             username=cogs.test_common.AUTHMOD_MOODLE_STUDENT_USERNAME,
                                             password=cogs.test_common.AUTHMOD_MOODLE_STUDENT_PASSWORD,
                                             authmod='moodle')
-        self.student_uuid = str(self.student.uuid).lower()
 
         # Create Assignment
         self.asn_key = 'assignments'
@@ -662,15 +658,15 @@ class CogsApiRunBase(CogsApiObjectHelpers, CogsApiTestCase):
 
         # Delete Submission
         url = "/{:s}/".format(self.sub_key)
-        self.delete_object(url, self.sub_uuid, user=self.user)
+        self.delete_object(url, self.sub_uuid, user=self.student)
 
         # Delete Test
         url = "/{:s}/".format(self.tst_key)
-        self.delete_object(url, self.tst_uuid, user=self.user)
+        self.delete_object(url, self.tst_uuid, user=self.admin)
 
         # Delete Assignment
         url = "/{:s}/".format(self.asn_key)
-        self.delete_object(url, self.asn_uuid, user=self.user)
+        self.delete_object(url, self.asn_uuid, user=self.admin)
 
         # Delete Student
         self.student.delete()
@@ -679,9 +675,13 @@ class CogsApiRunBase(CogsApiObjectHelpers, CogsApiTestCase):
         super(CogsApiRunBase, self).tearDown()
 
 
+## Run Tests ##
 class CogsApiRunTestCase(CogsApiObjectTests, CogsApiRunBase):
 
     def setUp(self):
+
+        # Set Default User
+        self.user = self.admin
 
         # Call Parent
         super(CogsApiRunTestCase, self).setUp()
@@ -710,6 +710,7 @@ class CogsApiRunTestCase(CogsApiObjectTests, CogsApiRunBase):
         obj = self.delete_object(self.url_obj, obj_uuid, user=self.user)
         self.assertIsNotNone(obj)
 
+
 ## Run Execute Tests ##
 class CogsApiRunExecuteTestCase(CogsApiRunBase):
 
@@ -729,8 +730,8 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/{:s}/{:s}/{:s}/'.format(self.tst_key, self.tst_uuid, self.rpt_key)
         self.add_objects(url, self.rpt_key, [self.rpt_uuid], user=self.admin)
 
-        # Setup Permissions
-        api.auth.add_allowed_groups('POST', self.url_lst, [api.cogs.auth.SPECIAL_GROUP_ANY])
+        # Set File Permissions to Any
+        api.auth.add_allowed_groups('POST', '/files/', [api.cogs.auth.SPECIAL_GROUP_ANY])
 
     def tearDown(self):
 
@@ -759,13 +760,12 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         run = None
         status = ""
         while not status.startswith('complete'):
-            run = self.get_object(self.url_obj, run_uuid, user=self.admin)
+            run = self.get_object(self.url_obj, run_uuid, user=self.student)
             self.assertTrue(run)
             self.assertTrue(run['status'])
             status = run['status']
             time.sleep(1)
 
-        print(run)
         # Check Object
         self.assertEqual(run['status'], 'complete-error')
         self.assertEqual(int(run['retcode']), -1)
@@ -773,7 +773,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         self.assertTrue(run['output'])
 
         # Delete Object
-        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        run = self.delete_object(self.url_obj, run_uuid, user=self.student)
         self.assertIsNotNone(run)
 
     def test_run_script_no_submission(self):
@@ -782,7 +782,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         data = copy.copy(cogs.test_common.TEST_TESTDICT)
         data['tester'] = 'script'
         tst = self.set_object('/tests/', self.tst_uuid, data,
-                              json_data=True, user=self.user)
+                              json_data=True, user=self.admin)
         self.assertTrue(tst)
 
         # Upload Script File and Attach to Test
@@ -792,22 +792,22 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/files/'
         fle_uuid = self.create_objects(url, 'files',
                                        {file_key: (file_path, file_name)},
-                                       json_data=False, user=self.user)
+                                       json_data=False, user=self.admin)
         self.assertTrue(fle_uuid)
         url = '/tests/{:s}/files/'.format(self.tst_uuid)
-        fle_lst = self.add_objects(url, 'files', [fle_uuid], user=self.user)
+        fle_lst = self.add_objects(url, 'files', [fle_uuid], user=self.admin)
         self.assertTrue(fle_lst)
 
         # Create Run
         run_uuid = self.create_objects(self.url_lst, self.key, self.data,
-                                       json_data=self.json_data, user=self.user)
+                                       json_data=self.json_data, user=self.student)
         self.assertTrue(run_uuid)
 
         # Wait for Run Completion
         run = None
         status = ""
         while not status.startswith('complete'):
-            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            run = self.get_object(self.url_obj, run_uuid, user=self.student)
             self.assertTrue(run)
             self.assertTrue(run['status'])
             status = run['status']
@@ -820,11 +820,11 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         self.assertTrue(run['output'])
 
         # Delete Run
-        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        run = self.delete_object(self.url_obj, run_uuid, user=self.student)
         self.assertIsNotNone(run)
 
         # Delete File
-        fle = self.delete_object('/files/', fle_uuid, user=self.user)
+        fle = self.delete_object('/files/', fle_uuid, user=self.admin)
         self.assertIsNotNone(fle)
 
     def test_run_script_good(self):
@@ -833,7 +833,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         data = copy.copy(cogs.test_common.TEST_TESTDICT)
         data['tester'] = 'script'
         tst = self.set_object('/tests/', self.tst_uuid, data,
-                              json_data=True, user=self.user)
+                              json_data=True, user=self.admin)
         self.assertTrue(tst)
 
         # Upload Script File and Attach to Test
@@ -843,10 +843,10 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/files/'
         fle_uuid_script = self.create_objects(url, 'files',
                                               {file_key: (file_path, file_name)},
-                                              json_data=False, user=self.user)
+                                              json_data=False, user=self.admin)
         self.assertTrue(fle_uuid_script)
         url = '/tests/{:s}/files/'.format(self.tst_uuid)
-        fle_lst_tst = self.add_objects(url, 'files', [fle_uuid_script], user=self.user)
+        fle_lst_tst = self.add_objects(url, 'files', [fle_uuid_script], user=self.admin)
         self.assertTrue(fle_lst_tst)
 
         # Upload Submission File and Attach to Submission
@@ -856,22 +856,22 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/files/'
         fle_uuid_sub = self.create_objects(url, 'files',
                                            {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.user)
+                                           json_data=False, user=self.student)
         self.assertTrue(fle_uuid_sub)
         url = '/submissions/{:s}/files/'.format(self.sub_uuid)
-        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.user)
+        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.student)
         self.assertTrue(fle_lst_sub)
 
         # Create Run
         run_uuid = self.create_objects(self.url_lst, self.key, self.data,
-                                       json_data=self.json_data, user=self.user)
+                                       json_data=self.json_data, user=self.student)
         self.assertTrue(run_uuid)
 
         # Wait for Run Completion
         run = None
         status = ""
         while not status.startswith('complete'):
-            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            run = self.get_object(self.url_obj, run_uuid, user=self.student)
             self.assertTrue(run)
             self.assertTrue(run['status'])
             status = run['status']
@@ -884,15 +884,15 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         self.assertTrue(run['output'])
 
         # Delete Run
-        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        run = self.delete_object(self.url_obj, run_uuid, user=self.student)
         self.assertIsNotNone(run)
 
         # Delete Submission File
-        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.user)
+        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.student)
         self.assertIsNotNone(fle_sub)
 
         # Delete Script File
-        fle_script = self.delete_object('/files/', fle_uuid_script, user=self.user)
+        fle_script = self.delete_object('/files/', fle_uuid_script, user=self.admin)
         self.assertIsNotNone(fle_script)
 
     def test_run_script_bad(self):
@@ -901,7 +901,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         data = copy.copy(cogs.test_common.TEST_TESTDICT)
         data['tester'] = 'script'
         tst = self.set_object('/tests/', self.tst_uuid, data,
-                              json_data=True, user=self.user)
+                              json_data=True, user=self.admin)
         self.assertTrue(tst)
 
         # Upload Script File and Attach to Test
@@ -911,10 +911,10 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/files/'
         fle_uuid_script = self.create_objects(url, 'files',
                                               {file_key: (file_path, file_name)},
-                                              json_data=False, user=self.user)
+                                              json_data=False, user=self.admin)
         self.assertTrue(fle_uuid_script)
         url = '/tests/{:s}/files/'.format(self.tst_uuid)
-        fle_lst_tst = self.add_objects(url, 'files', [fle_uuid_script], user=self.user)
+        fle_lst_tst = self.add_objects(url, 'files', [fle_uuid_script], user=self.admin)
         self.assertTrue(fle_lst_tst)
 
         # Upload Submission File and Attach to Submission
@@ -924,22 +924,22 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/files/'
         fle_uuid_sub = self.create_objects(url, 'files',
                                            {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.user)
+                                           json_data=False, user=self.student)
         self.assertTrue(fle_uuid_sub)
         url = '/submissions/{:s}/files/'.format(self.sub_uuid)
-        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.user)
+        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.student)
         self.assertTrue(fle_lst_sub)
 
         # Create Run
         run_uuid = self.create_objects(self.url_lst, self.key, self.data,
-                                       json_data=self.json_data, user=self.user)
+                                       json_data=self.json_data, user=self.student)
         self.assertTrue(run_uuid)
 
         # Wait for Run Completion
         run = None
         status = ""
         while not status.startswith('complete'):
-            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            run = self.get_object(self.url_obj, run_uuid, user=self.student)
             self.assertTrue(run)
             self.assertTrue(run['status'])
             status = run['status']
@@ -952,15 +952,15 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         self.assertTrue(run['output'])
 
         # Delete Run
-        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        run = self.delete_object(self.url_obj, run_uuid, user=self.student)
         self.assertIsNotNone(run)
 
         # Delete Submission File
-        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.user)
+        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.student)
         self.assertIsNotNone(fle_sub)
 
         # Delete Script File
-        fle_script = self.delete_object('/files/', fle_uuid_script, user=self.user)
+        fle_script = self.delete_object('/files/', fle_uuid_script, user=self.admin)
         self.assertIsNotNone(fle_script)
 
     def test_run_io_no_files(self):
@@ -969,19 +969,19 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         data = copy.copy(cogs.test_common.TEST_TESTDICT)
         data['tester'] = 'io'
         tst = self.set_object('/tests/', self.tst_uuid, data,
-                              json_data=True, user=self.user)
+                              json_data=True, user=self.admin)
         self.assertTrue(tst)
 
         # Create Run
         run_uuid = self.create_objects(self.url_lst, self.key, self.data,
-                                       json_data=self.json_data, user=self.user)
+                                       json_data=self.json_data, user=self.student)
         self.assertTrue(run_uuid)
 
         # Wait for Run Completion
         run = None
         status = ""
         while not status.startswith('complete'):
-            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            run = self.get_object(self.url_obj, run_uuid, user=self.student)
             self.assertTrue(run)
             self.assertTrue(run['status'])
             status = run['status']
@@ -994,7 +994,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         self.assertTrue(run['output'])
 
         # Delete Object
-        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        run = self.delete_object(self.url_obj, run_uuid, user=self.student)
         self.assertIsNotNone(run)
 
     def test_run_io_no_inputs_no_submission(self):
@@ -1003,7 +1003,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         data = copy.copy(cogs.test_common.TEST_TESTDICT)
         data['tester'] = 'io'
         tst = self.set_object('/tests/', self.tst_uuid, data,
-                              json_data=True, user=self.user)
+                              json_data=True, user=self.admin)
         self.assertTrue(tst)
 
         # Upload Solution File and Attach to Test
@@ -1013,22 +1013,22 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/files/'
         fle_uuid_sol = self.create_objects(url, 'files',
                                            {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.user)
+                                           json_data=False, user=self.admin)
         self.assertTrue(fle_uuid_sol)
         url = '/tests/{:s}/files/'.format(self.tst_uuid)
-        fle_lst = self.add_objects(url, 'files', [fle_uuid_sol], user=self.user)
+        fle_lst = self.add_objects(url, 'files', [fle_uuid_sol], user=self.admin)
         self.assertTrue(fle_lst)
 
         # Create Run
         run_uuid = self.create_objects(self.url_lst, self.key, self.data,
-                                       json_data=self.json_data, user=self.user)
+                                       json_data=self.json_data, user=self.student)
         self.assertTrue(run_uuid)
 
         # Wait for Run Completion
         run = None
         status = ""
         while not status.startswith('complete'):
-            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            run = self.get_object(self.url_obj, run_uuid, user=self.student)
             self.assertTrue(run)
             self.assertTrue(run['status'])
             status = run['status']
@@ -1041,11 +1041,11 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         self.assertTrue(run['output'])
 
         # Delete Run
-        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        run = self.delete_object(self.url_obj, run_uuid, user=self.student)
         self.assertIsNotNone(run)
 
         # Delete File
-        fle_sol = self.delete_object('/files/', fle_uuid_sol, user=self.user)
+        fle_sol = self.delete_object('/files/', fle_uuid_sol, user=self.admin)
         self.assertIsNotNone(fle_sol)
 
     def test_run_io_no_inputs(self):
@@ -1054,7 +1054,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         data = copy.copy(cogs.test_common.TEST_TESTDICT)
         data['tester'] = 'io'
         tst = self.set_object('/tests/', self.tst_uuid, data,
-                              json_data=True, user=self.user)
+                              json_data=True, user=self.admin)
         self.assertTrue(tst)
 
         # Upload Solution File and Attach to Test
@@ -1064,10 +1064,10 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/files/'
         fle_uuid_sol = self.create_objects(url, 'files',
                                            {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.user)
+                                           json_data=False, user=self.admin)
         self.assertTrue(fle_uuid_sol)
         url = '/tests/{:s}/files/'.format(self.tst_uuid)
-        fle_lst = self.add_objects(url, 'files', [fle_uuid_sol], user=self.user)
+        fle_lst = self.add_objects(url, 'files', [fle_uuid_sol], user=self.admin)
         self.assertTrue(fle_lst)
 
         # Upload Submission File and Attach to Submission
@@ -1077,22 +1077,22 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/files/'
         fle_uuid_sub = self.create_objects(url, 'files',
                                            {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.user)
+                                           json_data=False, user=self.student)
         self.assertTrue(fle_uuid_sub)
         url = '/submissions/{:s}/files/'.format(self.sub_uuid)
-        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.user)
+        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.student)
         self.assertTrue(fle_lst_sub)
 
         # Create Run
         run_uuid = self.create_objects(self.url_lst, self.key, self.data,
-                                       json_data=self.json_data, user=self.user)
+                                       json_data=self.json_data, user=self.student)
         self.assertTrue(run_uuid)
 
         # Wait for Run Completion
         run = None
         status = ""
         while not status.startswith('complete'):
-            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            run = self.get_object(self.url_obj, run_uuid, user=self.student)
             self.assertTrue(run)
             self.assertTrue(run['status'])
             status = run['status']
@@ -1105,15 +1105,15 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         self.assertTrue(run['output'])
 
         # Delete Run
-        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        run = self.delete_object(self.url_obj, run_uuid, user=self.student)
         self.assertIsNotNone(run)
 
         # Delete Submission
-        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.user)
+        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.student)
         self.assertIsNotNone(fle_sub)
 
         # Delete Solution
-        fle_sol = self.delete_object('/files/', fle_uuid_sol, user=self.user)
+        fle_sol = self.delete_object('/files/', fle_uuid_sol, user=self.admin)
         self.assertIsNotNone(fle_sol)
 
     def test_run_io_good(self):
@@ -1122,7 +1122,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         data = copy.copy(cogs.test_common.TEST_TESTDICT)
         data['tester'] = 'io'
         tst = self.set_object('/tests/', self.tst_uuid, data,
-                              json_data=True, user=self.user)
+                              json_data=True, user=self.admin)
         self.assertTrue(tst)
 
         # Upload Solution File and Attach to Test
@@ -1132,10 +1132,10 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/files/'
         fle_uuid_sol = self.create_objects(url, 'files',
                                            {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.user)
+                                           json_data=False, user=self.admin)
         self.assertTrue(fle_uuid_sol)
         url = '/tests/{:s}/files/'.format(self.tst_uuid)
-        fle_lst = self.add_objects(url, 'files', [fle_uuid_sol], user=self.user)
+        fle_lst = self.add_objects(url, 'files', [fle_uuid_sol], user=self.admin)
         self.assertTrue(fle_lst)
 
         # Upload Input File
@@ -1145,10 +1145,10 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/files/'
         fle_uuid_in1 = self.create_objects(url, 'files',
                                            {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.user)
+                                           json_data=False, user=self.admin)
         self.assertTrue(fle_uuid_in1)
         url = '/tests/{:s}/files/'.format(self.tst_uuid)
-        fle_lst = self.add_objects(url, 'files', [fle_uuid_in1], user=self.user)
+        fle_lst = self.add_objects(url, 'files', [fle_uuid_in1], user=self.admin)
         self.assertTrue(fle_lst)
 
         # Upload Submission File and Attach to Submission
@@ -1158,22 +1158,22 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/files/'
         fle_uuid_sub = self.create_objects(url, 'files',
                                            {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.user)
+                                           json_data=False, user=self.student)
         self.assertTrue(fle_uuid_sub)
         url = '/submissions/{:s}/files/'.format(self.sub_uuid)
-        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.user)
+        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.student)
         self.assertTrue(fle_lst_sub)
 
         # Create Run
         run_uuid = self.create_objects(self.url_lst, self.key, self.data,
-                                       json_data=self.json_data, user=self.user)
+                                       json_data=self.json_data, user=self.student)
         self.assertTrue(run_uuid)
 
         # Wait for Run Completion
         run = None
         status = ""
         while not status.startswith('complete'):
-            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            run = self.get_object(self.url_obj, run_uuid, user=self.student)
             self.assertTrue(run)
             self.assertTrue(run['status'])
             status = run['status']
@@ -1186,19 +1186,19 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         self.assertTrue(run['output'])
 
         # Delete Run
-        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        run = self.delete_object(self.url_obj, run_uuid, user=self.student)
         self.assertIsNotNone(run)
 
         # Delete Submission
-        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.user)
+        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.student)
         self.assertIsNotNone(fle_sub)
 
         # Delete Input
-        fle_in1 = self.delete_object('/files/', fle_uuid_in1, user=self.user)
+        fle_in1 = self.delete_object('/files/', fle_uuid_in1, user=self.admin)
         self.assertIsNotNone(fle_sub)
 
         # Delete Solution
-        fle_sol = self.delete_object('/files/', fle_uuid_sol, user=self.user)
+        fle_sol = self.delete_object('/files/', fle_uuid_sol, user=self.admin)
         self.assertIsNotNone(fle_sol)
 
     def test_run_io_bad(self):
@@ -1207,7 +1207,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         data = copy.copy(cogs.test_common.TEST_TESTDICT)
         data['tester'] = 'io'
         tst = self.set_object('/tests/', self.tst_uuid, data,
-                              json_data=True, user=self.user)
+                              json_data=True, user=self.admin)
         self.assertTrue(tst)
 
         # Upload Solution File and Attach to Test
@@ -1217,10 +1217,10 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/files/'
         fle_uuid_sol = self.create_objects(url, 'files',
                                            {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.user)
+                                           json_data=False, user=self.admin)
         self.assertTrue(fle_uuid_sol)
         url = '/tests/{:s}/files/'.format(self.tst_uuid)
-        fle_lst = self.add_objects(url, 'files', [fle_uuid_sol], user=self.user)
+        fle_lst = self.add_objects(url, 'files', [fle_uuid_sol], user=self.admin)
         self.assertTrue(fle_lst)
 
         # Upload Input File
@@ -1230,10 +1230,10 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/files/'
         fle_uuid_in1 = self.create_objects(url, 'files',
                                            {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.user)
+                                           json_data=False, user=self.admin)
         self.assertTrue(fle_uuid_in1)
         url = '/tests/{:s}/files/'.format(self.tst_uuid)
-        fle_lst = self.add_objects(url, 'files', [fle_uuid_in1], user=self.user)
+        fle_lst = self.add_objects(url, 'files', [fle_uuid_in1], user=self.admin)
         self.assertTrue(fle_lst)
 
         # Upload Submission File and Attach to Submission
@@ -1243,22 +1243,22 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         url = '/files/'
         fle_uuid_sub = self.create_objects(url, 'files',
                                            {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.user)
+                                           json_data=False, user=self.student)
         self.assertTrue(fle_uuid_sub)
         url = '/submissions/{:s}/files/'.format(self.sub_uuid)
-        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.user)
+        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.student)
         self.assertTrue(fle_lst_sub)
 
         # Create Run
         run_uuid = self.create_objects(self.url_lst, self.key, self.data,
-                                       json_data=self.json_data, user=self.user)
+                                       json_data=self.json_data, user=self.student)
         self.assertTrue(run_uuid)
 
         # Wait for Run Completion
         run = None
         status = ""
         while not status.startswith('complete'):
-            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            run = self.get_object(self.url_obj, run_uuid, user=self.student)
             self.assertTrue(run)
             self.assertTrue(run['status'])
             status = run['status']
@@ -1271,19 +1271,19 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         self.assertTrue(run['output'])
 
         # Delete Run
-        run = self.delete_object(self.url_obj, run_uuid, user=self.user)
+        run = self.delete_object(self.url_obj, run_uuid, user=self.student)
         self.assertIsNotNone(run)
 
         # Delete Submission
-        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.user)
+        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.student)
         self.assertIsNotNone(fle_sub)
 
         # Delete Input
-        fle_in1 = self.delete_object('/files/', fle_uuid_in1, user=self.user)
+        fle_in1 = self.delete_object('/files/', fle_uuid_in1, user=self.admin)
         self.assertIsNotNone(fle_sub)
 
         # Delete Solution
-        fle_sol = self.delete_object('/files/', fle_uuid_sol, user=self.user)
+        fle_sol = self.delete_object('/files/', fle_uuid_sol, user=self.admin)
         self.assertIsNotNone(fle_sol)
 
 
