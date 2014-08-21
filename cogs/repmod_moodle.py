@@ -4,6 +4,8 @@
 # Summer 2014
 # Univerity of Colorado
 
+import urllib
+
 import moodle.ws
 
 import config
@@ -62,4 +64,4 @@ class Reporter(object):
         print()
         print(grade)
         print(comment)
-        self.ws.mod_assign_save_grade(asn_id, usr_id, grade, comment=comment)
+        self.ws.mod_assign_save_grade(asn_id, usr_id, grade, comment=urllib.urlencode(comment))

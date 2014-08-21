@@ -16,8 +16,6 @@ def test(asn, sub, tst, run):
 
     try:
 
-        print("Test Print")
-
         # Setup Env
         env_type = asn['env']
         if env_type == 'local':
