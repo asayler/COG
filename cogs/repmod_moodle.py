@@ -54,4 +54,7 @@ class Reporter(object):
 
         asn_id = self.asn_id
         usr_id = user['moodle_id']
+        print()
+        print(grade)
+        print(comment)
         self.ws.mod_assign_save_grade(asn_id, usr_id, grade, comment=comment)
