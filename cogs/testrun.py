@@ -45,6 +45,7 @@ def test(asn, sub, tst, run):
             status = 'complete'
 
         # Report Results
+        # TODO: Add Better Reporter Error Handling
         a = auth.Auth()
         user = a.get_user(sub['owner'])
         grade = score
@@ -56,8 +57,7 @@ def test(asn, sub, tst, run):
 
         retcode = -1
         score = 0
-        #output = traceback.format_exc()
-        output = output
+        output = traceback.format_exc()
         status = "complete-exception"
         raise
 
