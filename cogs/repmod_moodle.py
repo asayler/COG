@@ -4,7 +4,7 @@
 # Summer 2014
 # Univerity of Colorado
 
-import time
+import string
 
 import moodle.ws
 
@@ -52,10 +52,7 @@ class Reporter(object):
         comment = comment.encode('ascii', 'replace')
         start = len(comment)/4 + len(comment)/8
         end = start + len(comment)/8
-        comment = comment[start:end]
-        print("comments = '{:s}'".format(comment))
-
-        time.sleep(1)
+        comment = comment[start:end].translate(string.maketrans("<>", "??"))
 
         warning = "\nWARNING: Output Truncated"
         max_len = (_MAX_COMMENT_LEN - len(warning))
