@@ -480,13 +480,3 @@ class AllowedGroups(GroupList):
     @classmethod
     def from_existing(cls, *args, **kwargs):
         raise NotImplementedError
-
-    # Override from_raw
-    @classmethod
-    def from_raw(cls, *args, **kwargs):
-
-        # Set Key
-        print(kwargs)
-
-        # Call Parent
-        return super(AllowedGroups, cls).from_raw(*args, **kwargs)
