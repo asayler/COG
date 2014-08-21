@@ -608,36 +608,47 @@ class CogsApiSubmissionTestCase(CogsApiObjectTests, CogsApiTestCase):
             self.delete_object('/files/', file_uuid, user=self.user)
 
 ## Run Tests ##
-class CogsApiRunTestCase(CogsApiObjectTests, CogsApiTestCase):
+
+class CogsApiRunBase(CogsApiObjectHelpers, CogsApiTestCase):
 
     def setUp(self):
 
         # Call Parent
-        super(CogsApiRunTestCase, self).setUp()
+        super(CogsApiRunBase, self).setUp()
 
-        # Set User
+        # Set Default User
         self.user = self.admin
+
+        # Setup Moodle Student
+        self.student = api.auth.create_user(cogs.test_common.USER_TESTDICT,
+                                            username=cogs.test_common.AUTHMOD_MOODLE_STUDENT_USERNAME,
+                                            password=cogs.test_common.AUTHMOD_MOODLE_STUDENT_PASSWORD,
+                                            authmod='moodle')
+        self.student_uuid = str(self.student.uuid).lower()
 
         # Create Assignment
         self.asn_key = 'assignments'
         self.asn_url = "/{:s}/".format(self.asn_key)
         self.asn_uuid = self.create_objects(self.asn_url, self.asn_key,
                                             cogs.test_common.ASSIGNMENT_TESTDICT,
-                                            json_data=True, user=self.user)
+                                            json_data=True, user=self.admin)
 
         # Create Test
         self.tst_key = 'tests'
         self.tst_url = "/{:s}/{:s}/{:s}/".format(self.asn_key, self.asn_uuid, self.tst_key)
         self.tst_uuid = self.create_objects(self.tst_url, self.tst_key,
                                             cogs.test_common.TEST_TESTDICT,
-                                            json_data=True, user=self.user)
+                                            json_data=True, user=self.admin)
+
 
         # Create Submission
         self.sub_key = 'submissions'
         self.sub_url = "/{:s}/{:s}/{:s}/".format(self.asn_key, self.asn_uuid, self.sub_key)
+        # Set Submit Permissions to Any
+        api.auth.add_allowed_groups('POST', self.sub_url, [api.cogs.auth.SPECIAL_GROUP_ANY])
         self.sub_uuid = self.create_objects(self.sub_url, self.sub_key,
                                             cogs.test_common.SUBMISSION_TESTDICT,
-                                            json_data=True, user=self.user)
+                                            json_data=True, user=self.student)
 
         # Set Params
         self.key = 'runs'
@@ -650,13 +661,32 @@ class CogsApiRunTestCase(CogsApiObjectTests, CogsApiTestCase):
     def tearDown(self):
 
         # Delete Submission
-        self.delete_object('/submissions/', self.sub_uuid, user=self.user)
+        url = "/{:s}/".format(self.sub_key)
+        self.delete_object(url, self.sub_uuid, user=self.user)
 
         # Delete Test
-        self.delete_object('/tests/', self.tst_uuid, user=self.user)
+        url = "/{:s}/".format(self.tst_key)
+        self.delete_object(url, self.tst_uuid, user=self.user)
 
         # Delete Assignment
-        self.delete_object('/assignments/', self.asn_uuid, user=self.user)
+        url = "/{:s}/".format(self.asn_key)
+        self.delete_object(url, self.asn_uuid, user=self.user)
+
+        # Delete Student
+        self.student.delete()
+
+        # Call Parent
+        super(CogsApiRunBase, self).tearDown()
+
+
+class CogsApiRunTestCase(CogsApiObjectTests, CogsApiRunBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(CogsApiRunTestCase, self).setUp()
+
+    def tearDown(self):
 
         # Call Parent
         super(CogsApiRunTestCase, self).tearDown()
@@ -681,55 +711,32 @@ class CogsApiRunTestCase(CogsApiObjectTests, CogsApiTestCase):
         self.assertIsNotNone(obj)
 
 ## Run Execute Tests ##
-class CogsApiRunExecuteTestCase(CogsApiObjectHelpers, CogsApiTestCase):
+class CogsApiRunExecuteTestCase(CogsApiRunBase):
 
     def setUp(self):
 
         # Call Parent
         super(CogsApiRunExecuteTestCase, self).setUp()
 
-        # Set User
-        self.user = self.admin
+        # Setup Reporter and Attach to Test
+        data = copy.copy(cogs.test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
+        data['asn_id'] = cogs.test_common.REPMOD_MOODLE_ASN
+        self.rpt_key = 'reporters'
+        self.rpt_url = "/{:s}/".format(self.rpt_key)
+        self.rpt_uuid = self.create_objects(self.rpt_url, self.rpt_key, data,
+                                            json_data=True, user=self.admin)
+        url = '/{:s}/{:s}/{:s}/'.format(self.tst_key, self.tst_uuid, self.rpt_key)
+        self.add_objects(url, self.rpt_key, [self.rpt_uuid], user=self.admin)
 
-        # Create Assignment
-        self.asn_key = 'assignments'
-        self.asn_url = "/{:s}/".format(self.asn_key)
-        self.asn_uuid = self.create_objects(self.asn_url, self.asn_key,
-                                            cogs.test_common.ASSIGNMENT_TESTDICT,
-                                            json_data=True, user=self.user)
-
-        # Create Test
-        self.tst_key = 'tests'
-        self.tst_url = "/{:s}/{:s}/{:s}/".format(self.asn_key, self.asn_uuid, self.tst_key)
-        self.tst_uuid = self.create_objects(self.tst_url, self.tst_key,
-                                            cogs.test_common.TEST_TESTDICT,
-                                            json_data=True, user=self.user)
-
-        # Create Submission
-        self.sub_key = 'submissions'
-        self.sub_url = "/{:s}/{:s}/{:s}/".format(self.asn_key, self.asn_uuid, self.sub_key)
-        self.sub_uuid = self.create_objects(self.sub_url, self.sub_key,
-                                            cogs.test_common.SUBMISSION_TESTDICT,
-                                            json_data=True, user=self.user)
-
-        # Set Params
-        self.key = 'runs'
-        self.url_lst = '/{:s}/{:s}/{:s}/'.format(self.sub_key, self.sub_uuid, self.key)
-        self.url_obj = '/{:s}/'.format(self.key)
-        self.data = copy.copy(cogs.test_common.RUN_TESTDICT)
-        self.data['test'] = self.tst_uuid
-        self.json_data = True
+        # Setup Permissions
+        api.auth.add_allowed_groups('POST', self.url_lst, [api.cogs.auth.SPECIAL_GROUP_ANY])
 
     def tearDown(self):
 
-        # Delete Submission
-        self.delete_object('/submissions/', self.sub_uuid, user=self.user)
-
-        # Delete Test
-        self.delete_object('/tests/', self.tst_uuid, user=self.user)
-
-        # Delete Assignment
-        self.delete_object('/assignments/', self.asn_uuid, user=self.user)
+        # Delete Reporter
+        url = "/{:s}/".format(self.rpt_key)
+        self.delete_object(url, self.rpt_uuid, user=self.admin)
 
         # Call Parent
         super(CogsApiRunExecuteTestCase, self).tearDown()
@@ -740,24 +747,25 @@ class CogsApiRunExecuteTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         data = copy.copy(cogs.test_common.TEST_TESTDICT)
         data['tester'] = 'script'
         tst = self.set_object('/tests/', self.tst_uuid, data,
-                              json_data=True, user=self.user)
+                              json_data=True, user=self.admin)
         self.assertTrue(tst)
 
         # Create Run
         run_uuid = self.create_objects(self.url_lst, self.key, self.data,
-                                       json_data=self.json_data, user=self.user)
+                                       json_data=self.json_data, user=self.student)
         self.assertTrue(run_uuid)
 
         # Wait for Run Completion
         run = None
         status = ""
         while not status.startswith('complete'):
-            run = self.get_object(self.url_obj, run_uuid, user=self.user)
+            run = self.get_object(self.url_obj, run_uuid, user=self.admin)
             self.assertTrue(run)
             self.assertTrue(run['status'])
             status = run['status']
             time.sleep(1)
 
+        print(run)
         # Check Object
         self.assertEqual(run['status'], 'complete-error')
         self.assertEqual(int(run['retcode']), -1)
