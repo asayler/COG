@@ -222,14 +222,14 @@ class Auth(object):
                 path = flask.request.path
                 method = flask.request.method
 
-                user_uuid = str(user.uuid).lower()
-                owner_uuid = None
+                user_uuid = str(user.uuid)
+                owner_uuid = getattr(flask.g, 'owner', None)
 
                 allowed = False
 
                 # Check if owner
                 if owner_uuid:
-                    if user_uuid == owner_uuid:
+                    if (user_uuid.lower() == owner_uuid.lower()):
                         allowed = True
 
                 # Check if User is in ADMIN Group
