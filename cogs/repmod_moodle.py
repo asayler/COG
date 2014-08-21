@@ -38,8 +38,6 @@ class Reporter(object):
         self.host = config.REPMOD_MOODLE_HOST
 
         # Setup WS
-        print()
-        print("Creating WS...")
         self.ws = moodle.ws.WS(self.host)
         self.ws.authenticate(config.REPMOD_MOODLE_USERNAME,
                              config.REPMOD_MOODLE_PASSWORD,
@@ -47,11 +45,11 @@ class Reporter(object):
 
     def file_report(self, user, grade, comment):
 
-        print()
-        print("Filing Report...")
-
         if user['auth'] != 'moodle':
             raise RepModMoodleError("Repmod requires users with authmod 'moodle'")
+
+        # Clean Comment
+        comment = comment.encode('ascii', 'replace')
 
         warning = "\nWARNING: Output Truncated"
         max_len = (_MAX_COMMENT_LEN - len(warning))
@@ -61,7 +59,4 @@ class Reporter(object):
 
         asn_id = self.asn_id
         usr_id = user['moodle_id']
-        print()
-        print(grade)
-        print(comment)
-        self.ws.mod_assign_save_grade(asn_id, usr_id, grade, comment="")
+        self.ws.mod_assign_save_grade(asn_id, usr_id, grade, comment=comment)
