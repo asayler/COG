@@ -767,10 +767,14 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             time.sleep(1)
 
         # Check Object
-        self.assertEqual(run['status'], 'complete-error')
-        self.assertEqual(int(run['retcode']), -1)
-        self.assertEqual(float(run['score']), 0)
-        self.assertTrue(run['output'])
+        try:
+            self.assertEqual(run['status'], 'complete-error')
+            self.assertEqual(int(run['retcode']), -1)
+            self.assertEqual(float(run['score']), 0)
+            self.assertTrue(run['output'])
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+            raise
 
         # Delete Object
         run = self.delete_object(self.url_obj, run_uuid, user=self.student)
@@ -814,10 +818,14 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             time.sleep(1)
 
         # Check Object
-        self.assertEqual(run['status'], 'complete')
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertEqual(float(run['score']), 0)
-        self.assertTrue(run['output'])
+        try:
+            self.assertEqual(run['status'], 'complete')
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertEqual(float(run['score']), 0)
+            self.assertTrue(run['output'])
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+            raise
 
         # Delete Run
         run = self.delete_object(self.url_obj, run_uuid, user=self.student)
@@ -878,10 +886,14 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             time.sleep(1)
 
         # Check Object
-        self.assertEqual(run['status'], 'complete')
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertEqual(float(run['score']), 10)
-        self.assertTrue(run['output'])
+        try:
+            self.assertEqual(run['status'], 'complete')
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertEqual(float(run['score']), 10)
+            self.assertTrue(run['output'])
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+            raise
 
         # Delete Run
         run = self.delete_object(self.url_obj, run_uuid, user=self.student)
@@ -946,10 +958,14 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             time.sleep(1)
 
         # Check Object
-        self.assertEqual(run['status'], 'complete')
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertLess(float(run['score']), 10)
-        self.assertTrue(run['output'])
+        try:
+            self.assertEqual(run['status'], 'complete')
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertLess(float(run['score']), 10)
+            self.assertTrue(run['output'])
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+            raise
 
         # Delete Run
         run = self.delete_object(self.url_obj, run_uuid, user=self.student)
@@ -988,10 +1004,14 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             time.sleep(1)
 
         # Check Object
-        self.assertEqual(run['status'], 'complete-error')
-        self.assertEqual(int(run['retcode']), -1)
-        self.assertEqual(float(run['score']), 0)
-        self.assertTrue(run['output'])
+        try:
+            self.assertEqual(run['status'], 'complete-error')
+            self.assertEqual(int(run['retcode']), -1)
+            self.assertEqual(float(run['score']), 0)
+            self.assertTrue(run['output'])
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+            raise
 
         # Delete Object
         run = self.delete_object(self.url_obj, run_uuid, user=self.student)
@@ -1035,10 +1055,14 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             time.sleep(1)
 
         # Check Object
-        self.assertEqual(run['status'], 'complete-error')
-        self.assertEqual(int(run['retcode']), -1)
-        self.assertEqual(float(run['score']), 0)
-        self.assertTrue(run['output'])
+        try:
+            self.assertEqual(run['status'], 'complete-error')
+            self.assertEqual(int(run['retcode']), -1)
+            self.assertEqual(float(run['score']), 0)
+            self.assertTrue(run['output'])
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+            raise
 
         # Delete Run
         run = self.delete_object(self.url_obj, run_uuid, user=self.student)
@@ -1099,10 +1123,14 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             time.sleep(1)
 
         # Check Object
-        self.assertEqual(run['status'], 'complete')
-        self.assertNotEqual(int(run['retcode']), 0)
-        self.assertEqual(float(run['score']), 0)
-        self.assertTrue(run['output'])
+        try:
+            self.assertEqual(run['status'], 'complete')
+            self.assertNotEqual(int(run['retcode']), 0)
+            self.assertEqual(float(run['score']), 0)
+            self.assertTrue(run['output'])
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+            raise
 
         # Delete Run
         run = self.delete_object(self.url_obj, run_uuid, user=self.student)
@@ -1180,10 +1208,14 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             time.sleep(1)
 
         # Check Object
-        self.assertEqual(run['status'], 'complete')
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertEqual(float(run['score']), 10)
-        self.assertTrue(run['output'])
+        try:
+            self.assertEqual(run['status'], 'complete')
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertEqual(float(run['score']), 10)
+            self.assertTrue(run['output'])
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+            raise
 
         # Delete Run
         run = self.delete_object(self.url_obj, run_uuid, user=self.student)
@@ -1265,10 +1297,14 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             time.sleep(1)
 
         # Check Object
-        self.assertEqual(run['status'], 'complete')
-        self.assertEqual(int(run['retcode']), 0)
-        self.assertLess(float(run['score']), 10)
-        self.assertTrue(run['output'])
+        try:
+            self.assertEqual(run['status'], 'complete')
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertLess(float(run['score']), 10)
+            self.assertTrue(run['output'])
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+            raise
 
         # Delete Run
         run = self.delete_object(self.url_obj, run_uuid, user=self.student)
