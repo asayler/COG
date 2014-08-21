@@ -58,7 +58,8 @@ def test(asn, sub, tst, run):
 
         retcode = -1
         score = 0
-        output = traceback.format_exc()
+        #output = traceback.format_exc()
+        output = output
         status = "complete-exception"
         raise
 
