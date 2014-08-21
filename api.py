@@ -11,6 +11,7 @@ import time
 import os
 import uuid
 import multiprocessing
+import functools
 
 import flask
 import flask.ext.httpauth
@@ -75,6 +76,30 @@ def verify_login(username, password):
         else:
             return False
 
+
+def get_owner(func_get):
+
+    def _decorator(func):
+
+        @functools.wraps(func)
+        def _wrapper(*args, **kwargs):
+
+            # Get UUID
+            obj_uuid = kwargs['obj_uuid']
+
+            # Get Object
+            obj = func_get(obj_uuid)
+
+            # Get Owner
+            flask.g.owner = obj.get('owner', None)
+
+            # Call Function
+            return func(*args, **kwargs)
+
+        return _wrapper
+
+    return _decorator
+
 ## Helper Functions ##
 
 def error_response(e, status):
@@ -136,10 +161,7 @@ def process_objects(func_list, func_create, key, create_stub=create_stub_json, *
 def process_object(func_get, obj_uuid, update_stub=update_stub_json):
 
     # Get Object
-    try:
-        obj = func_get(obj_uuid)
-    except cogs.structs.ObjectDNE as e:
-        return error_response(e, 404)
+    obj = func_get(obj_uuid)
 
     # Get Object Data
     if flask.request.method == 'GET':
@@ -238,6 +260,7 @@ def process_files():
 
 @app.route("/files/<obj_uuid>/", methods=['GET', 'DELETE'])
 @httpauth.login_required
+@get_owner(srv.get_file)
 @auth.requires_auth_route()
 def process_file(obj_uuid):
     return process_object(srv.get_file, obj_uuid, update_stub=None)
@@ -252,6 +275,7 @@ def process_reporters():
 
 @app.route("/reporters/<obj_uuid>/", methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
+@get_owner(srv.get_reporter)
 @auth.requires_auth_route()
 def process_reporter(obj_uuid):
     return process_object(srv.get_reporter, obj_uuid)
@@ -266,34 +290,31 @@ def process_assignments():
 
 @app.route("/assignments/<obj_uuid>/", methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
+@get_owner(srv.get_assignment)
 @auth.requires_auth_route()
 def process_assignment(obj_uuid):
     return process_object(srv.get_assignment, obj_uuid)
 
 @app.route("/assignments/<obj_uuid>/tests/", methods=['GET', 'POST'])
 @httpauth.login_required
+@get_owner(srv.get_assignment)
 @auth.requires_auth_route()
 def process_assignment_tests(obj_uuid):
 
     # Get Assignment
-    try:
-        asn = srv.get_assignment(obj_uuid)
-    except cogs.structs.ObjectDNE as e:
-        return error_response(e, 404)
+    asn = srv.get_assignment(obj_uuid)
 
     # Process Tests
     return process_objects(asn.list_tests, asn.create_test, _TESTS_KEY)
 
 @app.route("/assignments/<obj_uuid>/submissions/", methods=['GET', 'POST'])
 @httpauth.login_required
+@get_owner(srv.get_assignment)
 @auth.requires_auth_route()
 def process_assignment_submissions(obj_uuid):
 
     # Get Assignment
-    try:
-        asn = srv.get_assignment(obj_uuid)
-    except cogs.structs.ObjectDNE as e:
-        return error_response(e, 404)
+    asn = srv.get_assignment(obj_uuid)
 
     # Process Submissions
     return process_objects(asn.list_submissions, asn.create_submission, _SUBMISSIONS_KEY)
@@ -308,34 +329,31 @@ def process_tests():
 
 @app.route("/tests/<obj_uuid>/", methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
+@get_owner(srv.get_test)
 @auth.requires_auth_route()
 def process_test(obj_uuid):
     return process_object(srv.get_test, obj_uuid)
 
 @app.route("/tests/<obj_uuid>/files/", methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
+@get_owner(srv.get_test)
 @auth.requires_auth_route()
 def process_test_files(obj_uuid):
 
     # Get Test
-    try:
-        tst = srv.get_test(obj_uuid)
-    except cogs.structs.ObjectDNE as e:
-        return error_response(e, 404)
+    tst = srv.get_test(obj_uuid)
 
     # Process Files
     return process_uuid_list(tst.list_files, tst.add_files, tst.rem_files, _FILES_KEY)
 
 @app.route("/tests/<obj_uuid>/reporters/", methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
+@get_owner(srv.get_test)
 @auth.requires_auth_route()
 def process_test_reporters(obj_uuid):
 
     # Get Test
-    try:
-        tst = srv.get_test(obj_uuid)
-    except cogs.structs.ObjectDNE as e:
-        return error_response(e, 404)
+    tst = srv.get_test(obj_uuid)
 
     # Process Reporters
     return process_uuid_list(tst.list_reporters, tst.add_reporters, tst.rem_reporters, _REPORTERS_KEY)
@@ -350,34 +368,31 @@ def process_submissions():
 
 @app.route("/submissions/<obj_uuid>/", methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
+@get_owner(srv.get_submission)
 @auth.requires_auth_route()
 def process_submission(obj_uuid):
     return process_object(srv.get_submission, obj_uuid)
 
 @app.route("/submissions/<obj_uuid>/files/", methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
+@get_owner(srv.get_submission)
 @auth.requires_auth_route()
 def process_submission_files(obj_uuid):
 
     # Get Submission
-    try:
-        sub = srv.get_submission(obj_uuid)
-    except cogs.structs.ObjectDNE as e:
-        return error_response(e, 404)
+    sub = srv.get_submission(obj_uuid)
 
     # Process Files
     return process_uuid_list(sub.list_files, sub.add_files, sub.rem_files, _FILES_KEY)
 
 @app.route("/submissions/<obj_uuid>/runs/", methods=['GET', 'POST'])
 @httpauth.login_required
+@get_owner(srv.get_submission)
 @auth.requires_auth_route()
 def process_submission_runs(obj_uuid):
 
     # Get Submission
-    try:
-        sub = srv.get_submission(obj_uuid)
-    except cogs.structs.ObjectDNE as e:
-        return error_response(e, 404)
+    sub = srv.get_submission(obj_uuid)
 
     # Process Runs
     return process_objects(sub.list_runs, sub.execute_run, _RUNS_KEY, workers=workers)
@@ -392,6 +407,7 @@ def process_runs():
 
 @app.route("/runs/<obj_uuid>/", methods=['GET', 'DELETE'])
 @httpauth.login_required
+@get_owner(srv.get_run)
 @auth.requires_auth_route()
 def process_run(obj_uuid):
     return process_object(srv.get_run, obj_uuid)
@@ -403,6 +419,14 @@ def process_run(obj_uuid):
 def not_authorized(error):
     err = { 'status': 401,
             'message': str(error) }
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
+
+@app.errorhandler(cogs.structs.ObjectDNE)
+def not_found(error=False):
+    err = { 'status': 404,
+            'message': "Not Found: {:s}".format(flask.request.url) }
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
