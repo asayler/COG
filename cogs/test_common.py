@@ -40,8 +40,6 @@ TEST_ADMIN_USERNAME = "testadmin"
 TEST_ADMIN_PASSWORD = "testpassword"
 
 # Set Override Default Vals
-TEST_REDIS_HOST = "localhost"
-TEST_REDIS_PORT = 6379
 TEST_REDIS_DB = 5
 TEST_FILE_PATH = "/tmp/cogs/test_files"
 TEST_MOODLE_HOST = "https://moodle-test.cs.colorado.edu"
@@ -71,8 +69,6 @@ ADMIN_PASSWORD = os.environ.get('COGS_TEST_ADMIN_PASSWORD', TEST_ADMIN_PASSWORD)
 REPMOD_MOODLE_ASN = os.environ.get('COGS_TEST_REPMOD_MOODLE_ASN', TEST_REPMOD_MOODLE_ASN)
 
 # Get Override Test Env Vars
-REDIS_HOST = os.environ.get('COGS_TEST_REDIS_HOST', TEST_REDIS_HOST)
-REDIS_PORT = int(os.environ.get('COGS_TEST_REDIS_PORT', TEST_REDIS_PORT))
 REDIS_DB = int(os.environ.get('COGS_TEST_REDIS_DB', TEST_REDIS_DB))
 FILE_PATH = os.environ.get('COGS_TEST_FILE_PATH', TEST_FILE_PATH)
 AUTHMOD_MOODLE_HOST = os.environ.get('COGS_TEST_AUTHMOD_MOODLE_HOST', TEST_AUTHMOD_MOODLE_HOST)
@@ -91,8 +87,6 @@ else:
     REPMOD_MOODLE_PASSWORD = os.environ['COGS_TEST_REPMOD_MOODLE_PASSWORD']
 
 # Set Override DB Vars
-os.environ['COGS_REDIS_HOST'] = REDIS_HOST
-os.environ['COGS_REDIS_PORT'] = str(REDIS_PORT)
 os.environ['COGS_REDIS_DB'] = str(REDIS_DB)
 os.environ['COGS_FILE_PATH'] = str(FILE_PATH)
 os.environ['COGS_AUTHMOD_MOODLE_HOST'] = AUTHMOD_MOODLE_HOST
@@ -104,9 +98,10 @@ os.environ['COGS_REPMOD_MOODLE_PASSWORD'] = REPMOD_MOODLE_PASSWORD
 reload(config)
 
 # Create DB
-db = redis.StrictRedis(host=REDIS_HOST,
-                       port=REDIS_PORT,
-                       db=REDIS_DB)
+db = redis.StrictRedis(host=config.REDIS_HOST,
+                       port=config.REDIS_PORT,
+                       db=config.REDIS_DB,
+                       password=config.REDIS_PASSWORD)
 
 
 class CogsTestError(Exception):
