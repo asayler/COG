@@ -4,17 +4,25 @@
 # Summer 2014
 # Univerity of Colorado
 
+import ConfigParser
 import os
+
+config = ConfigParser.SafeConfigParser(allow_no_value=True)
+
+# Sections
+SEC_REDIS = "redis"
+config.add_section(SEC_REDIS)
 
 # Set Paths
 MOD_PATH = os.path.dirname(os.path.realpath(__file__))
 ROOT_PATH = os.path.realpath("{:s}/..".format(MOD_PATH))
+CONF_PATH = os.path.realpath("{:s}/{:s}".format(ROOT_PATH, "cog.conf"))
 
 # Set Default Vals
-DEFAULT_REDIS_HOST = "localhost"
-DEFAULT_REDIS_PORT = 6379
-DEFAULT_REDIS_DB = 4
-DEFAULT_REDIS_PASSWORD = None
+config.set(SEC_REDIS, 'HOST', "localhost")
+config.set(SEC_REDIS, 'PORT', "6379")
+config.set(SEC_REDIS, 'DB', "4")
+config.set(SEC_REDIS, 'PASSWORD', None)
 DEFAULT_FILE_PATH = os.path.realpath("{:s}/files".format(ROOT_PATH))
 DEFAULT_SCRIPT_PATH = os.path.realpath("{:s}/scripts".format(ROOT_PATH))
 DEFAULT_ENV_LOCAL_TMP_PATH = "/tmp/cogs"
@@ -28,11 +36,14 @@ DEFAULT_REPMOD_MOODLE_SERVICE = None
 DEFAULT_REPMOD_MOODLE_USERNAME = None
 DEFAULT_REPMOD_MOODLE_PASSWORD = None
 
-# Get Env Vars
-REDIS_HOST = os.environ.get('COGS_REDIS_HOST', DEFAULT_REDIS_HOST)
-REDIS_PORT = int(os.environ.get('COGS_REDIS_PORT', DEFAULT_REDIS_PORT))
-REDIS_DB = int(os.environ.get('COGS_REDIS_DB', DEFAULT_REDIS_DB))
-REDIS_PASSWORD = os.environ.get('COGS_REDIS_PASSWORD', DEFAULT_REDIS_PASSWORD)
+# Read Config File
+config.read(CONF_PATH)
+
+# Get Env Var Overrides
+REDIS_HOST = os.environ.get('COGS_REDIS_HOST', config.get(SEC_REDIS, 'HOST'))
+REDIS_PORT = int(os.environ.get('COGS_REDIS_PORT', config.get(SEC_REDIS, 'PORT')))
+REDIS_DB = int(os.environ.get('COGS_REDIS_DB', config.get(SEC_REDIS, 'DB')))
+REDIS_PASSWORD = os.environ.get('COGS_REDIS_PASSWORD', config.get(SEC_REDIS, 'PASSWORD'))
 FILE_PATH = os.environ.get('COGS_FILE_PATH', DEFAULT_FILE_PATH)
 SCRIPT_PATH = os.environ.get('COGS_SCRIPT_PATH', DEFAULT_SCRIPT_PATH)
 ENV_LOCAL_TMP_PATH = os.environ.get('COGS_ENV_LOCAL_TMP_PATH', DEFAULT_ENV_LOCAL_TMP_PATH)
