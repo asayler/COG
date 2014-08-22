@@ -12,6 +12,7 @@ import os
 import time
 import werkzeug
 import mimetypes
+import sys
 
 import config
 
@@ -656,7 +657,7 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         # TODO Prevent delete while still running
         if not force:
             while not self.is_complete():
-                print("Waiting for run to complete...")
+                sys.stderr.write("Waiting for run to complete...")
                 time.sleep(1)
 
         # Remove from submission
