@@ -111,7 +111,7 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
     def setup(cls):
 
         # Create File Path Directory if not existing
-        file_dir = os.path.abspath("{:s}".format(config.FILE_PATH))
+        file_dir = os.path.abspath("{:s}".format(config.FILESTORAGE_PATH))
         if not os.path.isdir(file_dir):
             os.makedirs(file_dir)
 
@@ -155,7 +155,7 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 
         # Set Path
         if dst is None:
-            fle['path'] = os.path.abspath("{:s}/{:s}".format(config.FILE_PATH, repr(fle)))
+            fle['path'] = os.path.abspath("{:s}/{:s}".format(config.FILESTORAGE_PATH, repr(fle)))
         else:
             fle['path'] = os.path.abspath("{:s}".format(dst))
 
