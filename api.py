@@ -19,6 +19,8 @@ import flask.ext.httpauth
 
 import redis
 
+import cogs.config
+
 import cogs.auth
 import cogs.structs
 
@@ -46,22 +48,20 @@ workers = multiprocessing.Pool(10)
 
 ### Logging ###
 
-import logging
+if cogs.config.LOGGING_ENABLED:
 
-api_logger = logging.getLogger(__name__)
-api_logger.setLevel(logging.DEBUG)
+    import logging
 
-loggers = [api_logger, app.logger,
-           logging.getLogger('cogs.auth'),
-           logging.getLogger('cogs.authmod_moodle')]
+    loggers = [app.logger, logging.getLogger('cogs')]
 
-formatter_line = logging.Formatter('%(asctime)s %(levelname)s: %(module)s - %(message)s')
+    formatter_line = logging.Formatter('%(levelname)s: %(module)s - %(message)s')
 
-handler_stream = logging.StreamHandler()
-handler_stream.setFormatter(formatter_line)
+    handler_stream = logging.StreamHandler()
+    handler_stream.setFormatter(formatter_line)
+    handler_stream.setLevel(logging.INFO)
 
-for logger in loggers:
-    logger.addHandler(handler_stream)
+    for logger in loggers:
+        logger.addHandler(handler_stream)
 
 
 ### Functions ###

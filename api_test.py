@@ -28,6 +28,7 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
 
         # Set App to Testing Mode
         api.app.testing = True
+        api.app.debug = True
 
         # Create Test Client
         self.app = api.app.test_client()

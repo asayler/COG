@@ -180,7 +180,7 @@ class Auth(object):
 
     def auth_userpass_mod(self, username, password, auth_mod):
 
-        logger.info("Authenticating {:s} via {:s}".format(username, auth_mod))
+        logger.debug("Authenticating {:s} via {:s}".format(username, auth_mod))
 
         if auth_mod == 'moodle':
             authenticator = authmod_moodle.Authenticator()
@@ -238,13 +238,13 @@ class Auth(object):
                 # Check if owner
                 if owner_uuid:
                     if (user_uuid.lower() == owner_uuid.lower()):
-                        logger.info("ALLOW OWNER {:s}".format(auth_info))
+                        logger.debug("ALLOW OWNER {:s}".format(auth_info))
                         allowed = True
 
                 # Check if User is in ADMIN Group
                 if not allowed:
                     if user_uuid in self.list_admins():
-                        logger.info("ALLOW ADMIN {:s}".format(auth_info))
+                        logger.debug("ALLOW ADMIN {:s}".format(auth_info))
                         allowed = True
 
                 # Setup Group List
@@ -254,7 +254,7 @@ class Auth(object):
                 # Check if ANY is an Allowed Group
                 if not allowed:
                     if SPECIAL_GROUP_ANY in group_uuids:
-                        logger.info("ALLOW GROUP_ANY {:s}".format(auth_info))
+                        logger.debug("ALLOW GROUP_ANY {:s}".format(auth_info))
                         allowed = True
 
                 # Check if User is in an Allowed Group
@@ -262,7 +262,7 @@ class Auth(object):
                     for group_uuid in group_uuids:
                         group = self.get_group(group_uuid)
                         if user_uuid in group.list_users():
-                            logger.info("ALLOW GROUP_{:s} {:s}".format(group['name'], auth_info))
+                            logger.debug("ALLOW GROUP_{:s} {:s}".format(group['name'], auth_info))
                             allowed = True
                             break
 

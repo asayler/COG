@@ -14,6 +14,8 @@ SEC_REDIS = "redis"
 config.add_section(SEC_REDIS)
 SEC_FILESTORAGE = "filestorage"
 config.add_section(SEC_FILESTORAGE)
+SEC_LOGGING = "logging"
+config.add_section(SEC_LOGGING)
 SEC_REPMOD_MOODLE = "repmod_moodle"
 config.add_section(SEC_REPMOD_MOODLE)
 SEC_AUTHMOD_MOODLE = "authmod_moodle"
@@ -30,6 +32,7 @@ config.set(SEC_REDIS, 'PORT', "6379")
 config.set(SEC_REDIS, 'DB', "4")
 config.set(SEC_REDIS, 'PASSWORD', None)
 config.set(SEC_FILESTORAGE, 'PATH', "{:s}/files".format(ROOT_PATH))
+config.set(SEC_LOGGING, 'ENABLED', "True")
 config.set(SEC_AUTHMOD_MOODLE, 'HOST', None)
 config.set(SEC_AUTHMOD_MOODLE, 'SERVICE', None)
 config.set(SEC_REPMOD_MOODLE, 'HOST', None)
@@ -52,6 +55,8 @@ REDIS_DB = int(os.environ.get('COGS_REDIS_DB', config.get(SEC_REDIS, 'DB')))
 REDIS_PASSWORD = os.environ.get('COGS_REDIS_PASSWORD', config.get(SEC_REDIS, 'PASSWORD'))
 FILESTORAGE_PATH = os.environ.get('COGS_FILESTORAGE_PATH', config.get(SEC_FILESTORAGE, 'PATH'))
 FILESTORAGE_PATH = os.path.realpath(FILESTORAGE_PATH)
+LOGGING_ENABLED = os.environ.get('COGS_LOGGING_ENABLED', config.get(SEC_LOGGING, 'ENABLED'))
+LOGGING_ENABLED = LOGGING_ENABLED.lower() in ['true', 'yes', 'on', '1']
 AUTHMOD_MOODLE_HOST = os.environ.get('COGS_AUTHMOD_MOODLE_HOST',
                                      config.get(SEC_AUTHMOD_MOODLE, 'HOST'))
 AUTHMOD_MOODLE_SERVICE = os.environ.get('COGS_AUTHMOD_MOODLE_SERVICE',
