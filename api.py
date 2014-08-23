@@ -16,6 +16,7 @@ import sys
 
 import flask
 import flask.ext.httpauth
+import flask.ext.cors
 
 import redis
 
@@ -37,9 +38,11 @@ _SUBMISSIONS_KEY = "submissions"
 _RUNS_KEY = "runs"
 _TOKEN_KEY = "token"
 
+
 ### Global Setup ###
 
 app = flask.Flask(__name__)
+cors = flask.ext.cors.CORS(app, headers="Content-Type")
 httpauth = flask.ext.httpauth.HTTPBasicAuth()
 srv = cogs.structs.Server()
 auth = cogs.auth.Auth()
