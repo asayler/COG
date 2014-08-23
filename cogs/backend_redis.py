@@ -123,8 +123,10 @@ class Hash(collections.MutableMapping, TypedObject):
         """New Constructor"""
 
         # Check Input
+        if (type(data) != dict):
+            raise TypeError("Data must be a list or set")
         if not data:
-            raise PersistentObjectError("Input dict must not be None or empty")
+            raise ValueError("Input must not be empty")
 
         # Call Parent
         obj = super(Hash, cls).from_new(**kwargs)
@@ -146,14 +148,14 @@ class Hash(collections.MutableMapping, TypedObject):
         for key in db.hkeys(self.full_key):
             yield key
 
-    def __getitem__(self, k):
+    def __getitem__(self, key):
         """Get Dict Item"""
-        ret = db.hget(self.full_key, k)
+        ret = db.hget(self.full_key, key)
         return ret
 
-    def __setitem__(self, k, v):
+    def __setitem__(self, key, val):
         """Set Dict Item"""
-        ret = db.hset(self.full_key, k, v)
+        ret = db.hset(self.full_key, key, val)
         return ret
 
     def __delitem__(self, key):
@@ -170,11 +172,17 @@ class Hash(collections.MutableMapping, TypedObject):
         ret = db.hgetall(self.full_key)
         return ret
 
-    def set_dict(self, d):
+    def set_dict(self, data):
         """Set Full Dict"""
-        if not d:
-            raise PersistentObjectError("Input dict must not be None or empty")
-        ret = db.hmset(self.full_key, d)
+
+        # Check Input
+        if (type(data) != dict):
+            raise TypeError("Data must be a list or set")
+        if not data:
+            raise ValueError("Input must not be empty")
+
+        # Update Object
+        ret = db.hmset(self.full_key, data)
         if not ret:
             raise PersistentObjectError("Set Failed")
 
@@ -265,8 +273,10 @@ class Set(collections.MutableSet, TypedObject):
         """New Constructor"""
 
         # Check Input
+        if not ((type(vals) == list) or (type(vals) == set)):
+            raise TypeError("Vals must be a list or set")
         if not vals:
-            raise PersistentObjectError("Input set must not be None or empty")
+            raise ValueError("Input must not be empty")
 
         # Call Parent
         obj = super(Set, cls).from_new(**kwargs)
@@ -309,10 +319,22 @@ class Set(collections.MutableSet, TypedObject):
     def add_vals(self, vals):
         """Add Vals to Set"""
 
+        # Check Input
+        if not ((type(vals) == list) or (type(vals) == set)):
+            raise TypeError("Vals must be a list or set")
+        if not vals:
+            raise ValueError("Input must not be empty")
+
         return db.sadd(self.full_key, *vals)
 
     def del_vals(self, vals):
         """Remove Vals from Set"""
+
+        # Check Input
+        if not ((type(vals) == list) or (type(vals) == set)):
+            raise TypeError("Vals must be a list or set")
+        if not vals:
+            raise ValueError("Input must not be empty")
 
         return db.srem(self.full_key, *vals)
 

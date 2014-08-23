@@ -303,11 +303,11 @@ class RedisHashTestCase(BackendRedisTestCase):
 
         # Test Empty Dict w/o Key
         data = {}
-        self.assertRaises(backend.PersistentObjectError, self.HashFactory.from_new, data)
+        self.assertRaises(ValueError, self.HashFactory.from_new, data)
 
         # Test Empty Dict w/ Key
         data = {}
-        self.assertRaises(backend.PersistentObjectError, self.HashFactory.from_new, data, key=key)
+        self.assertRaises(ValueError, self.HashFactory.from_new, data, key=key)
 
         # Test Non-Empty Dict w/o Key
         data = copy.deepcopy(test_common.DUMMY_TESTDICT)
@@ -542,7 +542,7 @@ class RedisUUIDHashTestCase(BackendRedisTestCase):
 
         # Test Empty Dict
         d = {}
-        self.assertRaises(backend.PersistentObjectError, self.UUIDHashFactory.from_new, d)
+        self.assertRaises(ValueError, self.UUIDHashFactory.from_new, d)
 
         # Test Non-Empty Dict w/o Key
         d = copy.deepcopy(test_common.DUMMY_TESTDICT)
@@ -582,11 +582,11 @@ class RedisSetTestCase(BackendRedisTestCase):
 
         # Test Empty Set w/o Key
         v = set([])
-        self.assertRaises(backend.PersistentObjectError, self.SetFactory.from_new, v)
+        self.assertRaises(ValueError, self.SetFactory.from_new, v)
 
         # Test Empty Dict w/ Key
         v = set([])
-        self.assertRaises(backend.PersistentObjectError, self.SetFactory.from_new, v, key=key)
+        self.assertRaises(ValueError, self.SetFactory.from_new, v, key=key)
 
         # Test Non-Empty Dict w/o Key
         v = set(['a', 'b', 'c'])
@@ -701,7 +701,7 @@ class RedisUUIDSetTestCase(BackendRedisTestCase):
 
         # Test Empty Set
         v = set([])
-        self.assertRaises(backend.PersistentObjectError, self.UUIDSetFactory.from_new, v)
+        self.assertRaises(ValueError, self.UUIDSetFactory.from_new, v)
 
         # Test Non-Empty Dict w/o Key
         v = set(['a', 'b', 'c'])
