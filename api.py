@@ -170,10 +170,7 @@ def process_objects(func_list, func_create, key, create_stub=create_stub_json, *
 
     # Create Object
     elif flask.request.method == 'POST':
-        try:
-            obj_lst = create_stub(func_create, **kwargs)
-        except KeyError as e:
-            return error_response(e, 400)
+        obj_lst = create_stub(func_create, **kwargs)
 
     # Bad Method
     else:
@@ -194,10 +191,7 @@ def process_object(func_get, obj_uuid, update_stub=update_stub_json):
 
     # Update Object Data
     elif flask.request.method == 'PUT':
-        try:
-            obj_dict = update_stub(obj)
-        except KeyError as e:
-            return error_response(e, 400)
+        obj_dict = update_stub(obj)
 
     # Delete Object
     elif flask.request.method == 'DELETE':
@@ -464,6 +458,30 @@ def not_authorized(error):
 def not_found(error=False):
     err = { 'status': 404,
             'message': "Not Found: {:s}".format(flask.request.url) }
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
+
+@app.errorhandler(KeyError)
+def bad_key(error):
+    err = { 'status': 400,
+            'message': "{:s}".format(error) }
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
+
+@app.errorhandler(ValueError)
+def bad_key(error):
+    err = { 'status': 400,
+            'message': "{:s}".format(error) }
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
+
+@app.errorhandler(TypeError)
+def bad_key(error):
+    err = { 'status': 400,
+            'message': "{:s}".format(error) }
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
