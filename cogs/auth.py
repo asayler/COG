@@ -12,6 +12,7 @@ import os
 import hashlib
 import uuid
 import functools
+import logging
 
 import flask
 
@@ -20,6 +21,9 @@ import backend_redis as backend
 import authmod_moodle
 import authmod_test
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.NullHandler())
 
 ### Constants ###
 
@@ -175,6 +179,9 @@ class Auth(object):
             return None
 
     def auth_userpass_mod(self, username, password, auth_mod):
+
+        logger.info("Authenticating {:s} via {:s}".format(username, auth_mod))
+
         if auth_mod == 'moodle':
             authenticator = authmod_moodle.Authenticator()
             moodle_user = authenticator.auth_user(username, password)
@@ -226,15 +233,18 @@ class Auth(object):
                 owner_uuid = getattr(flask.g, 'owner', None)
 
                 allowed = False
+                auth_info = "{:s} for {:s} at {:s}".format(user['username'], method, path)
 
                 # Check if owner
                 if owner_uuid:
                     if (user_uuid.lower() == owner_uuid.lower()):
+                        logger.info("ALLOW OWNER {:s}".format(auth_info))
                         allowed = True
 
                 # Check if User is in ADMIN Group
                 if not allowed:
                     if user_uuid in self.list_admins():
+                        logger.info("ALLOW ADMIN {:s}".format(auth_info))
                         allowed = True
 
                 # Setup Group List
@@ -244,6 +254,7 @@ class Auth(object):
                 # Check if ANY is an Allowed Group
                 if not allowed:
                     if SPECIAL_GROUP_ANY in group_uuids:
+                        logger.info("ALLOW GROUP_ANY {:s}".format(auth_info))
                         allowed = True
 
                 # Check if User is in an Allowed Group
@@ -251,6 +262,7 @@ class Auth(object):
                     for group_uuid in group_uuids:
                         group = self.get_group(group_uuid)
                         if user_uuid in group.list_users():
+                            logger.info("ALLOW GROUP_{:s} {:s}".format(group['name'], auth_info))
                             allowed = True
                             break
 
@@ -258,6 +270,7 @@ class Auth(object):
                 if allowed:
                     return func(*args, **kwargs)
                 else:
+                    logger.info("DENY {:s} {:s}".format(group['name'], auth_info))
                     raise UserNotAuthorizedError(user_uuid, method, path)
 
             return _wrapper
