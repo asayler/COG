@@ -2,6 +2,8 @@
 
 GET     /                                               Welcome Message
 
+GET     /tokens/                                        Get User Auth Token
+
 GET     /files/                                         List All Files
 POST    /files/                                         Create New File
 GET     /files/<ID>/                                    Show File

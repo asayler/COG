@@ -35,7 +35,7 @@ _ASSIGNMENTS_KEY = "assignments"
 _TESTS_KEY = "tests"
 _SUBMISSIONS_KEY = "submissions"
 _RUNS_KEY = "runs"
-
+_TOKEN_KEY = "token"
 
 ### Global Setup ###
 
@@ -270,7 +270,19 @@ def get_root():
 
 ## Access Control Endpoints ##
 
-# ToDo: All of Them...
+@app.route("/tokens/", methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def get_token():
+
+    # Get Token
+    token = flask.g.user['token']
+
+    # Return Token
+    out = {str(_TOKEN_KEY): str(token)}
+    return flask.jsonify(out)
+
+# ToDo: User and Group Control
 
 ## File Endpoints ##
 

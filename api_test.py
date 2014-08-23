@@ -370,6 +370,24 @@ class CogsApiRootTestCase(CogsApiTestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data, api._MSG_ROOT)
 
+## Auth Tests ##
+class CogsApiAuthTestCase(CogsApiTestCase):
+
+    def setUp(self):
+        super(CogsApiAuthTestCase, self).setUp()
+
+    def tearDown(self):
+        super(CogsApiAuthTestCase, self).tearDown()
+
+    def test_token_get(self):
+        res = self.open_user('GET', '/tokens/', user=self.admin)
+        self.assertEqual(res.status_code, 200)
+        res_obj = json.loads(res.data)
+        self.assertTrue(res_obj)
+        res_keys = res_obj.keys()
+        self.assertEqual(len(res_keys), 1)
+        token = res_obj['token']
+        self.assertEqual(token, self.admin['token'])
 
 ## File Tests ##
 class CogsApiFileTestCase(CogsApiObjectTests, CogsApiTestCase):
