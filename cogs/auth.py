@@ -270,7 +270,7 @@ class Auth(object):
                 if allowed:
                     return func(*args, **kwargs)
                 else:
-                    logger.info("DENY {:s} {:s}".format(group['name'], auth_info))
+                    logger.info("DENY {:s}".format(auth_info))
                     raise UserNotAuthorizedError(user_uuid, method, path)
 
             return _wrapper
