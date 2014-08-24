@@ -42,7 +42,7 @@ _TOKEN_KEY = "token"
 ### Global Setup ###
 
 app = flask.Flask(__name__)
-cors = flask.ext.cors.CORS(app, headers="Content-Type")
+cors = flask.ext.cors.CORS(app, headers=["Content-Type", "Authorization"])
 httpauth = flask.ext.httpauth.HTTPBasicAuth()
 srv = cogs.structs.Server()
 auth = cogs.auth.Auth()
@@ -258,8 +258,6 @@ def process_uuid_list(func_list, func_add, func_remove, key):
 
 @app.route("/",
            methods=['GET'])
-@httpauth.login_required
-@auth.requires_auth_route()
 def get_root():
 
     res = _MSG_ROOT
