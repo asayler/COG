@@ -225,10 +225,7 @@ def process_uuid_list(func_list, func_add, func_remove, key):
     elif flask.request.method == 'PUT':
         in_obj = flask.request.get_json(force=True)
         in_lst = list(in_obj[key])
-        try:
-            add_lst = sanitize_uuid_list(in_lst)
-        except ValueError as e:
-            return (None, error_response(e, 400))
+        add_lst = sanitize_uuid_list(in_lst)
         func_add(add_lst)
         out_lst = list(func_list())
 
@@ -236,10 +233,7 @@ def process_uuid_list(func_list, func_add, func_remove, key):
     elif flask.request.method == 'DELETE':
         in_obj = flask.request.get_json(force=True)
         in_lst = list(in_obj[key])
-        try:
-            rem_lst = sanitize_uuid_list(in_lst)
-        except ValueError as e:
-            return (None, error_response(e, 400))
+        rem_lst = sanitize_uuid_list(in_lst)
         func_remove(rem_lst)
         out_lst = list(func_list())
 
