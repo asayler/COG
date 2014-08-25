@@ -14,64 +14,65 @@ import auth
 
 def test(asn, sub, tst, run):
 
+    # Setup Env
     try:
-
-        # Setup Env
         env_type = asn['env']
         if env_type == 'local':
             env = env_local.Env(asn, sub, tst, run)
         else:
             raise Exception("Unknown env type {:s}".format(env_type))
-
-        # Setup Tester
-        tester_type = tst['tester']
-        if tester_type == 'script':
-            tester = tester_script.Tester(env, tst.get_dict())
-        elif tester_type == 'io':
-            tester = tester_io.Tester(env, tst.get_dict())
-        else:
-            raise Exception("Unknown tester type {:s}".format(tester_type))
-
-        # Run Test
-        run['status'] = 'running'
-        try:
-            retcode, score, output = tester.test()
-        except Exception as e:
-            retcode = -1
-            score = 0
-            output = str(e)
-            status = 'complete-error'
-        else:
-            status = 'complete'
-
-        # Report Results
-        # TODO: Add Better Reporter Error Handling
-        a = auth.Auth()
-        user = a.get_user(sub['owner'])
-        grade = score
-        comments = output
-        for rpt in tst.get_reporters():
-            rpt.file_report(user, grade, comments)
-
     except Exception as e:
-
         retcode = -1
         score = 0
         output = traceback.format_exc()
-        status = "complete-exception"
-        raise
+        status = "complete-exception-env"
+    else:        
+        # Setup Tester
+        try:
+            tester_type = tst['tester']
+            if tester_type == 'script':
+                tester = tester_script.Tester(env, tst.get_dict())
+            elif tester_type == 'io':
+                tester = tester_io.Tester(env, tst.get_dict())
+            else:
+                raise Exception("Unknown tester type {:s}".format(tester_type))
+        except Exception as e:
+            retcode = -1
+            score = 0
+            output = traceback.format_exc()
+            status = "complete-exception-tst"
+        else:
+            # Run Test
+            try:
+                run['status'] = 'running'
+                retcode, score, output = tester.test()
+            except Exception as e:
+                retcode = -1
+                score = 0
+                output = str(e)
+                status = 'complete-error'
+            else:
+                status = 'complete'
+                retcode = str(retcode)
+                score = str(score)
+                output = str(output)
 
-    else:
-
-        retcode = str(retcode)
-        score = str(score)
-        output = str(output)
-
-    finally:
-
+                # Report Results
+                a = auth.Auth()
+                user = a.get_user(sub['owner'])
+                grade = score
+                comments = output
+                for rpt in tst.get_reporters():
+                    try:
+                        rpt.file_report(user, grade, comments)
+                    except Exception as e:
+                        retcode = -1
+                        score = 0
+                        output = traceback.format_exc()
+                        status = "complete-exception-reporter"
         # Cleanup
         env.close()
-
+    finally:
         # Update Run
         run['retcode'] = retcode
         run['score'] = score
