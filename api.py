@@ -46,8 +46,8 @@ cors = flask.ext.cors.CORS(app, headers=["Content-Type", "Authorization"])
 httpauth = flask.ext.httpauth.HTTPBasicAuth()
 srv = cogs.structs.Server()
 auth = cogs.auth.Auth()
-workers = multiprocessing.Pool(10)
-
+#workers = multiprocessing.Pool(10)
+workers = None
 
 ### Logging ###
 

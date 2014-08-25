@@ -604,8 +604,8 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 
         # Process Args
         workers = kwargs.pop('workers')
-        if not workers:
-            raise TypeError("Requires Workers")
+        # if not workers:
+        #     raise TypeError("Requires Workers")
         asn_uuid = data.get('assignment', None)
         if not asn_uuid:
             raise KeyError("Requires assignment")
@@ -646,7 +646,10 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         run_uuid = str(run.uuid).lower()
 
         # Add Task to Pool
-        res = workers.apply_async(testrun.test, args=(asn, sub, tst, run))
+        if workers:
+            res = workers.apply_async(testrun.test, args=(asn, sub, tst, run))
+        else:
+            res = testrun.test(asn, sub, tst, run)
 
         # Return Run
         return run
