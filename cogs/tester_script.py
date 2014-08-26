@@ -14,6 +14,9 @@ import copy
 import config
 
 
+EXTRA_TEST_SCHEMA = []
+EXTRA_TEST_DEFAULTS = {}
+
 KEY_SCRIPT = 'script'
 
 

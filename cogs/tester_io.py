@@ -13,6 +13,9 @@ import copy
 
 import config
 
+EXTRA_TEST_SCHEMA = ['path_solution', 'path_submission', 'prefix_input']
+EXTRA_TEST_DEFAULTS = {'path_solution': "", 'path_submission': "", 'prefix_input': ""}
+
 KEY_SOLUTION = 'solution'
 KEY_SUBMISSION = 'submission'
 KEY_INPUT = 'input'

@@ -21,6 +21,8 @@ from backend_redis import BackendError, FactoryError, PersistentObjectError, Obj
 import testrun
 
 import repmod_moodle
+import tester_script
+import tester_io
 
 
 ### Constants ###
@@ -29,6 +31,7 @@ _FILE_SCHEMA = ['key', 'name', 'type', 'encoding', 'path']
 _REPORTER_SCHEMA = ['mod']
 _ASSIGNMENT_SCHEMA = ['name', 'env']
 _TEST_SCHEMA = ['assignment', 'name', 'maxscore', 'tester']
+_TEST_DEFAULTS = {}
 _SUBMISSION_SCHEMA = ['assignment']
 _RUN_SCHEMA = ['submission', 'test', 'assignment', 'status', 'score', 'retcode', 'output']
 
@@ -365,13 +368,32 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         asn = kwargs.pop('asn', None)
         if not asn:
             raise TypeError("Requires 'asn'")
+        mod = data['tester']
+        data = copy.copy(data)
 
         # Set Schema
         schema = set(_TEST_SCHEMA)
+        if mod == 'script':
+            schema.update(set(tester_script.EXTRA_TEST_SCHEMA))
+        elif mod == 'io':
+            schema.update(set(tester_io.EXTRA_TEST_SCHEMA))
+        else:
+            raise Exception("Unknown tester {:s}".format(mod))
         kwargs['schema'] = schema
 
+        # Set Defaults
+        defaults = copy.copy(_TEST_DEFAULTS)
+        if mod == 'script':
+            defaults.update(tester_script.EXTRA_TEST_DEFAULTS)
+        elif mod == 'io':
+            defaults.update(tester_io.EXTRA_TEST_DEFAULTS)
+        else:
+            raise Exception("Unknown tester {:s}".format(mod))
+        for key in defaults:
+            if key not in data:
+                data[key] = defaults[key]
+
         # Set Assignment
-        data = copy.copy(data)
         if asn:
             data['assignment'] = str(asn.uuid).lower()
         else:
