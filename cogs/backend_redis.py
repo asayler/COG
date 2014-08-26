@@ -374,7 +374,7 @@ class SchemaHash(Hash):
         if key in self.schema:
             return super(SchemaHash, self).__setitem__(key, val)
         else:
-            msg = "{:s} not in {:s}".format(key, schema)
+            msg = "{:s} not in {:s}".format(key, self.schema)
             raise KeyError(msg)
 
     def __delitem__(self, key):
@@ -383,7 +383,7 @@ class SchemaHash(Hash):
         if key in self.schema:
             return super(SchemaHash, self).__delitem__(key)
         else:
-            msg = "{:s} not in {:s}".format(key, schema)
+            msg = "{:s} not in {:s}".format(key, self.schema)
             raise KeyError(msg)
 
     def set_dict(self, data):
