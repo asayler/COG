@@ -368,7 +368,7 @@ class CogsApiRootTestCase(CogsApiTestCase):
     def test_root_get(self):
         res = self.open_user('GET', '/', user=self.admin)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.data, api._MSG_ROOT)
+        self.assertTrue(res.data)
 
 ## Auth Tests ##
 class CogsApiAuthTestCase(CogsApiTestCase):

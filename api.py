@@ -28,8 +28,6 @@ import cogs.structs
 
 ### Constants ###
 
-_MSG_ROOT = "Welcome to the CU CS Online Grading System API\n"
-
 _FILES_KEY = "files"
 _REPORTERS_KEY = "reporters"
 _ASSIGNMENTS_KEY = "assignments"
@@ -250,12 +248,10 @@ def process_uuid_list(func_list, func_add, func_remove, key):
 
 ## Root Endpoints ##
 
-@app.route("/",
-           methods=['GET'])
+@app.route("/", methods=['GET'])
 def get_root():
 
-    res = _MSG_ROOT
-    return res
+    return app.send_static_file('index.html')
 
 ## Access Control Endpoints ##
 
