@@ -1165,7 +1165,7 @@ class RunTestCaseIO(test_common_backend.SubMixin,
 
     def test_execute_run_add_fork(self):
 
-        # Test Frok Bomb
+        # Test Fork Bomb
         self.pgm_fork['key'] = 'submission'
         data = copy.copy(test_common.RUN_TESTDICT)
         data['test'] = str(self.tst_add.uuid)
