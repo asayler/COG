@@ -20,9 +20,6 @@ import auth
 import structs
 
 
-_NUM_WORKERS = 10
-
-
 class StructsTestCase(test_common.CogsTestCase):
 
     def setUp(self):
@@ -43,13 +40,9 @@ class StructsTestCase(test_common.CogsTestCase):
         self.srv = structs.Server()
 
         # Setup Worker Pool
-        self.workers = multiprocessing.Pool(_NUM_WORKERS)
+        self.workers = None
 
     def tearDown(self):
-
-        # Cleanup Pool
-        self.workers.close()
-        self.workers.join()
 
         # Cleanup Server
         self.srv.close()
@@ -558,7 +551,6 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         data['test'] = str(self.tst_args.uuid)
         run = self.sub_good.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -579,7 +571,6 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         data['test'] = str(self.tst_args.uuid)
         run = self.sub_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -600,7 +591,6 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         data['test'] = str(self.tst_stdin.uuid)
         run = self.sub_good.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -621,7 +611,6 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         data['test'] = str(self.tst_stdin.uuid)
         run = self.sub_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -644,7 +633,6 @@ class RunTestCaseScript(test_common_backend.SubMixin,
             data['test'] = str(self.tst_args.uuid)
             run = self.sub_good.execute_run(data, workers=self.workers, owner=self.testuser)
             self.assertTrue(run)
-            self.assertNotEqual(run['status'], "complete")
             runs.append(run)
 
         # Wait for Completion
@@ -672,7 +660,6 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         data['test'] = str(self.tst_hang.uuid)
         run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -692,7 +679,6 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         data['test'] = str(self.tst_busy.uuid)
         run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -712,7 +698,6 @@ class RunTestCaseScript(test_common_backend.SubMixin,
         data['test'] = str(self.tst_fork.uuid)
         run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -937,7 +922,6 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         data['test'] = str(self.tst_bad.uuid)
         run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -960,7 +944,6 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         data['test'] = str(self.tst_bad.uuid)
         run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -983,7 +966,6 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         data['test'] = str(self.tst_bad.uuid)
         run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -1004,7 +986,6 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         data['test'] = str(self.tst_hello.uuid)
         run = self.sub_hello_good.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -1025,7 +1006,6 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         data['test'] = str(self.tst_hello.uuid)
         run = self.sub_hello_wrong.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -1047,7 +1027,6 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         data['test'] = str(self.tst_hello.uuid)
         run = self.sub_hello_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -1069,7 +1048,6 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         data['test'] = str(self.tst_hello.uuid)
         run = self.sub_hello_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -1091,7 +1069,6 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         data['test'] = str(self.tst_hello.uuid)
         run = self.sub_hello_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -1112,7 +1089,6 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         data['test'] = str(self.tst_add.uuid)
         run = self.sub_add_good.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -1132,7 +1108,6 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         data['test'] = str(self.tst_add.uuid)
         run = self.sub_add_wrong.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -1154,7 +1129,6 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         data['test'] = str(self.tst_add.uuid)
         run = self.sub_add_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -1176,7 +1150,6 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         data['test'] = str(self.tst_add.uuid)
         run = self.sub_add_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
@@ -1198,7 +1171,6 @@ class RunTestCaseIO(test_common_backend.SubMixin,
         data['test'] = str(self.tst_add.uuid)
         run = self.sub_add_bad.execute_run(data, workers=self.workers, owner=self.testuser)
         self.assertTrue(run)
-        self.assertNotEqual(run['status'], "complete")
         while not run.is_complete():
             time.sleep(1)
         try:
