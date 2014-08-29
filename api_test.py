@@ -398,7 +398,7 @@ class CogsApiFileTestCase(CogsApiObjectTests, CogsApiTestCase):
         self.url = '/files/'
         self.key = 'files'
         self.file_key = "test_file"
-        self.file_name = "test.txt"
+        self.file_name = "test1.txt"
         self.file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, self.file_name)
         self.data = {self.file_key: (self.file_path, self.file_name)}
         self.json_data = False
@@ -512,7 +512,7 @@ class CogsApiTestTestCase(CogsApiObjectTests, CogsApiTestCase):
         # Create Files
         file_lst = []
         file_key = "test_file"
-        file_name = "test.txt"
+        file_name = "test1.txt"
         file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, file_name)
         for i in range(10):
             file_uuid = self.create_objects('/files/', 'files',
@@ -602,7 +602,7 @@ class CogsApiSubmissionTestCase(CogsApiObjectTests, CogsApiTestCase):
         # Create Files
         file_lst = []
         file_key = "test_file"
-        file_name = "test.txt"
+        file_name = "test1.txt"
         file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, file_name)
         for i in range(10):
             file_uuid = self.create_objects('/files/', 'files',

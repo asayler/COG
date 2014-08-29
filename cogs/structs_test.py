@@ -144,26 +144,16 @@ class FileTestCase(test_common_backend.UUIDHashMixin,
 
         # Setup Test File
         file_key = "test"
-        file_name = "test.txt"
+        file_name = "test1.txt"
         file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
         file_stream = open(file_path, 'rb')
         self.file_obj = werkzeug.datastructures.FileStorage(stream=file_stream,
                                                             filename=file_name,
                                                             name=file_key)
 
-        # Setup test Archive
-        archive_key = "extract"
-        archive_name = "test.zip"
-        archive_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, archive_name)
-        archive_stream = open(archive_path, 'rb')
-        self.archive_obj = werkzeug.datastructures.FileStorage(stream=archive_stream,
-                                                               filename=archive_name,
-                                                               name=archive_key)
-
     def tearDown(self):
 
         # Cleanup
-        self.archive_obj.close()
         self.file_obj.close()
 
         # Call Parent
@@ -190,9 +180,24 @@ class FileTestCase(test_common_backend.UUIDHashMixin,
                               test_common.FILE_TESTDICT,
                               extra_kwargs={'file_obj': self.file_obj, 'owner': self.testuser})
 
-    def test_create_archive(self):
-        fles = self.srv.extract_archive({}, archive_obj=self.archive_obj, owner=self.testuser)
+    def test_zip_single(self):
+
+        # Setup
+        archive_key = "extract"
+        archive_name = "test_single.zip"
+        archive_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, archive_name)
+        archive_stream = open(archive_path, 'rb')
+        archive_obj = werkzeug.datastructures.FileStorage(stream=archive_stream,
+                                                          filename=archive_name,
+                                                          name=archive_key)
+
+        # Test
+        fles = self.srv.extract_archive({}, archive_obj=archive_obj, owner=self.testuser)
         self.assertTrue(fles)
+
+        # Cleanup
+        archive_obj.close()
+
 
 class ReporterTestCase(test_common_backend.UUIDHashMixin,
                        StructsTestCase):
