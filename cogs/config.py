@@ -41,6 +41,7 @@ config.set(SEC_REPMOD_MOODLE, 'USERNAME', None)
 config.set(SEC_REPMOD_MOODLE, 'PASSWORD', None)
 DEFAULT_SCRIPT_PATH = os.path.realpath("{:s}/scripts".format(ROOT_PATH))
 DEFAULT_ENV_LOCAL_TMP_PATH = "/tmp/cogs"
+DEFAULT_ARCHIVE_PATH = "/tmp/cogs/archives"
 DEFAULT_ENV_LOCAL_SANDBOX = "local_sandbox.py"
 DEFAULT_TESTER_SCRIPT_USER = "nobody"
 DEFAULT_TESTER_SCRIPT_GROUP = "nogroup"
@@ -55,6 +56,7 @@ REDIS_DB = int(os.environ.get('COGS_REDIS_DB', config.get(SEC_REDIS, 'DB')))
 REDIS_PASSWORD = os.environ.get('COGS_REDIS_PASSWORD', config.get(SEC_REDIS, 'PASSWORD'))
 FILESTORAGE_PATH = os.environ.get('COGS_FILESTORAGE_PATH', config.get(SEC_FILESTORAGE, 'PATH'))
 FILESTORAGE_PATH = os.path.realpath(FILESTORAGE_PATH)
+ARCHIVE_PATH = os.path.realpath(DEFAULT_ARCHIVE_PATH)
 LOGGING_ENABLED = os.environ.get('COGS_LOGGING_ENABLED', config.get(SEC_LOGGING, 'ENABLED'))
 LOGGING_ENABLED = LOGGING_ENABLED.lower() in ['true', 'yes', 'on', '1']
 AUTHMOD_MOODLE_HOST = os.environ.get('COGS_AUTHMOD_MOODLE_HOST',

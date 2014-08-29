@@ -13,6 +13,8 @@ import time
 import werkzeug
 import mimetypes
 import sys
+import uuid
+import zipfile
 
 import config
 
@@ -173,6 +175,74 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 
         # Return File
         return fle
+
+    # Archive Construtor
+    @classmethod
+    def from_archive(cls, data, **kwargs):
+        """Archive Constructor"""
+
+        # Extract Args
+        archive_obj = kwargs.pop('archive_obj', None)
+        if not archive_obj:
+            raise KeyError("archive_obj required")
+
+        # Save archive
+        archive_uuid = uuid.uuid4()
+        archive_dir = os.path.abspath("{:s}/{:s}".format(config.ARCHIVE_PATH, archive_uuid))
+        os.makedirs(archive_dir)
+        archive_name = os.path.basename(archive_obj.filename)
+        archive_name = werkzeug.utils.secure_filename(archive_name)
+        archive_path = os.path.abspath("{:s}/{:s}".format(archive_dir, archive_name))
+        file_obj.save(archive_path)
+
+        # Extract archive
+        output_dir = os.path.abspath("{:s}/{:s}".format(archive_dir, 'extracted'))
+        os.makedirs(output_dir)
+        archive_type, archive_encoding = mimetypes.guess_type(archive_name)
+        if archive_type == 'application/zip':
+            if not zipfile.is_zipfile(archive_path):
+                raise ValueError("Invalid zip file received: {:s}".format(archive_name))
+            archive_zip = zipefile.ZipFile(archive_path, 'r')
+            if archive_zip.testzip():
+                raise ValueError("Corrupted zip file received: {:s}".format(archive_name))
+            archive_zip.extractall(output_dir)
+        else:
+            raise ValueError("Unsupported archive format: {:s}".format(archive_type))
+
+        # Add extracted files to system
+        fles = []
+        try:
+            for root, dirs, files in os.walk(output_dir):
+                # TODO Ignore uneeded files: temp, git, etc
+                # TODO Handle nested directories
+                for f in files:
+                    src_path = os.path.abspath("{:s}".format(data['path']))
+                    src_file = open(src_path, 'rb')
+                    file_obj = werkzeug.datastructures.FileStorage(stream=src_file,
+                                                                   filename=data['name'],
+                                                                   name=archive_name)
+                    # Create New Object
+                    data = copy.copy(data)
+                    data['key'] = file_obj.name
+                    try:
+                        fle = cls.from_new(data, file_obj=file_obj)
+                    except Exception as e:
+                        raise
+                    else:
+                        fle.append(fle)
+                    finally:
+                        file_obj.close()
+        except Exception as e:
+            # Clean up on failure
+            for fle in fles:
+                fle.delete()
+            raise
+        else:
+            # Return Files
+            return fles
+        finally:
+            # Remove Archive Files
+            shutil.rmtree(archive_dir)
 
     # Override Delete
     def delete(self, force=False):
