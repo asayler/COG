@@ -194,6 +194,10 @@ class FileTestCase(test_common_backend.UUIDHashMixin,
         # Test
         fles = self.srv.extract_archive({}, archive_obj=archive_obj, owner=self.testuser)
         self.assertTrue(fles)
+        self.assertEqual(len(fles), 1)
+        fle = fles[0]
+        self.assertEqual(fle['key'], archive_name)
+        self.assertEqual(fle['name'], 'test1.txt')
 
         # Cleanup
         archive_obj.close()
