@@ -131,7 +131,8 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 
         # Extract Args
         file_obj = kwargs.pop('file_obj', None)
-        dst = kwargs.pop('dst', None)
+        if not file_obj:
+            raise TypeError("file_obj required")
 
         # Set Schema
         schema = set(_FILE_SCHEMA)
@@ -139,12 +140,6 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 
         # Create New Object
         data = copy.copy(data)
-
-        # Setup file_obj
-        if file_obj is None:
-            src_path = os.path.abspath("{:s}".format(data['path']))
-            src_file = open(src_path, 'rb')
-            file_obj = werkzeug.datastructures.FileStorage(stream=src_file, filename=data['name'])
 
         # Setup + Clean Name/Path
         name = os.path.basename(file_obj.filename)
@@ -163,10 +158,7 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         fle = super(File, cls).from_new(data, **kwargs)
 
         # Set Path
-        if dst is None:
-            fle['path'] = os.path.abspath("{:s}/{:s}".format(config.FILESTORAGE_PATH, repr(fle)))
-        else:
-            fle['path'] = os.path.abspath("{:s}".format(dst))
+        fle['path'] = os.path.abspath("{:s}/{:s}".format(config.FILESTORAGE_PATH, repr(fle)))
 
         # Save File
         try:
