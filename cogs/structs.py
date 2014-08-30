@@ -251,9 +251,10 @@ class FileUUIDFactory(backend.UUIDFactory):
                 for file_name in files:
                     src_path = os.path.abspath("{:s}/{:s}".format(root, file_name))
                     src_file = open(src_path, 'rb')
+                    key = "from_{:s}".format(archive_name)
                     file_obj = werkzeug.datastructures.FileStorage(stream=src_file,
                                                                    filename=file_name,
-                                                                   name=archive_name)
+                                                                   name=key)
                     # Create New Object
                     data = copy.copy(data)
                     data['key'] = file_obj.name

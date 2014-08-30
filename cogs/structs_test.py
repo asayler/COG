@@ -214,7 +214,7 @@ class FileTestCase(test_common_backend.UUIDHashMixin,
             for fle in fles:
                 file_path = file_paths.pop(fle['name'], None)
                 self.assertTrue(file_path)
-                self.assertEqual(fle['key'], archive_name)
+                self.assertEqual(fle['key'], "from_{:s}".format(archive_name))
                 self.assertTrue(os.path.exists(fle['path']))
                 self.assertEqual(os.path.getsize(fle['path']), os.path.getsize(file_path))
 
