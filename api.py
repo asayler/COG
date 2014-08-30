@@ -146,7 +146,6 @@ def create_stub_file(func_create, **kwargs):
     files = flask.request.files
     for key in files:
         data = {}
-        data['key'] = str(key)
         file_obj = files[key]
         obj = func_create(data, file_obj=file_obj, owner=flask.g.user, **kwargs)
         obj_lst.append(str(obj.uuid))

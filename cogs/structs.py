@@ -141,12 +141,13 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         # Create New Object
         data = copy.copy(data)
 
-        # Setup + Clean Name/Path
+        # Setup + Clean Name/Key/Path
         name = os.path.basename(file_obj.filename)
         name = werkzeug.utils.secure_filename(name)
         if not name:
             raise KeyError("Valid filename required")
         data['name'] = str(name)
+        data['key'] = file_obj.name
         data['path'] = ""
 
         # Get Type
@@ -248,8 +249,6 @@ class FileUUIDFactory(backend.UUIDFactory):
                                                                    filename=file_name,
                                                                    name=key)
                     # Create New Object
-                    data = copy.copy(data)
-                    data['key'] = file_obj.name
                     try:
                         fle = self.from_new(data, file_obj=file_obj, **kwargs)
                     except Exception as e:

@@ -397,7 +397,7 @@ class CogsApiFileTestCase(CogsApiObjectTests, CogsApiTestCase):
         self.user = self.admin
         self.url = '/files/'
         self.key = 'files'
-        self.file_key = "test_file"
+        self.file_key = "test"
         self.file_name = "test1.txt"
         self.file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, self.file_name)
         self.data = {self.file_key: (self.file_path, self.file_name)}
@@ -417,6 +417,8 @@ class CogsApiFileTestCase(CogsApiObjectTests, CogsApiTestCase):
         obj = self.get_object(self.url, obj_uuid, user=self.user)
         self.assertEqual(self.file_key, obj['key'])
         self.assertEqual(self.file_name, obj['name'])
+        self.assertTrue(os.path.exists(obj['path']))
+        self.assertEqual(os.path.getsize(obj['path']), os.path.getsize(self.file_path))
         self.assertEqual(str(self.user.uuid), obj['owner'])
 
         # Delete Object

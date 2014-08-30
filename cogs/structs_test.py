@@ -325,8 +325,13 @@ class TestTestCase(test_common_backend.SubMixin,
         self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.testuser)
 
         # Create Files
-        src_file = open("./Makefile", 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=src_file, filename="Makefile")
+        file_key = "test"
+        file_name = "test1.txt"
+        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
+        file_stream = open(file_path, 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_stream,
+                                                       filename=file_name,
+                                                       name=file_key)
         self.files = set([])
         for i in range(10):
             data = copy.copy(test_common.FILE_TESTDICT)
@@ -404,8 +409,13 @@ class SubmissionTestCase(test_common_backend.SubMixin,
         self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.testuser)
 
         # Create Files
-        src_file = open("./Makefile", 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=src_file, filename="Makefile")
+        file_key = "test"
+        file_name = "test1.txt"
+        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
+        file_stream = open(file_path, 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_stream,
+                                                       filename=file_name,
+                                                       name=file_key)
         self.files = set([])
         for i in range(10):
             data = copy.copy(test_common.FILE_TESTDICT)
@@ -462,57 +472,64 @@ class RunTestCaseScript(test_common_backend.SubMixin,
 
         # Create Args Test Script
         file_bse = open("{:s}/grade_add_args.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="grade.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="grade.py",
+                                                       name='script')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'script'
         self.tst_file_args = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Stdin Test Script
         file_bse = open("{:s}/grade_add_stdin.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="grade.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="grade.py",
+                                                       name='script')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'script'
         self.tst_file_stdin = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Hanging Script
         file_bse = open("{:s}/pgm_hang.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="pgm.py",
+                                                       name='script')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'script'
         self.pgm_hang = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Busy Script
         file_bse = open("{:s}/pgm_busy.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="pgm.py",
+                                                       name='script')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'script'
         self.pgm_busy = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Forkbomb Script
         file_bse = open("{:s}/pgm_forkbomb.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="pgm.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="pgm.py",
+                                                       name='script')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'script'
         self.pgm_fork = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Good Sub File
         file_bse = open("{:s}/add_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="add.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="add.py",
+                                                       name='submission')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'submission'
         self.sub_file_good = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Bad Sub File
         file_bse = open("{:s}/add_bad.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="add.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="add.py",
+                                                       name='submission')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'submission'
         self.sub_file_bad = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
@@ -758,105 +775,118 @@ class RunTestCaseIO(test_common_backend.SubMixin,
 
         # Create Null File
         file_bse = open("{:s}/null".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="null")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="null",
+                                                       name='null')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'null'
         self.file_null = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Hanging Script
         file_bse = open("{:s}/pgm_hang.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="hang.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="hang.py",
+                                                       name='pgm')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'pgm'
         self.pgm_hang = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Busy Script
         file_bse = open("{:s}/pgm_busy.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="busy.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="busy.py",
+                                                       name='pgm')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'pgm'
         self.pgm_busy = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Forkbomb Script
         file_bse = open("{:s}/pgm_forkbomb.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="fork.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="fork.py",
+                                                       name='pgm')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'pgm'
         self.pgm_fork = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Good Sub File Hello
         file_bse = open("{:s}/hello_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="hello.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="hello.py",
+                                                       name='submission')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'submission'
         self.sub_file_hello_good = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Bad Sub File Hello
         file_bse = open("{:s}/hello_bad.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="hello.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="hello.py",
+                                                       name='submission')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'submission'
         self.sub_file_hello_bad = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Good Sub File Add
         file_bse = open("{:s}/add_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="add.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="add.py",
+                                                       name='submission')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'submission'
         self.sub_file_add_good = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Bad Sub File Add
         file_bse = open("{:s}/add_bad.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="add.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="add.py",
+                                                       name='submission')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'submission'
         self.sub_file_add_bad = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Ref Sub File Hello
         file_bse = open("{:s}/hello_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="hello.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="hello.py",
+                                                       name='solution')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'solution'
         self.sol_hello_file = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Ref Sub File Add
         file_bse = open("{:s}/add_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="add.py")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="add.py",
+                                                       name='solution')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'solution'
         self.sol_add_file = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Input 1
         file_bse = open("{:s}/add_input1.txt".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="input1.txt")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="input1.txt",
+                                                       name='input')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'input'
         self.input_file_1 = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Input 2
         file_bse = open("{:s}/add_input2.txt".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="input2.txt")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="input2.txt",
+                                                       name='input')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'input'
         self.input_file_2 = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
         # Create Input 3
         file_bse = open("{:s}/add_input3.txt".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse, filename="input3.txt")
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="input3.txt",
+                                                       name='input')
         data = copy.copy(test_common.FILE_TESTDICT)
-        data['key'] = 'input'
         self.input_file_3 = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
         file_obj.close()
 
