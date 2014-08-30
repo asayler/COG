@@ -12,6 +12,7 @@ import os
 import time
 import multiprocessing
 import random
+import zipfile
 
 import test_common
 import test_common_backend
@@ -173,27 +174,62 @@ class FileTestCase(test_common_backend.UUIDHashMixin,
                               test_common.FILE_TESTDICT,
                               extra_kwargs={'file_obj': self.file_obj, 'owner': self.testuser})
 
-    def test_zip_single(self):
+    def _create_zip(self, zip_path, file_paths):
 
-        # Setup
-        archive_key = "extract"
-        archive_name = "test_single.zip"
+        if os.path.exists(zip_path):
+            raise Exception("{:s} already exists".format(zip_path))
+        with zipfile.ZipFile(zip_path, 'w') as archive:
+            for file_path in file_paths:
+                archive.write(file_path)
+
+    def _run_zip_test(self, file_names):
+
+        # Check Input
+        file_paths = {}
+        for file_name in file_names:
+            file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
+            file_paths[file_name] = file_path
+
+        # Setup Zip
+        archive_name = "test.zip"
         archive_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, archive_name)
-        archive_stream = open(archive_path, 'rb')
-        archive_obj = werkzeug.datastructures.FileStorage(stream=archive_stream,
-                                                          filename=archive_name,
-                                                          name=archive_key)
+        self._create_zip(archive_path, file_paths.values())
 
-        # Test
-        fles = self.srv.extract_archive({}, archive_obj=archive_obj, owner=self.testuser)
-        self.assertTrue(fles)
-        self.assertEqual(len(fles), 1)
-        fle = fles[0]
-        self.assertEqual(fle['key'], archive_name)
-        self.assertEqual(fle['name'], 'test1.txt')
+        try:
 
-        # Cleanup
-        archive_obj.close()
+            # Open Zip
+            archive_key = "extract"
+            archive_stream = open(archive_path, 'rb')
+            archive_obj = werkzeug.datastructures.FileStorage(stream=archive_stream,
+                                                              filename=archive_name,
+                                                              name=archive_key)
+
+            # Create from Zip
+            fles = self.srv.create_files({}, archive_obj=archive_obj, owner=self.testuser)
+            archive_obj.close()
+
+            # Verify Output
+            self.assertTrue(fles)
+            self.assertEqual(len(fles), len(file_paths))
+            for fle in fles:
+                file_path = file_paths.pop(fle['name'], None)
+                self.assertTrue(file_path)
+                self.assertEqual(fle['key'], archive_name)
+                self.assertTrue(os.path.exists(fle['path']))
+                self.assertEqual(os.path.getsize(fle['path']), os.path.getsize(file_path))
+
+        except Exception as e:
+            raise
+        finally:
+            # Cleanup
+            os.remove(archive_path)
+
+
+    def test_zip_single(self):
+        self._run_zip_test(['test1.txt'])
+
+    def test_zip_multi(self):
+        self._run_zip_test(['test1.txt', 'test2.txt', 'test3.txt'])
 
 
 class ReporterTestCase(test_common_backend.UUIDHashMixin,

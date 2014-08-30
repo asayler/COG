@@ -70,7 +70,7 @@ class Server(object):
     # File Methods
     def create_file(self, data, file_obj=None, dst=None, owner=None):
         return self.FileFactory.from_new(data, file_obj=file_obj, dst=dst, owner=owner)
-    def extract_archive(self, data, archive_obj=None, owner=None):
+    def create_files(self, data, archive_obj=None, owner=None):
         return self.FileFactory.from_archive(data, archive_obj=archive_obj, owner=owner)
     def get_file(self, uuid_hex):
         return self.FileFactory.from_existing(uuid_hex)
@@ -235,10 +235,10 @@ class FileUUIDFactory(backend.UUIDFactory):
         if archive_type == 'application/zip':
             if not zipfile.is_zipfile(archive_path):
                 raise ValueError("Invalid zip file received: {:s}".format(archive_name))
-            archive_zip = zipfile.ZipFile(archive_path, 'r')
-            if archive_zip.testzip():
-                raise ValueError("Corrupted zip file received: {:s}".format(archive_name))
-            archive_zip.extractall(output_dir)
+            with zipfile.ZipFile(archive_path, 'r') as archive_zip:
+                if archive_zip.testzip():
+                    raise ValueError("Corrupted zip file received: {:s}".format(archive_name))
+                archive_zip.extractall(output_dir)
         else:
             raise ValueError("Unsupported archive format: {:s}".format(archive_type))
 
