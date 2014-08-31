@@ -67,6 +67,9 @@ class Env(object):
         new_fle = copy.copy(fle)
         src = os.path.abspath("{:s}".format(new_fle['path']))
         dst = os.path.abspath("{:s}/{:s}".format(dst_dir, fle['name']))
+        dst_dir = os.path.dirname(dst)
+        if not os.path.exists(dst_dir):
+            os.makedirs(dst_dir)
         shutil.copy(src, dst)
         new_fle['path'] = dst
         return new_fle
