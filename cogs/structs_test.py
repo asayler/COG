@@ -180,7 +180,8 @@ class FileTestCase(test_common_backend.UUIDHashMixin,
             raise Exception("{:s} already exists".format(zip_path))
         with zipfile.ZipFile(zip_path, 'w') as archive:
             for file_path in file_paths:
-                archive.write(file_path)
+                file_name = os.path.relpath(file_path, test_common.TEST_INPUT_PATH)
+                archive.write(file_path, file_name)
 
     def _run_zip_test(self, file_names):
 
@@ -213,7 +214,7 @@ class FileTestCase(test_common_backend.UUIDHashMixin,
             self.assertEqual(len(fles), len(file_paths))
             for fle in fles:
                 file_path = file_paths.pop(fle['name'], None)
-                self.assertTrue(file_path)
+                self.assertTrue(file_path, "Name '{:s}' not in input files".format(fle['name']))
                 self.assertEqual(fle['key'], "from_{:s}".format(archive_name))
                 self.assertTrue(os.path.exists(fle['path']))
                 self.assertEqual(os.path.getsize(fle['path']), os.path.getsize(file_path))
@@ -224,12 +225,20 @@ class FileTestCase(test_common_backend.UUIDHashMixin,
             # Cleanup
             os.remove(archive_path)
 
-
     def test_zip_single(self):
         self._run_zip_test(['test1.txt'])
 
     def test_zip_multi(self):
         self._run_zip_test(['test1.txt', 'test2.txt', 'test3.txt'])
+
+    def test_zip_dir_single(self):
+        self._run_zip_test(['dir1/test1.txt'])
+
+    def test_zip_dir_multi(self):
+        self._run_zip_test(['dir2/test1.txt', 'dir2/test2.txt', 'dir2/test3.txt'])
+
+    def test_zip_dir_nested(self):
+        self._run_zip_test(['dir3/test1.txt', 'dir3/subdir/test2.txt', 'dir3/subdir/test3.txt'])
 
 
 class ReporterTestCase(test_common_backend.UUIDHashMixin,

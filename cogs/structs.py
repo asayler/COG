@@ -142,8 +142,7 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         data = copy.copy(data)
 
         # Setup + Clean Name/Key/Path
-        name = os.path.basename(file_obj.filename)
-        name = werkzeug.utils.secure_filename(name)
+        name = os.path.normpath(file_obj.filename)
         if not name:
             raise KeyError("Valid filename required")
         data['name'] = str(name)
@@ -240,13 +239,13 @@ class FileUUIDFactory(backend.UUIDFactory):
         try:
             for root, dirs, files in os.walk(output_dir):
                 # TODO Ignore uneeded files: temp, git, etc
-                # TODO Handle nested directories
                 for file_name in files:
                     src_path = os.path.abspath("{:s}/{:s}".format(root, file_name))
+                    rel_path = os.path.relpath(src_path, output_dir)
                     src_file = open(src_path, 'rb')
                     key = "from_{:s}".format(archive_name)
                     file_obj = werkzeug.datastructures.FileStorage(stream=src_file,
-                                                                   filename=file_name,
+                                                                   filename=rel_path,
                                                                    name=key)
                     # Create New Object
                     try:
