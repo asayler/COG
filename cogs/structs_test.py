@@ -640,6 +640,31 @@ class RunTestCaseScriptArgs(RunTestCaseTestsMixin, RunTestCaseScriptBase):
         # Call Parent
         super(RunTestCaseScriptArgs, self).tearDown()
 
+class RunTestCaseScriptStdin(RunTestCaseTestsMixin, RunTestCaseScriptBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseScriptStdin, self).setUp()
+
+        # Setup Test Script
+        file_bse = open("{:s}/grade_add_stdin.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="grade.py",
+                                                       name='script')
+        data = copy.copy(test_common.FILE_TESTDICT)
+        self.fle_script = self.srv.create_file(data, file_obj=file_obj, owner=self.admin)
+        file_obj.close()
+        self.tst.add_files([str(self.fle_script.uuid)])
+
+    def tearDown(self):
+
+        # Cleanup Structs
+        self.fle_script.delete()
+
+        # Call Parent
+        super(RunTestCaseScriptStdin, self).tearDown()
+
 
 class RunTestCaseScript(test_common_backend.SubMixin,
                         test_common_backend.UUIDHashMixin,
