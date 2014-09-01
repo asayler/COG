@@ -26,14 +26,14 @@ def test(asn, sub, tst, run):
         score = 0
         output = traceback.format_exc()
         status = "complete-exception-env"
-    else:        
+    else:
         # Setup Tester
         try:
             tester_type = tst['tester']
             if tester_type == 'script':
-                tester = tester_script.Tester(env, tst.get_dict())
+                tester = tester_script.Tester(env, tst, run)
             elif tester_type == 'io':
-                tester = tester_io.Tester(env, tst.get_dict())
+                tester = tester_io.Tester(env, tst, run)
             else:
                 raise Exception("Unknown tester type {:s}".format(tester_type))
         except Exception as e:

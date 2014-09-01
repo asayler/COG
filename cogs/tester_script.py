@@ -13,6 +13,7 @@ import copy
 
 import config
 
+import tester
 
 EXTRA_TEST_SCHEMA = []
 EXTRA_TEST_DEFAULTS = {}
@@ -20,11 +21,8 @@ EXTRA_TEST_DEFAULTS = {}
 KEY_SCRIPT = 'script'
 
 
-class Tester(object):
 
-    def __init__(self, env, data):
-        self.env = env
-        self.data = data
+class Tester(tester.Tester):
 
     def test(self):
 

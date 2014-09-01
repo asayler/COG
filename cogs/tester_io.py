@@ -13,6 +13,9 @@ import copy
 
 import config
 
+import tester
+
+
 EXTRA_TEST_SCHEMA = ['path_solution', 'path_submission', 'prefix_input']
 EXTRA_TEST_DEFAULTS = {'path_solution': "", 'path_submission': "", 'prefix_input': ""}
 
@@ -20,11 +23,8 @@ KEY_SOLUTION = 'solution'
 KEY_SUBMISSION = 'submission'
 KEY_INPUT = 'input'
 
-class Tester(object):
 
-    def __init__(self, env, data):
-        self.env = env
-        self.data = data
+class Tester(tester.Tester):
 
     def test(self):
 
@@ -162,7 +162,7 @@ class Tester(object):
             raise
 
         # Calculate Score
-        score = (pts / float(len(input_fles))) * float(self.data['maxscore'])
+        score = (pts / float(len(input_fles))) * float(self.tst['maxscore'])
 
         # Return
         return ret_val, score, output
