@@ -471,6 +471,176 @@ class SubmissionTestCase(test_common_backend.SubMixin,
         sub.delete()
 
 
+class RunTestCaseTestsMixin(object):
+
+    def _test_execute_run_sub(self, test_file, file_name=None, file_key=None):
+
+        # Proces Input
+        if not file_name:
+            file_name = test_file
+        if not file_key:
+            file_key = "submission"
+
+        # Setup Submission File
+        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, test_file)
+        file_bse = open(file_path, 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename=file_name,
+                                                       name=file_key)
+        data = copy.copy(test_common.FILE_TESTDICT)
+        fle_submission = self.srv.create_file(data, file_obj=file_obj, owner=self.student)
+        file_obj.close()
+        self.sub.add_files([str(fle_submission.uuid)])
+
+        # Run Submission
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst.uuid)
+        run = self.sub.execute_run(data, workers=self.workers, owner=self.testuser)
+        self.assertTrue(run)
+        while not run.is_complete():
+            time.sleep(1)
+        out = run.get_dict()
+
+        # Cleanup
+        run.delete()
+        fle_submission.delete()
+
+        # Return
+        return out
+
+    def test_execute_run_sub_good(self):
+
+        out = self._test_execute_run_sub("add_good.py", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete")
+            self.assertEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 10)
+        except AssertionError as e:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_sub_bad(self):
+
+        out = self._test_execute_run_sub("add_bad.py", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete")
+            self.assertEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertLess(float(out['score']), 10)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_sub_hang(self):
+
+        out = self._test_execute_run_sub("pgm_hang.py", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_sub_busy(self):
+
+        out = self._test_execute_run_sub("pgm_busy.py", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_sub_forkbomb(self):
+
+        out = self._test_execute_run_sub("pgm_forkbomb.py", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+
+class RunTestCaseScriptBase(StructsTestCase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseScriptBase, self).setUp()
+        self.admin = self.testuser
+
+        # Setup Assignment
+        data = copy.copy(test_common.ASSIGNMENT_TESTDICT)
+        self.asn = self.srv.create_assignment(data, owner=self.admin)
+
+        # Setup Test
+        data = copy.copy(test_common.TEST_TESTDICT)
+        data['tester'] = "script"
+        self.tst = self.asn.create_test(data, owner=self.admin)
+
+        # Setup Reporter
+        data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
+        data['asn_id'] = test_common.REPMOD_MOODLE_ASN
+        self.rpt_moodle = self.srv.create_reporter(data, owner=self.admin)
+        self.tst.add_reporters([str(self.rpt_moodle.uuid)])
+
+        # Create Submission User
+        self.student = self.auth.create_user(test_common.USER_TESTDICT,
+                                             username=test_common.AUTHMOD_MOODLE_STUDENT_USERNAME,
+                                             password=test_common.AUTHMOD_MOODLE_STUDENT_PASSWORD,
+                                             authmod="moodle")
+
+        # Create Submissions
+        self.sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.student)
+
+    def tearDown(self):
+
+        # Cleanup
+        self.sub.delete()
+        self.student.delete()
+        self.rpt_moodle.delete()
+        self.tst.delete()
+        self.asn.delete()
+
+        # Call Parent
+        super(RunTestCaseScriptBase, self).tearDown()
+
+
+class RunTestCaseScriptArgs(RunTestCaseTestsMixin, RunTestCaseScriptBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseScriptArgs, self).setUp()
+
+        # Setup Test Script
+        file_bse = open("{:s}/grade_add_args.py".format(test_common.TEST_INPUT_PATH), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename="grade.py",
+                                                       name='script')
+        data = copy.copy(test_common.FILE_TESTDICT)
+        self.fle_script = self.srv.create_file(data, file_obj=file_obj, owner=self.admin)
+        file_obj.close()
+        self.tst.add_files([str(self.fle_script.uuid)])
+
+    def tearDown(self):
+
+        # Cleanup Structs
+        self.fle_script.delete()
+
+        # Call Parent
+        super(RunTestCaseScriptArgs, self).tearDown()
+
+
 class RunTestCaseScript(test_common_backend.SubMixin,
                         test_common_backend.UUIDHashMixin,
                         StructsTestCase):
