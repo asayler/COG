@@ -36,7 +36,7 @@ class Tester(tester.Tester):
 
         # If user provided path_script, use that
         if self.tst['path_script']:
-            script_path = "{:s}\{:s}".format(self.env.wd_test, self.tst['path_script'])
+            script_path = "{:s}/{:s}".format(self.env.wd_tst, self.tst['path_script'])
             script_path = os.path.normpath(script_path)
             for fle in self.env.tst_files:
                 fle_path = os.path.normpath(fle['path'])

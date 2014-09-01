@@ -13,6 +13,7 @@ import time
 import multiprocessing
 import random
 import zipfile
+import logging
 
 import test_common
 import test_common_backend
@@ -53,6 +54,15 @@ class StructsTestCase(test_common.CogsTestCase):
 
         # Call parent
         super(StructsTestCase, self).tearDown()
+
+    def _create_zip(self, zip_path, file_paths):
+
+        if os.path.exists(zip_path):
+            raise Exception("{:s} already exists".format(zip_path))
+        with zipfile.ZipFile(zip_path, 'w') as archive:
+            for file_path in file_paths:
+                file_name = os.path.relpath(file_path, test_common.TEST_INPUT_PATH)
+                archive.write(file_path, file_name)
 
 
 class ServerTestCase(test_common_backend.SubMixin,
@@ -173,15 +183,6 @@ class FileTestCase(test_common_backend.UUIDHashMixin,
         self.hashDeleteHelper(self.srv.create_file,
                               test_common.FILE_TESTDICT,
                               extra_kwargs={'file_obj': self.file_obj, 'owner': self.testuser})
-
-    def _create_zip(self, zip_path, file_paths):
-
-        if os.path.exists(zip_path):
-            raise Exception("{:s} already exists".format(zip_path))
-        with zipfile.ZipFile(zip_path, 'w') as archive:
-            for file_path in file_paths:
-                file_name = os.path.relpath(file_path, test_common.TEST_INPUT_PATH)
-                archive.write(file_path, file_name)
 
     def _run_zip_test(self, file_names):
 
@@ -609,6 +610,28 @@ class RunTestCaseScript(test_common_backend.SubMixin,
     def test_execute_run_args_good(self):
 
         # Test Good
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst_args.uuid)
+        run = self.sub_good.execute_run(data, workers=self.workers, owner=self.testuser)
+        self.assertTrue(run)
+        while not run.is_complete():
+            time.sleep(1)
+        try:
+            self.assertEqual(run['status'], "complete")
+            self.assertEqual(int(run['retcode']), 0)
+            self.assertTrue(run['output'])
+            self.assertEqual(float(run['score']), 10)
+        except AssertionError:
+            print("run = {:s}".format(run.get_dict()))
+            raise
+        finally:
+            run.delete()
+
+    def test_execute_run_args_good_nokey(self):
+
+        # Test Good
+        self.tst_file_args['key'] = "None"
+        self.tst_args['path_script'] = self.tst_file_args['name']
         data = copy.copy(test_common.RUN_TESTDICT)
         data['test'] = str(self.tst_args.uuid)
         run = self.sub_good.execute_run(data, workers=self.workers, owner=self.testuser)
