@@ -49,10 +49,13 @@ def test(asn, sub, tst, run):
             except Exception as e:
                 retcode = -1
                 score = 0
-                output = str(e)
-                status = 'complete-error'
+                output = traceback.format_exc()
+                status = 'complete-exception-run'
             else:
-                status = 'complete'
+                if retcode == 0:
+                    status = 'complete'
+                else:
+                    status = 'complete-error'
                 retcode = str(retcode)
                 score = str(score)
                 output = str(output)
