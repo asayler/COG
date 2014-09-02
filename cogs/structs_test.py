@@ -471,7 +471,7 @@ class SubmissionTestCase(test_common_backend.SubMixin,
         sub.delete()
 
 
-class RunTestCaseBaseTestsMixin(object):
+class RunTestCaseBaseMixin(object):
 
     def _test_execute_run_sub(self, submission_file, file_name=None, file_key=None):
 
@@ -509,7 +509,7 @@ class RunTestCaseBaseTestsMixin(object):
         return out
 
 
-class RunTestCaseAddTestsMixin(RunTestCaseBaseTestsMixin):
+class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_sub_good(self):
 
@@ -652,6 +652,9 @@ class RunTestCaseScriptBase(StructsTestCase):
         # Cleanup Structs
         self.fle_script.delete()
 
+
+class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
+
     def test_execute_run_script_none(self):
 
         self.tst.rem_files([str(self.fle_script.uuid)])
@@ -766,7 +769,9 @@ class RunTestCaseScriptBase(StructsTestCase):
             raise
 
 
-class RunTestCaseScriptArgsKey(RunTestCaseAddTestsMixin, RunTestCaseScriptBase):
+class RunTestCaseScriptArgsKey(RunTestCaseBadScriptMixin,
+                               RunTestCaseAddTestsMixin,
+                               RunTestCaseScriptBase):
 
     def setUp(self):
 
@@ -786,7 +791,9 @@ class RunTestCaseScriptArgsKey(RunTestCaseAddTestsMixin, RunTestCaseScriptBase):
         super(RunTestCaseScriptArgsKey, self).tearDown()
 
 
-class RunTestCaseScriptStdinKey(RunTestCaseAddTestsMixin, RunTestCaseScriptBase):
+class RunTestCaseScriptStdinKey(RunTestCaseBadScriptMixin,
+                                RunTestCaseAddTestsMixin,
+                                RunTestCaseScriptBase):
 
     def setUp(self):
 
@@ -806,7 +813,9 @@ class RunTestCaseScriptStdinKey(RunTestCaseAddTestsMixin, RunTestCaseScriptBase)
         super(RunTestCaseScriptStdinKey, self).tearDown()
 
 
-class RunTestCaseScriptArgsPath(RunTestCaseAddTestsMixin, RunTestCaseScriptBase):
+class RunTestCaseScriptArgsPath(RunTestCaseBadScriptMixin,
+                                RunTestCaseAddTestsMixin,
+                                RunTestCaseScriptBase):
 
     def setUp(self):
 
@@ -826,7 +835,9 @@ class RunTestCaseScriptArgsPath(RunTestCaseAddTestsMixin, RunTestCaseScriptBase)
         super(RunTestCaseScriptArgsPath, self).tearDown()
 
 
-class RunTestCaseScriptStdinPath(RunTestCaseAddTestsMixin, RunTestCaseScriptBase):
+class RunTestCaseScriptStdinPath(RunTestCaseBadScriptMixin,
+                                 RunTestCaseAddTestsMixin,
+                                 RunTestCaseScriptBase):
 
     def setUp(self):
 
