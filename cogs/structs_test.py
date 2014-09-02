@@ -473,16 +473,16 @@ class SubmissionTestCase(test_common_backend.SubMixin,
 
 class RunTestCaseTestsMixin(object):
 
-    def _test_execute_run_sub(self, test_file, file_name=None, file_key=None):
+    def _test_execute_run_sub(self, submission_file, file_name=None, file_key=None):
 
         # Proces Input
         if not file_name:
-            file_name = test_file
+            file_name = submission_file
         if not file_key:
             file_key = "submission"
 
         # Setup Submission File
-        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, test_file)
+        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, submission_file)
         file_bse = open(file_path, 'rb')
         file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
                                                        filename=file_name,
@@ -614,6 +614,29 @@ class RunTestCaseScriptBase(StructsTestCase):
         # Call Parent
         super(RunTestCaseScriptBase, self).tearDown()
 
+    def _setup(self, script_file, file_name=None, file_key=None):
+
+        # Proces Input
+        if not file_name:
+            file_name = script_file
+        if not file_key:
+            file_key = "script"
+
+        # Setup Test Script
+        file_bse = open("{:s}/{:s}".format(test_common.TEST_INPUT_PATH, script_file), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename=file_name,
+                                                       name=file_key)
+        data = copy.copy(test_common.FILE_TESTDICT)
+        self.fle_script = self.srv.create_file(data, file_obj=file_obj, owner=self.admin)
+        file_obj.close()
+        self.tst.add_files([str(self.fle_script.uuid)])
+
+    def _teardown(self):
+
+        # Cleanup Structs
+        self.fle_script.delete()
+
 
 class RunTestCaseScriptArgs(RunTestCaseTestsMixin, RunTestCaseScriptBase):
 
@@ -622,20 +645,13 @@ class RunTestCaseScriptArgs(RunTestCaseTestsMixin, RunTestCaseScriptBase):
         # Call Parent
         super(RunTestCaseScriptArgs, self).setUp()
 
-        # Setup Test Script
-        file_bse = open("{:s}/grade_add_args.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                       filename="grade.py",
-                                                       name='script')
-        data = copy.copy(test_common.FILE_TESTDICT)
-        self.fle_script = self.srv.create_file(data, file_obj=file_obj, owner=self.admin)
-        file_obj.close()
-        self.tst.add_files([str(self.fle_script.uuid)])
+        # Call Helper
+        self._setup("grade_add_args.py")
 
     def tearDown(self):
 
-        # Cleanup Structs
-        self.fle_script.delete()
+        # Call Helper
+        self._teardown()
 
         # Call Parent
         super(RunTestCaseScriptArgs, self).tearDown()
@@ -647,20 +663,13 @@ class RunTestCaseScriptStdin(RunTestCaseTestsMixin, RunTestCaseScriptBase):
         # Call Parent
         super(RunTestCaseScriptStdin, self).setUp()
 
-        # Setup Test Script
-        file_bse = open("{:s}/grade_add_stdin.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                       filename="grade.py",
-                                                       name='script')
-        data = copy.copy(test_common.FILE_TESTDICT)
-        self.fle_script = self.srv.create_file(data, file_obj=file_obj, owner=self.admin)
-        file_obj.close()
-        self.tst.add_files([str(self.fle_script.uuid)])
+        # Call Helper
+        self._setup("grade_add_stdin.py")
 
     def tearDown(self):
 
-        # Cleanup Structs
-        self.fle_script.delete()
+        # Call Helper
+        self._teardown()
 
         # Call Parent
         super(RunTestCaseScriptStdin, self).tearDown()
