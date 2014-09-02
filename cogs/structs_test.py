@@ -638,81 +638,6 @@ class RunTestCaseHelloTestsMixin(RunTestCaseBaseMixin):
             raise
 
 
-class RunTestCaseScriptBase(StructsTestCase):
-
-    def setUp(self):
-
-        # Call Parent
-        super(RunTestCaseScriptBase, self).setUp()
-        self.admin = self.testuser
-
-        # Setup Assignment
-        data = copy.copy(test_common.ASSIGNMENT_TESTDICT)
-        self.asn = self.srv.create_assignment(data, owner=self.admin)
-
-        # Setup Test
-        data = copy.copy(test_common.TEST_TESTDICT)
-        data['tester'] = "script"
-        self.tst = self.asn.create_test(data, owner=self.admin)
-
-        # Setup Reporter
-        data = copy.copy(test_common.REPORTER_TESTDICT)
-        data['mod'] = "moodle"
-        data['asn_id'] = test_common.REPMOD_MOODLE_ASN
-        self.rpt_moodle = self.srv.create_reporter(data, owner=self.admin)
-        self.tst.add_reporters([str(self.rpt_moodle.uuid)])
-
-        # Create Submission User
-        self.student = self.auth.create_user(test_common.USER_TESTDICT,
-                                             username=test_common.AUTHMOD_MOODLE_STUDENT_USERNAME,
-                                             password=test_common.AUTHMOD_MOODLE_STUDENT_PASSWORD,
-                                             authmod="moodle")
-
-        # Create Submissions
-        self.sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.student)
-
-        # Set Mixin Values
-        self.status_ok = "complete"
-        self.retcode_ok = 0
-        self.status_error = "complete-error"
-        self.retcode_error = None
-
-    def tearDown(self):
-
-        # Cleanup
-        self.sub.delete()
-        self.student.delete()
-        self.rpt_moodle.delete()
-        self.tst.delete()
-        self.asn.delete()
-
-        # Call Parent
-        super(RunTestCaseScriptBase, self).tearDown()
-
-    def _setup(self, script_file, file_name=None, file_key=None):
-
-        # Proces Input
-        if file_name is None:
-            file_name = script_file
-        if file_key is None:
-            file_key = "script"
-
-        # Setup Test Script
-        file_bse = open("{:s}/{:s}".format(test_common.TEST_INPUT_PATH, script_file), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                       filename=file_name,
-                                                       name=file_key)
-        data = copy.copy(test_common.FILE_TESTDICT)
-        self.fle_script = self.srv.create_file(data, file_obj=file_obj, owner=self.admin)
-        file_obj.close()
-        self.tst.add_files([str(self.fle_script.uuid)])
-
-    def _teardown(self):
-
-        # Cleanup Structs
-        self.fle_script.delete()
-
-
 class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_script_none(self):
@@ -746,14 +671,11 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_script_null(self):
 
-        # Extract Data and Remove Original Script
         file_name = self.fle_script['name']
         file_key = self.fle_script['key']
-        self.tst.rem_files([str(self.fle_script.uuid)])
-        self._teardown()
-
-        # Add New Script
-        self._setup("null", file_name=file_name, file_key=file_key)
+        self._del_test_file(self.fle_script)
+        self.fle_script = self._add_test_file("null",
+                                              file_name=file_name, file_key=file_key)
 
         out = self._test_execute_run_sub("null", file_name="add.py")
         try:
@@ -767,14 +689,11 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_script_hang(self):
 
-        # Extract Data and Remove Original Script
         file_name = self.fle_script['name']
         file_key = self.fle_script['key']
-        self.tst.rem_files([str(self.fle_script.uuid)])
-        self._teardown()
-
-        # Add New Script
-        self._setup("pgm_hang.py", file_name=file_name, file_key=file_key)
+        self._del_test_file(self.fle_script)
+        self.fle_script = self._add_test_file("pgm_hang.py",
+                                              file_name=file_name, file_key=file_key)
 
         out = self._test_execute_run_sub("null", file_name="add.py")
         try:
@@ -788,14 +707,11 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_script_busy(self):
 
-        # Extract Data and Remove Original Script
         file_name = self.fle_script['name']
         file_key = self.fle_script['key']
-        self.tst.rem_files([str(self.fle_script.uuid)])
-        self._teardown()
-
-        # Add New Script
-        self._setup("pgm_busy.py", file_name=file_name, file_key=file_key)
+        self._del_test_file(self.fle_script)
+        self.fle_script = self._add_test_file("pgm_busy.py",
+                                              file_name=file_name, file_key=file_key)
 
         out = self._test_execute_run_sub("null", file_name="add.py")
         try:
@@ -809,14 +725,11 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_script_forkbomb(self):
 
-        # Extract Data and Remove Original Script
         file_name = self.fle_script['name']
         file_key = self.fle_script['key']
-        self.tst.rem_files([str(self.fle_script.uuid)])
-        self._teardown()
-
-        # Add New Script
-        self._setup("pgm_forkbomb.py", file_name=file_name, file_key=file_key)
+        self._del_test_file(self.fle_script)
+        self.fle_script = self._add_test_file("pgm_forkbomb.py",
+                                              file_name=file_name, file_key=file_key)
 
         out = self._test_execute_run_sub("null", file_name="add.py")
         try:
@@ -827,188 +740,6 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
         except AssertionError:
             print("run = {:s}".format(out))
             raise
-
-
-class RunTestCaseScriptArgsKey(RunTestCaseBadScriptMixin,
-                               RunTestCaseAddTestsMixin,
-                               RunTestCaseBadTestsMixin,
-                               RunTestCaseScriptBase):
-
-    def setUp(self):
-
-        # Call Parent
-        super(RunTestCaseScriptArgsKey, self).setUp()
-
-        # Call Helper
-        self._setup("grade_add_args.py", file_key="script")
-        self.tst['path_script'] = ""
-
-        # Set Mixin Values
-        self.sub_name = "add.py"
-
-    def tearDown(self):
-
-        # Call Helper
-        self._teardown()
-
-        # Call Parent
-        super(RunTestCaseScriptArgsKey, self).tearDown()
-
-
-class RunTestCaseScriptStdinKey(RunTestCaseBadScriptMixin,
-                                RunTestCaseAddTestsMixin,
-                                RunTestCaseBadTestsMixin,
-                                RunTestCaseScriptBase):
-
-    def setUp(self):
-
-        # Call Parent
-        super(RunTestCaseScriptStdinKey, self).setUp()
-
-        # Call Helper
-        self._setup("grade_add_stdin.py", file_key="script")
-        self.tst['path_script'] = ""
-
-        # Set Mixin Values
-        self.sub_name = "add.py"
-
-    def tearDown(self):
-
-        # Call Helper
-        self._teardown()
-
-        # Call Parent
-        super(RunTestCaseScriptStdinKey, self).tearDown()
-
-
-class RunTestCaseScriptArgsPath(RunTestCaseBadScriptMixin,
-                                RunTestCaseAddTestsMixin,
-                                RunTestCaseBadTestsMixin,
-                                RunTestCaseScriptBase):
-
-    def setUp(self):
-
-        # Call Parent
-        super(RunTestCaseScriptArgsPath, self).setUp()
-
-        # Call Helper
-        self._setup("grade_add_args.py", file_key="")
-        self.tst['path_script'] = "grade_add_args.py"
-
-        # Set Mixin Values
-        self.sub_name = "add.py"
-
-    def tearDown(self):
-
-        # Call Helper
-        self._teardown()
-
-        # Call Parent
-        super(RunTestCaseScriptArgsPath, self).tearDown()
-
-
-class RunTestCaseScriptStdinPath(RunTestCaseBadScriptMixin,
-                                 RunTestCaseAddTestsMixin,
-                                 RunTestCaseBadTestsMixin,
-                                 RunTestCaseScriptBase):
-
-    def setUp(self):
-
-        # Call Parent
-        super(RunTestCaseScriptStdinPath, self).setUp()
-
-        # Call Helper
-        self._setup("grade_add_stdin.py", file_key="")
-        self.tst['path_script'] = "grade_add_stdin.py"
-
-        # Set Mixin Values
-        self.sub_name = "add.py"
-
-    def tearDown(self):
-
-        # Call Helper
-        self._teardown()
-
-        # Call Parent
-        super(RunTestCaseScriptStdinPath, self).tearDown()
-
-
-class RunTestCaseIOBase(StructsTestCase):
-
-    def setUp(self):
-
-        # Call Parent
-        super(RunTestCaseIOBase, self).setUp()
-        self.admin = self.testuser
-
-        # Setup Assignment
-        data = copy.copy(test_common.ASSIGNMENT_TESTDICT)
-        self.asn = self.srv.create_assignment(data, owner=self.admin)
-
-        # Setup Test
-        data = copy.copy(test_common.TEST_TESTDICT)
-        data['tester'] = "io"
-        self.tst = self.asn.create_test(data, owner=self.admin)
-
-        # Setup Reporter
-        data = copy.copy(test_common.REPORTER_TESTDICT)
-        data['mod'] = "moodle"
-        data['asn_id'] = test_common.REPMOD_MOODLE_ASN
-        self.rpt_moodle = self.srv.create_reporter(data, owner=self.admin)
-        self.tst.add_reporters([str(self.rpt_moodle.uuid)])
-
-        # Create Submission User
-        self.student = self.auth.create_user(test_common.USER_TESTDICT,
-                                             username=test_common.AUTHMOD_MOODLE_STUDENT_USERNAME,
-                                             password=test_common.AUTHMOD_MOODLE_STUDENT_PASSWORD,
-                                             authmod="moodle")
-
-        # Create Submissions
-        self.sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.student)
-
-        # Set Mixin Values
-        self.status_ok = "complete"
-        self.retcode_ok = 0
-        self.status_error = "complete"
-        self.retcode_error = 0
-
-    def tearDown(self):
-
-        # Cleanup
-        self.sub.delete()
-        self.student.delete()
-        self.rpt_moodle.delete()
-        self.tst.delete()
-        self.asn.delete()
-
-        # Call Parent
-        super(RunTestCaseIOBase, self).tearDown()
-
-    def _add_test_file(self, test_file, file_name=None, file_key=None):
-
-        # Proces Input
-        if file_name is None:
-            file_name = test_file
-        if file_key is None:
-            file_key = ""
-
-        # Setup Test File
-        file_bse = open("{:s}/{:s}".format(test_common.TEST_INPUT_PATH, test_file), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                       filename=file_name,
-                                                       name=file_key)
-        data = copy.copy(test_common.FILE_TESTDICT)
-        fle = self.srv.create_file(data, file_obj=file_obj, owner=self.admin)
-        file_obj.close()
-        self.tst.add_files([str(fle.uuid)])
-
-        return fle
-
-    def _del_test_file(self, fle):
-
-        # Cleanup Test File
-        self.tst.rem_files([str(fle.uuid)])
-        fle.delete()
 
 
 class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
@@ -1044,12 +775,9 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_solution_null(self):
 
-        # Extract Data and Remove Original Script
         file_name = self.fle_solution['name']
         file_key = self.fle_solution['key']
         self._del_test_file(self.fle_solution)
-
-        # Add New Solution
         self.fle_solution = self._add_test_file("null",
                                                 file_name=file_name, file_key=file_key)
 
@@ -1065,12 +793,9 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_solution_hang(self):
 
-        # Extract Data and Remove Original Script
         file_name = self.fle_solution['name']
         file_key = self.fle_solution['key']
         self._del_test_file(self.fle_solution)
-
-        # Add New Solution
         self.fle_solution = self._add_test_file("pgm_hang.py",
                                                 file_name=file_name, file_key=file_key)
 
@@ -1086,12 +811,9 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_solution_busy(self):
 
-        # Extract Data and Remove Original Script
         file_name = self.fle_solution['name']
         file_key = self.fle_solution['key']
         self._del_test_file(self.fle_solution)
-
-        # Add New Solution
         self.fle_solution = self._add_test_file("pgm_busy.py",
                                                 file_name=file_name, file_key=file_key)
 
@@ -1107,12 +829,9 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_solution_forkbomb(self):
 
-        # Extract Data and Remove Original Script
         file_name = self.fle_solution['name']
         file_key = self.fle_solution['key']
         self._del_test_file(self.fle_solution)
-
-        # Add New Solution
         self.fle_solution = self._add_test_file("pgm_forkbomb.py",
                                                 file_name=file_name, file_key=file_key)
 
@@ -1178,6 +897,234 @@ class RunTestCaseBadInputMixin(RunTestCaseBaseMixin):
         except AssertionError:
             print("run = {:s}".format(out))
             raise
+
+
+class RunTestCaseBase(StructsTestCase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseBase, self).setUp()
+        self.admin = self.testuser
+
+        # Setup Assignment
+        data = copy.copy(test_common.ASSIGNMENT_TESTDICT)
+        self.asn = self.srv.create_assignment(data, owner=self.admin)
+
+        # Setup Reporter
+        data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
+        data['asn_id'] = test_common.REPMOD_MOODLE_ASN
+        self.rpt_moodle = self.srv.create_reporter(data, owner=self.admin)
+
+        # Create Submission User
+        self.student = self.auth.create_user(test_common.USER_TESTDICT,
+                                             username=test_common.AUTHMOD_MOODLE_STUDENT_USERNAME,
+                                             password=test_common.AUTHMOD_MOODLE_STUDENT_PASSWORD,
+                                             authmod="moodle")
+
+        # Create Submissions
+        self.sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.student)
+
+    def tearDown(self):
+
+        # Cleanup
+        self.sub.delete()
+        self.student.delete()
+        self.rpt_moodle.delete()
+        self.asn.delete()
+
+        # Call Parent
+        super(RunTestCaseBase, self).tearDown()
+
+    def _setup_test(self, mod_tester):
+        data = copy.copy(test_common.TEST_TESTDICT)
+        data['tester'] = mod_tester
+        self.tst = self.asn.create_test(data, owner=self.admin)
+        self.tst.add_reporters([str(self.rpt_moodle.uuid)])
+
+    def _teardown_test(self):
+        self.tst.delete()
+
+    def _add_test_file(self, test_file, file_name=None, file_key=None):
+
+        # Proces Input
+        if file_name is None:
+            file_name = test_file
+        if file_key is None:
+            file_key = ""
+
+        # Setup Test File
+        file_bse = open("{:s}/{:s}".format(test_common.TEST_INPUT_PATH, test_file), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename=file_name,
+                                                       name=file_key)
+        data = copy.copy(test_common.FILE_TESTDICT)
+        fle = self.srv.create_file(data, file_obj=file_obj, owner=self.admin)
+        file_obj.close()
+        self.tst.add_files([str(fle.uuid)])
+
+        return fle
+
+    def _del_test_file(self, fle):
+
+        # Cleanup Test File
+        self.tst.rem_files([str(fle.uuid)])
+        fle.delete()
+
+
+class RunTestCaseScriptBase(RunTestCaseBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseScriptBase, self).setUp()
+
+        # Setup Test
+        self._setup_test("script")
+
+        # Set Mixin Values
+        self.status_ok = "complete"
+        self.retcode_ok = 0
+        self.status_error = "complete-error"
+        self.retcode_error = None
+
+    def tearDown(self):
+
+        # Cleanup
+        self._teardown_test()
+
+        # Call Parent
+        super(RunTestCaseScriptBase, self).tearDown()
+
+
+class RunTestCaseScriptArgsKey(RunTestCaseBadScriptMixin,
+                               RunTestCaseAddTestsMixin,
+                               RunTestCaseBadTestsMixin,
+                               RunTestCaseScriptBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseScriptArgsKey, self).setUp()
+
+        # Add Script File
+        self.fle_script = self._add_test_file("grade_add_args.py", file_key="script")
+        self.tst['path_script'] = ""
+
+        # Set Mixin Values
+        self.sub_name = "add.py"
+
+    def tearDown(self):
+
+        # Remove Script File
+        self._del_test_file(self.fle_script)
+
+        # Call Parent
+        super(RunTestCaseScriptArgsKey, self).tearDown()
+
+
+class RunTestCaseScriptStdinKey(RunTestCaseBadScriptMixin,
+                                RunTestCaseAddTestsMixin,
+                                RunTestCaseBadTestsMixin,
+                                RunTestCaseScriptBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseScriptStdinKey, self).setUp()
+
+        # Add Script File
+        self.fle_script = self._add_test_file("grade_add_stdin.py", file_key="script")
+        self.tst['path_script'] = ""
+
+        # Set Mixin Values
+        self.sub_name = "add.py"
+
+    def tearDown(self):
+
+        # Remove Script File
+        self._del_test_file(self.fle_script)
+
+        # Call Parent
+        super(RunTestCaseScriptStdinKey, self).tearDown()
+
+
+class RunTestCaseScriptArgsPath(RunTestCaseBadScriptMixin,
+                                RunTestCaseAddTestsMixin,
+                                RunTestCaseBadTestsMixin,
+                                RunTestCaseScriptBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseScriptArgsPath, self).setUp()
+
+        # Add Script File
+        self.fle_script = self._add_test_file("grade_add_args.py",)
+        self.tst['path_script'] = "grade_add_args.py"
+
+        # Set Mixin Values
+        self.sub_name = "add.py"
+
+    def tearDown(self):
+
+        # Remove Script File
+        self._del_test_file(self.fle_script)
+
+        # Call Parent
+        super(RunTestCaseScriptArgsPath, self).tearDown()
+
+
+class RunTestCaseScriptStdinPath(RunTestCaseBadScriptMixin,
+                                 RunTestCaseAddTestsMixin,
+                                 RunTestCaseBadTestsMixin,
+                                 RunTestCaseScriptBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseScriptStdinPath, self).setUp()
+
+        # Add Script File
+        self.fle_script = self._add_test_file("grade_add_stdin.py",)
+        self.tst['path_script'] = "grade_add_stdin.py"
+
+        # Set Mixin Values
+        self.sub_name = "add.py"
+
+    def tearDown(self):
+
+        # Remove Script File
+        self._del_test_file(self.fle_script)
+
+        # Call Parent
+        super(RunTestCaseScriptStdinPath, self).tearDown()
+
+
+class RunTestCaseIOBase(RunTestCaseBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseIOBase, self).setUp()
+
+        # Setup Test
+        self._setup_test("io")
+
+        # Set Mixin Values
+        self.status_ok = "complete"
+        self.retcode_ok = 0
+        self.status_error = "complete"
+        self.retcode_error = 0
+
+    def tearDown(self):
+
+        # Cleanup
+        self._teardown_test()
+
+        # Call Parent
+        super(RunTestCaseIOBase, self).tearDown()
 
 
 class RunTestCaseIOKeyAdd(RunTestCaseBadSolnMixin,
