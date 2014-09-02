@@ -118,7 +118,7 @@ class Tester(tester.Tester):
                 stderr = msg
 
         # Log Results
-        msg = "ret='{:d}', score='{:.2f}', stderr='{:s}'".format(ret, score, stderr)
+        msg = "retval='{:d}', score='{:.2f}', output='{:s}'".format(ret, score, stderr)
         logger.info(self._format_msg(msg))
 
         # Return
