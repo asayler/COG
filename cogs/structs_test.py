@@ -1289,6 +1289,34 @@ class RunTestCaseIOPathAdd(RunTestCaseBadSolnMixin,
         super(RunTestCaseIOPathAdd, self).tearDown()
 
 
+class RunTestCaseIOPathHello(RunTestCaseBadSolnMixin,
+                             RunTestCaseBadTestsMixin,
+                             RunTestCaseHelloTestsMixin,
+                             RunTestCaseIOBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseIOPathHello, self).setUp()
+
+        # Add Solution
+        self.tst['path_solution'] = "hello_good.py"
+        self.fle_solution = self._add_test_file("hello_good.py")
+
+        # Set Mixin Values
+        self.tst['path_submission'] = "hello.py"
+        self.sub_name = "hello.py"
+        self.sub_key = ""
+
+    def tearDown(self):
+
+        # Remove Solution
+        self._del_test_file(self.fle_solution)
+
+        # Call Parent
+        super(RunTestCaseIOPathHello, self).tearDown()
+
+
 # Main
 if __name__ == '__main__':
     unittest.main()
