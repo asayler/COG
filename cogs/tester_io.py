@@ -114,7 +114,6 @@ class Tester(tester.Tester):
                 fle_path = os.path.normpath(fle['path'])
                 if fle_path.startswith(input_prefix):
                     input_fles.append(fle)
-                    break
             if not input_fles:
                 msg = ("User specified 'prefix_input', " +
                        "but no files starting with {:s} were found".format(input_prefix))
