@@ -605,6 +605,39 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
             raise
 
 
+class RunTestCaseHelloTestsMixin(RunTestCaseBaseMixin):
+
+    def test_execute_run_sub_good(self):
+
+        out = self._test_execute_run_sub("hello_good.py", file_name=self.sub_name)
+        try:
+            self.assertEqual(out['status'], self.status_ok)
+            if self.retcode_ok:
+                self.assertEqual(int(out['retcode']), self.retcode_ok)
+            else:
+                self.assertEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 10)
+        except AssertionError as e:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_sub_bad(self):
+
+        out = self._test_execute_run_sub("hello_bad.py", file_name=self.sub_name)
+        try:
+            self.assertEqual(out['status'], self.status_ok)
+            if self.retcode_ok:
+                self.assertEqual(int(out['retcode']), self.retcode_ok)
+            else:
+                self.assertEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+
 class RunTestCaseScriptBase(StructsTestCase):
 
     def setUp(self):
@@ -1184,6 +1217,32 @@ class RunTestCaseIOKeyAdd(RunTestCaseBadSolnMixin,
 
         # Call Parent
         super(RunTestCaseIOKeyAdd, self).tearDown()
+
+
+class RunTestCaseIOKeyHello(RunTestCaseBadSolnMixin,
+                            RunTestCaseBadTestsMixin,
+                            RunTestCaseHelloTestsMixin,
+                            RunTestCaseIOBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseIOKeyHello, self).setUp()
+
+        # Add Solution
+        self.tst['path_solution'] = ""
+        self.fle_solution = self._add_test_file("hello_good.py", file_key="solution")
+
+        # Set Mixin Values
+        self.sub_name = "hello.py"
+
+    def tearDown(self):
+
+        # Remove Solution
+        self._del_test_file(self.fle_solution)
+
+        # Call Parent
+        super(RunTestCaseIOKeyHello, self).tearDown()
 
 
 # Main
