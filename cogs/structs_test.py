@@ -471,14 +471,14 @@ class SubmissionTestCase(test_common_backend.SubMixin,
         sub.delete()
 
 
-class RunTestCaseTestsMixin(object):
+class RunTestCaseBaseTestsMixin(object):
 
     def _test_execute_run_sub(self, submission_file, file_name=None, file_key=None):
 
         # Proces Input
-        if not file_name:
+        if file_name is None:
             file_name = submission_file
-        if not file_key:
+        if file_key is None:
             file_key = "submission"
 
         # Setup Submission File
@@ -629,9 +629,9 @@ class RunTestCaseScriptBase(StructsTestCase):
     def _setup(self, script_file, file_name=None, file_key=None):
 
         # Proces Input
-        if not file_name:
+        if file_name is None:
             file_name = script_file
-        if not file_key:
+        if file_key is None:
             file_key = "script"
 
         # Setup Test Script
