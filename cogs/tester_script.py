@@ -85,7 +85,7 @@ class Tester(tester.Tester):
         os.chdir(self.env.wd)
 
         # Run Script
-        score = float('nan')
+        score = float(0)
         try:
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.env.env)
             stdout, stderr = p.communicate()
@@ -94,7 +94,7 @@ class Tester(tester.Tester):
             msg = "Script raised error: {:s}".format(e)
             logger.error(self._format_msg(msg))
             stderr = msg
-            retcode = -1
+            ret = -1
 
         # Change Back to OWD
         msg = "Changing back to directory '{:s}'".format(owd)
@@ -107,11 +107,15 @@ class Tester(tester.Tester):
             try:
                 score = float(stdout_clean)
             except Exception as e:
-                msg = "Could not convert score '{:s}' to float: {:s}".format(score, e)
+                msg = "Could not convert score '{:s}' to float: {:s}".format(stdout_clean, e)
                 logger.error(self._format_msg(msg))
                 stderr = msg
+                ret = -1
         else:
-            score = 0
+            msg = "Script returned non-zero value: {:d}".format(ret)
+            logger.warning(self._format_msg(msg))
+            if not stderr:
+                stderr = msg
 
         # Log Results
         msg = "ret='{:d}', score='{:.2f}', stderr='{:s}'".format(ret, score, stderr)
