@@ -479,7 +479,7 @@ class RunTestCaseBaseMixin(object):
         if file_name is None:
             file_name = submission_file
         if file_key is None:
-            file_key = "submission"
+            file_key = ""
 
         # Setup Submission File
         file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, submission_file)
@@ -540,7 +540,8 @@ class RunTestCaseBadTestsMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_sub_null(self):
 
-        out = self._test_execute_run_sub("null", file_name=self.sub_name)
+        out = self._test_execute_run_sub("null",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], self.status_error)
             if self.retcode_error is not None:
@@ -555,7 +556,8 @@ class RunTestCaseBadTestsMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_sub_hang(self):
 
-        out = self._test_execute_run_sub("pgm_hang.py", file_name=self.sub_name)
+        out = self._test_execute_run_sub("pgm_hang.py",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], self.status_error)
             if self.retcode_error is not None:
@@ -570,7 +572,8 @@ class RunTestCaseBadTestsMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_sub_busy(self):
 
-        out = self._test_execute_run_sub("pgm_busy.py", file_name=self.sub_name)
+        out = self._test_execute_run_sub("pgm_busy.py",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], self.status_error)
             if self.retcode_error is not None:
@@ -585,7 +588,8 @@ class RunTestCaseBadTestsMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_sub_forkbomb(self):
 
-        out = self._test_execute_run_sub("pgm_forkbomb.py", file_name=self.sub_name)
+        out = self._test_execute_run_sub("pgm_forkbomb.py",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], self.status_error)
             if self.retcode_error is not None:
@@ -603,7 +607,8 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_sub_good(self):
 
-        out = self._test_execute_run_sub("add_good.py", file_name=self.sub_name)
+        out = self._test_execute_run_sub("add_good.py",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], self.status_ok)
             if self.retcode_ok:
@@ -618,7 +623,8 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_sub_bad(self):
 
-        out = self._test_execute_run_sub("add_bad.py", file_name=self.sub_name)
+        out = self._test_execute_run_sub("add_bad.py",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], self.status_ok)
             if self.retcode_ok:
@@ -636,7 +642,8 @@ class RunTestCaseHelloTestsMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_sub_good(self):
 
-        out = self._test_execute_run_sub("hello_good.py", file_name=self.sub_name)
+        out = self._test_execute_run_sub("hello_good.py",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], self.status_ok)
             if self.retcode_ok:
@@ -651,7 +658,8 @@ class RunTestCaseHelloTestsMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_sub_bad(self):
 
-        out = self._test_execute_run_sub("hello_bad.py", file_name=self.sub_name)
+        out = self._test_execute_run_sub("hello_bad.py",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], self.status_ok)
             if self.retcode_ok:
@@ -671,7 +679,8 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
         self.tst.rem_files([str(self.fle_script.uuid)])
 
-        out = self._test_execute_run_sub("null", file_name="add.py")
+        out = self._test_execute_run_sub("null",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], "complete-exception-run")
             self.assertNotEqual(int(out['retcode']), 0)
@@ -686,7 +695,8 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
         self.fle_script['key'] = ""
         self.tst['path_script'] = ""
 
-        out = self._test_execute_run_sub("null", file_name="add.py")
+        out = self._test_execute_run_sub("null",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], "complete-exception-run")
             self.assertNotEqual(int(out['retcode']), 0)
@@ -775,7 +785,8 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
 
         self.tst.rem_files([str(self.fle_solution.uuid)])
 
-        out = self._test_execute_run_sub("null", file_name="add.py")
+        out = self._test_execute_run_sub("null",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], "complete-exception-run")
             self.assertNotEqual(int(out['retcode']), 0)
@@ -790,7 +801,8 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
         self.fle_solution['key'] = ""
         self.tst['path_solution'] = ""
 
-        out = self._test_execute_run_sub("null", file_name="add.py")
+        out = self._test_execute_run_sub("null",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], "complete-exception-run")
             self.assertNotEqual(int(out['retcode']), 0)
@@ -808,7 +820,8 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
         self.fle_solution = self._add_test_file("null",
                                                 file_name=file_name, file_key=file_key)
 
-        out = self._test_execute_run_sub("null", file_name="add.py")
+        out = self._test_execute_run_sub("null",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], "complete")
             self.assertEqual(int(out['retcode']), 0)
@@ -826,7 +839,8 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
         self.fle_solution = self._add_test_file("pgm_hang.py",
                                                 file_name=file_name, file_key=file_key)
 
-        out = self._test_execute_run_sub("null", file_name="add.py")
+        out = self._test_execute_run_sub("null",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], "complete-error")
             self.assertNotEqual(int(out['retcode']), 0)
@@ -844,7 +858,8 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
         self.fle_solution = self._add_test_file("pgm_busy.py",
                                                 file_name=file_name, file_key=file_key)
 
-        out = self._test_execute_run_sub("null", file_name="add.py")
+        out = self._test_execute_run_sub("null",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], "complete-error")
             self.assertNotEqual(int(out['retcode']), 0)
@@ -862,7 +877,8 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
         self.fle_solution = self._add_test_file("pgm_forkbomb.py",
                                                 file_name=file_name, file_key=file_key)
 
-        out = self._test_execute_run_sub("null", file_name="add.py")
+        out = self._test_execute_run_sub("null",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], "complete-error")
             self.assertNotEqual(int(out['retcode']), 0)
@@ -881,7 +897,8 @@ class RunTestCaseBadInputMixin(RunTestCaseBaseMixin):
         self.tst.rem_files([str(self.fle_input2.uuid)])
         self.tst.rem_files([str(self.fle_input3.uuid)])
 
-        out = self._test_execute_run_sub("null", file_name="add.py")
+        out = self._test_execute_run_sub("null",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], "complete-error")
             self.assertNotEqual(int(out['retcode']), 0)
@@ -898,7 +915,8 @@ class RunTestCaseBadInputMixin(RunTestCaseBaseMixin):
         self.fle_input2['key'] = ""
         self.fle_input3['key'] = ""
 
-        out = self._test_execute_run_sub("null", file_name="add.py")
+        out = self._test_execute_run_sub("null",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], "complete-error")
             self.assertNotEqual(int(out['retcode']), 0)
@@ -913,9 +931,11 @@ class RunTestCaseBadInputMixin(RunTestCaseBaseMixin):
         file_name = self.fle_input1['name']
         file_key = self.fle_input1['key']
         self._del_test_file(self.fle_input1)
-        self.fle_input1 = self._add_test_file("null", file_key="input")
+        self.fle_input1 = self._add_test_file("null",
+                                              file_name=file_name, file_key=file_key)
 
-        out = self._test_execute_run_sub("null", file_name="add.py")
+        out = self._test_execute_run_sub("null",
+                                         file_name=self.sub_name, file_key=self.sub_key)
         try:
             self.assertEqual(out['status'], "complete-error")
             self.assertNotEqual(int(out['retcode']), 0)
@@ -1043,6 +1063,7 @@ class RunTestCaseScriptArgsKey(RunTestCaseBadScriptMixin,
 
         # Set Mixin Values
         self.sub_name = "add.py"
+        self.sub_key = ""
 
     def tearDown(self):
 
@@ -1069,6 +1090,7 @@ class RunTestCaseScriptStdinKey(RunTestCaseBadScriptMixin,
 
         # Set Mixin Values
         self.sub_name = "add.py"
+        self.sub_key = ""
 
     def tearDown(self):
 
@@ -1095,6 +1117,7 @@ class RunTestCaseScriptArgsPath(RunTestCaseBadScriptMixin,
 
         # Set Mixin Values
         self.sub_name = "add.py"
+        self.sub_key = ""
 
     def tearDown(self):
 
@@ -1121,6 +1144,7 @@ class RunTestCaseScriptStdinPath(RunTestCaseBadScriptMixin,
 
         # Set Mixin Values
         self.sub_name = "add.py"
+        self.sub_key = ""
 
     def tearDown(self):
 
@@ -1183,7 +1207,9 @@ class RunTestCaseIOKeyAdd(RunTestCaseBadSolnMixin,
                                               file_name="input3.txt", file_key="input")
 
         # Set Mixin Values
+        self.tst['path_submission'] = ""
         self.sub_name = "add.py"
+        self.sub_key = "submission"
 
     def tearDown(self):
 
@@ -1212,7 +1238,9 @@ class RunTestCaseIOKeyHello(RunTestCaseBadSolnMixin,
         self.fle_solution = self._add_test_file("hello_good.py", file_key="solution")
 
         # Set Mixin Values
+        self.tst['path_submission'] = ""
         self.sub_name = "hello.py"
+        self.sub_key = "submission"
 
     def tearDown(self):
 
@@ -1221,6 +1249,44 @@ class RunTestCaseIOKeyHello(RunTestCaseBadSolnMixin,
 
         # Call Parent
         super(RunTestCaseIOKeyHello, self).tearDown()
+
+
+class RunTestCaseIOPathAdd(RunTestCaseBadSolnMixin,
+                           RunTestCaseBadInputMixin,
+                           RunTestCaseBadTestsMixin,
+                           RunTestCaseAddTestsMixin,
+                           RunTestCaseIOBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseIOPathAdd, self).setUp()
+
+        # Add Solution
+        self.tst['path_solution'] = "add_good.py"
+        self.fle_solution = self._add_test_file("add_good.py")
+
+        # Add Test Inputs
+        self.tst['prefix_input'] = "input"
+        self.fle_input1 = self._add_test_file("add_input1.txt", file_name="input1.txt")
+        self.fle_input2 = self._add_test_file("add_input2.txt", file_name="input2.txt")
+        self.fle_input3 = self._add_test_file("add_input3.txt", file_name="input3.txt")
+
+        # Set Mixin Values
+        self.tst['path_submission'] = "add.py"
+        self.sub_name = "add.py"
+        self.sub_key = ""
+
+    def tearDown(self):
+
+        # Remove Solution
+        self._del_test_file(self.fle_input3)
+        self._del_test_file(self.fle_input2)
+        self._del_test_file(self.fle_input1)
+        self._del_test_file(self.fle_solution)
+
+        # Call Parent
+        super(RunTestCaseIOPathAdd, self).tearDown()
 
 
 # Main

@@ -73,7 +73,7 @@ class Tester(tester.Tester):
 
         # If user provided path_submission, use that
         if self.tst['path_submission']:
-            sub_path = "{:s}/{:s}".format(self.env.wd_tst, self.tst['path_submission'])
+            sub_path = "{:s}/{:s}".format(self.env.wd_sub, self.tst['path_submission'])
             sub_path = os.path.normpath(sub_path)
             for fle in self.env.sub_files:
                 fle_path = os.path.normpath(fle['path'])
