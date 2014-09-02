@@ -509,41 +509,11 @@ class RunTestCaseBaseMixin(object):
         return out
 
 
-class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
-
-    def test_execute_run_sub_good(self):
-
-        out = self._test_execute_run_sub("add_good.py", file_name="add.py")
-        try:
-            self.assertEqual(out['status'], self.status_ok)
-            if self.retcode_ok:
-                self.assertEqual(int(out['retcode']), self.retcode_ok)
-            else:
-                self.assertEqual(int(out['retcode']), 0)
-            self.assertTrue(out['output'])
-            self.assertEqual(float(out['score']), 10)
-        except AssertionError as e:
-            print("run = {:s}".format(out))
-            raise
-
-    def test_execute_run_sub_bad(self):
-
-        out = self._test_execute_run_sub("add_bad.py", file_name="add.py")
-        try:
-            self.assertEqual(out['status'], self.status_ok)
-            if self.retcode_ok:
-                self.assertEqual(int(out['retcode']), self.retcode_ok)
-            else:
-                self.assertEqual(int(out['retcode']), 0)
-            self.assertTrue(out['output'])
-            self.assertLess(float(out['score']), 10)
-        except AssertionError:
-            print("run = {:s}".format(out))
-            raise
+class RunTestCaseBadTestsMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_sub_null(self):
 
-        out = self._test_execute_run_sub("null", file_name="add.py")
+        out = self._test_execute_run_sub("null", file_name=self.sub_name)
         try:
             self.assertEqual(out['status'], self.status_error)
             if self.retcode_error is not None:
@@ -558,7 +528,7 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_sub_hang(self):
 
-        out = self._test_execute_run_sub("pgm_hang.py", file_name="add.py")
+        out = self._test_execute_run_sub("pgm_hang.py", file_name=self.sub_name)
         try:
             self.assertEqual(out['status'], self.status_error)
             if self.retcode_error is not None:
@@ -573,7 +543,7 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_sub_busy(self):
 
-        out = self._test_execute_run_sub("pgm_busy.py", file_name="add.py")
+        out = self._test_execute_run_sub("pgm_busy.py", file_name=self.sub_name)
         try:
             self.assertEqual(out['status'], self.status_error)
             if self.retcode_error is not None:
@@ -588,7 +558,7 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_sub_forkbomb(self):
 
-        out = self._test_execute_run_sub("pgm_forkbomb.py", file_name="add.py")
+        out = self._test_execute_run_sub("pgm_forkbomb.py", file_name=self.sub_name)
         try:
             self.assertEqual(out['status'], self.status_error)
             if self.retcode_error is not None:
@@ -597,6 +567,39 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
                 self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+
+class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
+
+    def test_execute_run_sub_good(self):
+
+        out = self._test_execute_run_sub("add_good.py", file_name=self.sub_name)
+        try:
+            self.assertEqual(out['status'], self.status_ok)
+            if self.retcode_ok:
+                self.assertEqual(int(out['retcode']), self.retcode_ok)
+            else:
+                self.assertEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 10)
+        except AssertionError as e:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_sub_bad(self):
+
+        out = self._test_execute_run_sub("add_bad.py", file_name=self.sub_name)
+        try:
+            self.assertEqual(out['status'], self.status_ok)
+            if self.retcode_ok:
+                self.assertEqual(int(out['retcode']), self.retcode_ok)
+            else:
+                self.assertEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertLess(float(out['score']), 10)
         except AssertionError:
             print("run = {:s}".format(out))
             raise
@@ -634,6 +637,12 @@ class RunTestCaseScriptBase(StructsTestCase):
 
         # Create Submissions
         self.sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.student)
+
+        # Set Mixin Values
+        self.status_ok = "complete"
+        self.retcode_ok = 0
+        self.status_error = "complete-error"
+        self.retcode_error = None
 
     def tearDown(self):
 
@@ -789,6 +798,7 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
 class RunTestCaseScriptArgsKey(RunTestCaseBadScriptMixin,
                                RunTestCaseAddTestsMixin,
+                               RunTestCaseBadTestsMixin,
                                RunTestCaseScriptBase):
 
     def setUp(self):
@@ -799,6 +809,9 @@ class RunTestCaseScriptArgsKey(RunTestCaseBadScriptMixin,
         # Call Helper
         self._setup("grade_add_args.py", file_key="script")
         self.tst['path_script'] = ""
+
+        # Set Mixin Values
+        self.sub_name = "add.py"
 
     def tearDown(self):
 
@@ -811,6 +824,7 @@ class RunTestCaseScriptArgsKey(RunTestCaseBadScriptMixin,
 
 class RunTestCaseScriptStdinKey(RunTestCaseBadScriptMixin,
                                 RunTestCaseAddTestsMixin,
+                                RunTestCaseBadTestsMixin,
                                 RunTestCaseScriptBase):
 
     def setUp(self):
@@ -821,6 +835,9 @@ class RunTestCaseScriptStdinKey(RunTestCaseBadScriptMixin,
         # Call Helper
         self._setup("grade_add_stdin.py", file_key="script")
         self.tst['path_script'] = ""
+
+        # Set Mixin Values
+        self.sub_name = "add.py"
 
     def tearDown(self):
 
@@ -833,6 +850,7 @@ class RunTestCaseScriptStdinKey(RunTestCaseBadScriptMixin,
 
 class RunTestCaseScriptArgsPath(RunTestCaseBadScriptMixin,
                                 RunTestCaseAddTestsMixin,
+                                RunTestCaseBadTestsMixin,
                                 RunTestCaseScriptBase):
 
     def setUp(self):
@@ -843,6 +861,9 @@ class RunTestCaseScriptArgsPath(RunTestCaseBadScriptMixin,
         # Call Helper
         self._setup("grade_add_args.py", file_key="")
         self.tst['path_script'] = "grade_add_args.py"
+
+        # Set Mixin Values
+        self.sub_name = "add.py"
 
     def tearDown(self):
 
@@ -855,6 +876,7 @@ class RunTestCaseScriptArgsPath(RunTestCaseBadScriptMixin,
 
 class RunTestCaseScriptStdinPath(RunTestCaseBadScriptMixin,
                                  RunTestCaseAddTestsMixin,
+                                 RunTestCaseBadTestsMixin,
                                  RunTestCaseScriptBase):
 
     def setUp(self):
@@ -865,6 +887,9 @@ class RunTestCaseScriptStdinPath(RunTestCaseBadScriptMixin,
         # Call Helper
         self._setup("grade_add_stdin.py", file_key="")
         self.tst['path_script'] = "grade_add_stdin.py"
+
+        # Set Mixin Values
+        self.sub_name = "add.py"
 
     def tearDown(self):
 
@@ -908,7 +933,7 @@ class RunTestCaseIOBase(StructsTestCase):
         # Create Submissions
         self.sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.student)
 
-        # Set Check Values
+        # Set Mixin Values
         self.status_ok = "complete"
         self.retcode_ok = 0
         self.status_error = "complete"
@@ -1124,6 +1149,7 @@ class RunTestCaseBadInputMixin(RunTestCaseBaseMixin):
 
 class RunTestCaseIOKeyAdd(RunTestCaseBadSolnMixin,
                           RunTestCaseBadInputMixin,
+                          RunTestCaseBadTestsMixin,
                           RunTestCaseAddTestsMixin,
                           RunTestCaseIOBase):
 
@@ -1144,6 +1170,9 @@ class RunTestCaseIOKeyAdd(RunTestCaseBadSolnMixin,
                                               file_name="input2.txt", file_key="input")
         self.fle_input3 = self._add_test_file("add_input3.txt",
                                               file_name="input3.txt", file_key="input")
+
+        # Set Mixin Values
+        self.sub_name = "add.py"
 
     def tearDown(self):
 
