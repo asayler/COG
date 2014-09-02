@@ -789,7 +789,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
 
         # Check Object
         try:
-            self.assertEqual(run['status'], 'complete-error')
+            self.assertEqual(run['status'], 'complete-exception-run')
             self.assertEqual(int(run['retcode']), -1)
             self.assertEqual(float(run['score']), 0)
             self.assertTrue(run['output'])
@@ -1026,7 +1026,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
 
         # Check Object
         try:
-            self.assertEqual(run['status'], 'complete-error')
+            self.assertEqual(run['status'], 'complete-exception-run')
             self.assertEqual(int(run['retcode']), -1)
             self.assertEqual(float(run['score']), 0)
             self.assertTrue(run['output'])
@@ -1077,7 +1077,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
 
         # Check Object
         try:
-            self.assertEqual(run['status'], 'complete-error')
+            self.assertEqual(run['status'], 'complete-exception-run')
             self.assertEqual(int(run['retcode']), -1)
             self.assertEqual(float(run['score']), 0)
             self.assertTrue(run['output'])
@@ -1145,7 +1145,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
 
         # Check Object
         try:
-            self.assertEqual(run['status'], 'complete')
+            self.assertEqual(run['status'], 'complete-error')
             self.assertNotEqual(int(run['retcode']), 0)
             self.assertEqual(float(run['score']), 0)
             self.assertTrue(run['output'])
