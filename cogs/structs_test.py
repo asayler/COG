@@ -511,6 +511,33 @@ class RunTestCaseBaseMixin(object):
 
 class RunTestCaseBadTestsMixin(RunTestCaseBaseMixin):
 
+    def test_execute_run_sub_none(self):
+
+        # Run Submission
+        data = copy.copy(test_common.RUN_TESTDICT)
+        data['test'] = str(self.tst.uuid)
+        run = self.sub.execute_run(data, workers=self.workers, owner=self.testuser)
+        self.assertTrue(run)
+        while not run.is_complete():
+            time.sleep(1)
+        out = run.get_dict()
+
+        # Cleanup
+        run.delete()
+
+        # Check Output
+        try:
+            self.assertEqual(out['status'], self.status_nosub)
+            if self.retcode_nosub is not None:
+                self.assertEqual(int(out['retcode']), self.retcode_nosub)
+            else:
+                self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
     def test_execute_run_sub_null(self):
 
         out = self._test_execute_run_sub("null", file_name=self.sub_name)
@@ -988,6 +1015,8 @@ class RunTestCaseScriptBase(RunTestCaseBase):
         self.retcode_ok = 0
         self.status_error = "complete-error"
         self.retcode_error = None
+        self.status_nosub = "complete"
+        self.retcode_nosub = 0
 
     def tearDown(self):
 
@@ -1117,6 +1146,8 @@ class RunTestCaseIOBase(RunTestCaseBase):
         self.retcode_ok = 0
         self.status_error = "complete"
         self.retcode_error = 0
+        self.status_nosub = "complete-exception-run"
+        self.retcode_nosub = -1
 
     def tearDown(self):
 
