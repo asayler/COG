@@ -515,8 +515,11 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
 
         out = self._test_execute_run_sub("add_good.py", file_name="add.py")
         try:
-            self.assertEqual(out['status'], "complete")
-            self.assertEqual(int(out['retcode']), 0)
+            self.assertEqual(out['status'], self.status_ok)
+            if self.retcode_ok:
+                self.assertEqual(int(out['retcode']), self.retcode_ok)
+            else:
+                self.assertEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 10)
         except AssertionError as e:
@@ -527,8 +530,11 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
 
         out = self._test_execute_run_sub("add_bad.py", file_name="add.py")
         try:
-            self.assertEqual(out['status'], "complete")
-            self.assertEqual(int(out['retcode']), 0)
+            self.assertEqual(out['status'], self.status_ok)
+            if self.retcode_ok:
+                self.assertEqual(int(out['retcode']), self.retcode_ok)
+            else:
+                self.assertEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertLess(float(out['score']), 10)
         except AssertionError:
@@ -539,8 +545,11 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
 
         out = self._test_execute_run_sub("null", file_name="add.py")
         try:
-            self.assertEqual(out['status'], "complete-error")
-            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertEqual(out['status'], self.status_error)
+            if self.retcode_error is not None:
+                self.assertEqual(int(out['retcode']), self.retcode_error)
+            else:
+                self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
         except AssertionError:
@@ -551,8 +560,11 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
 
         out = self._test_execute_run_sub("pgm_hang.py", file_name="add.py")
         try:
-            self.assertEqual(out['status'], "complete-error")
-            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertEqual(out['status'], self.status_error)
+            if self.retcode_error is not None:
+                self.assertEqual(int(out['retcode']), self.retcode_error)
+            else:
+                self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
         except AssertionError:
@@ -563,8 +575,11 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
 
         out = self._test_execute_run_sub("pgm_busy.py", file_name="add.py")
         try:
-            self.assertEqual(out['status'], "complete-error")
-            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertEqual(out['status'], self.status_error)
+            if self.retcode_error is not None:
+                self.assertEqual(int(out['retcode']), self.retcode_error)
+            else:
+                self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
         except AssertionError:
@@ -575,8 +590,11 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
 
         out = self._test_execute_run_sub("pgm_forkbomb.py", file_name="add.py")
         try:
-            self.assertEqual(out['status'], "complete-error")
-            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertEqual(out['status'], self.status_error)
+            if self.retcode_error is not None:
+                self.assertEqual(int(out['retcode']), self.retcode_error)
+            else:
+                self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
         except AssertionError:
@@ -855,6 +873,288 @@ class RunTestCaseScriptStdinPath(RunTestCaseBadScriptMixin,
 
         # Call Parent
         super(RunTestCaseScriptStdinPath, self).tearDown()
+
+
+class RunTestCaseIOBase(StructsTestCase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseIOBase, self).setUp()
+        self.admin = self.testuser
+
+        # Setup Assignment
+        data = copy.copy(test_common.ASSIGNMENT_TESTDICT)
+        self.asn = self.srv.create_assignment(data, owner=self.admin)
+
+        # Setup Test
+        data = copy.copy(test_common.TEST_TESTDICT)
+        data['tester'] = "io"
+        self.tst = self.asn.create_test(data, owner=self.admin)
+
+        # Setup Reporter
+        data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
+        data['asn_id'] = test_common.REPMOD_MOODLE_ASN
+        self.rpt_moodle = self.srv.create_reporter(data, owner=self.admin)
+        self.tst.add_reporters([str(self.rpt_moodle.uuid)])
+
+        # Create Submission User
+        self.student = self.auth.create_user(test_common.USER_TESTDICT,
+                                             username=test_common.AUTHMOD_MOODLE_STUDENT_USERNAME,
+                                             password=test_common.AUTHMOD_MOODLE_STUDENT_PASSWORD,
+                                             authmod="moodle")
+
+        # Create Submissions
+        self.sub = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.student)
+
+        # Set Check Values
+        self.status_ok = "complete"
+        self.retcode_ok = 0
+        self.status_error = "complete"
+        self.retcode_error = 0
+
+    def tearDown(self):
+
+        # Cleanup
+        self.sub.delete()
+        self.student.delete()
+        self.rpt_moodle.delete()
+        self.tst.delete()
+        self.asn.delete()
+
+        # Call Parent
+        super(RunTestCaseIOBase, self).tearDown()
+
+    def _add_test_file(self, test_file, file_name=None, file_key=None):
+
+        # Proces Input
+        if file_name is None:
+            file_name = test_file
+        if file_key is None:
+            file_key = ""
+
+        # Setup Test File
+        file_bse = open("{:s}/{:s}".format(test_common.TEST_INPUT_PATH, test_file), 'rb')
+        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                       filename=file_name,
+                                                       name=file_key)
+        data = copy.copy(test_common.FILE_TESTDICT)
+        fle = self.srv.create_file(data, file_obj=file_obj, owner=self.admin)
+        file_obj.close()
+        self.tst.add_files([str(fle.uuid)])
+
+        return fle
+
+    def _del_test_file(self, fle):
+
+        # Cleanup Test File
+        self.tst.rem_files([str(fle.uuid)])
+        fle.delete()
+
+
+class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
+
+    def test_execute_run_solution_none(self):
+
+        self.tst.rem_files([str(self.fle_solution.uuid)])
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete-exception-run")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_solution_hidden(self):
+
+        self.fle_solution['key'] = ""
+        self.tst['path_solution'] = ""
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete-exception-run")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_solution_null(self):
+
+        # Extract Data and Remove Original Script
+        file_name = self.fle_solution['name']
+        file_key = self.fle_solution['key']
+        self._del_test_file(self.fle_solution)
+
+        # Add New Solution
+        self.fle_solution = self._add_test_file("null",
+                                                file_name=file_name, file_key=file_key)
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete")
+            self.assertEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 10)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_solution_hang(self):
+
+        # Extract Data and Remove Original Script
+        file_name = self.fle_solution['name']
+        file_key = self.fle_solution['key']
+        self._del_test_file(self.fle_solution)
+
+        # Add New Solution
+        self.fle_solution = self._add_test_file("pgm_hang.py",
+                                                file_name=file_name, file_key=file_key)
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete-error")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_solution_busy(self):
+
+        # Extract Data and Remove Original Script
+        file_name = self.fle_solution['name']
+        file_key = self.fle_solution['key']
+        self._del_test_file(self.fle_solution)
+
+        # Add New Solution
+        self.fle_solution = self._add_test_file("pgm_busy.py",
+                                                file_name=file_name, file_key=file_key)
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete-error")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_solution_forkbomb(self):
+
+        # Extract Data and Remove Original Script
+        file_name = self.fle_solution['name']
+        file_key = self.fle_solution['key']
+        self._del_test_file(self.fle_solution)
+
+        # Add New Solution
+        self.fle_solution = self._add_test_file("pgm_forkbomb.py",
+                                                file_name=file_name, file_key=file_key)
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete-error")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+
+class RunTestCaseBadInputMixin(RunTestCaseBaseMixin):
+
+    def test_execute_run_input_none(self):
+
+        self.tst.rem_files([str(self.fle_input1.uuid)])
+        self.tst.rem_files([str(self.fle_input2.uuid)])
+        self.tst.rem_files([str(self.fle_input3.uuid)])
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete-error")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_input_hidden(self):
+
+        self.tst['prefix_input'] = ""
+        self.fle_input1['key'] = ""
+        self.fle_input2['key'] = ""
+        self.fle_input3['key'] = ""
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete-error")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_input_null(self):
+
+        file_name = self.fle_input1['name']
+        file_key = self.fle_input1['key']
+        self._del_test_file(self.fle_input1)
+        self.fle_input1 = self._add_test_file("null", file_key="input")
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete-error")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+
+class RunTestCaseIOKeyAdd(RunTestCaseBadSolnMixin,
+                          RunTestCaseBadInputMixin,
+                          RunTestCaseAddTestsMixin,
+                          RunTestCaseIOBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseIOKeyAdd, self).setUp()
+
+        # Add Solution
+        self.tst['path_solution'] = ""
+        self.fle_solution = self._add_test_file("add_good.py", file_key="solution")
+
+        # Add Test Inputs
+        self.tst['prefix_input'] = ""
+        self.fle_input1 = self._add_test_file("add_input1.txt",
+                                              file_name="input1.txt", file_key="input")
+        self.fle_input2 = self._add_test_file("add_input2.txt",
+                                              file_name="input2.txt", file_key="input")
+        self.fle_input3 = self._add_test_file("add_input3.txt",
+                                              file_name="input3.txt", file_key="input")
+
+    def tearDown(self):
+
+        # Remove Solution
+        self._del_test_file(self.fle_input3)
+        self._del_test_file(self.fle_input2)
+        self._del_test_file(self.fle_input1)
+        self._del_test_file(self.fle_solution)
+
+        # Call Parent
+        super(RunTestCaseIOKeyAdd, self).tearDown()
 
 
 class RunTestCaseIO(test_common_backend.SubMixin,
