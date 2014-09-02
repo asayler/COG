@@ -508,6 +508,9 @@ class RunTestCaseBaseTestsMixin(object):
         # Return
         return out
 
+
+class RunTestCaseAddTestsMixin(RunTestCaseBaseTestsMixin):
+
     def test_execute_run_sub_good(self):
 
         out = self._test_execute_run_sub("add_good.py", file_name="add.py")
@@ -536,7 +539,7 @@ class RunTestCaseBaseTestsMixin(object):
 
         out = self._test_execute_run_sub("null", file_name="add.py")
         try:
-            self.assertEqual(out['status'], "complete")
+            self.assertEqual(out['status'], "complete-error")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -548,7 +551,7 @@ class RunTestCaseBaseTestsMixin(object):
 
         out = self._test_execute_run_sub("pgm_hang.py", file_name="add.py")
         try:
-            self.assertEqual(out['status'], "complete")
+            self.assertEqual(out['status'], "complete-error")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -560,7 +563,7 @@ class RunTestCaseBaseTestsMixin(object):
 
         out = self._test_execute_run_sub("pgm_busy.py", file_name="add.py")
         try:
-            self.assertEqual(out['status'], "complete")
+            self.assertEqual(out['status'], "complete-error")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -572,7 +575,7 @@ class RunTestCaseBaseTestsMixin(object):
 
         out = self._test_execute_run_sub("pgm_forkbomb.py", file_name="add.py")
         try:
-            self.assertEqual(out['status'], "complete")
+            self.assertEqual(out['status'], "complete-error")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -649,16 +652,130 @@ class RunTestCaseScriptBase(StructsTestCase):
         # Cleanup Structs
         self.fle_script.delete()
 
+    def test_execute_run_script_none(self):
 
-class RunTestCaseScriptArgs(RunTestCaseTestsMixin, RunTestCaseScriptBase):
+        self.tst.rem_files([str(self.fle_script.uuid)])
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete-exception-run")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_script_hidden(self):
+
+        self.fle_script['key'] = ""
+        self.tst['path_script'] = ""
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete-exception-run")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_script_null(self):
+
+        # Extract Data and Remove Original Script
+        file_name = self.fle_script['name']
+        file_key = self.fle_script['key']
+        self.tst.rem_files([str(self.fle_script.uuid)])
+        self._teardown()
+
+        # Add New Script
+        self._setup("null", file_name=file_name, file_key=file_key)
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete-error")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_script_hang(self):
+
+        # Extract Data and Remove Original Script
+        file_name = self.fle_script['name']
+        file_key = self.fle_script['key']
+        self.tst.rem_files([str(self.fle_script.uuid)])
+        self._teardown()
+
+        # Add New Script
+        self._setup("pgm_hang.py", file_name=file_name, file_key=file_key)
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete-error")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_script_busy(self):
+
+        # Extract Data and Remove Original Script
+        file_name = self.fle_script['name']
+        file_key = self.fle_script['key']
+        self.tst.rem_files([str(self.fle_script.uuid)])
+        self._teardown()
+
+        # Add New Script
+        self._setup("pgm_busy.py", file_name=file_name, file_key=file_key)
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete-error")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_script_forkbomb(self):
+
+        # Extract Data and Remove Original Script
+        file_name = self.fle_script['name']
+        file_key = self.fle_script['key']
+        self.tst.rem_files([str(self.fle_script.uuid)])
+        self._teardown()
+
+        # Add New Script
+        self._setup("pgm_forkbomb.py", file_name=file_name, file_key=file_key)
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete-error")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+
+class RunTestCaseScriptArgsKey(RunTestCaseAddTestsMixin, RunTestCaseScriptBase):
 
     def setUp(self):
 
         # Call Parent
-        super(RunTestCaseScriptArgs, self).setUp()
+        super(RunTestCaseScriptArgsKey, self).setUp()
 
         # Call Helper
-        self._setup("grade_add_args.py")
+        self._setup("grade_add_args.py", file_key="script")
+        self.tst['path_script'] = ""
 
     def tearDown(self):
 
@@ -666,17 +783,19 @@ class RunTestCaseScriptArgs(RunTestCaseTestsMixin, RunTestCaseScriptBase):
         self._teardown()
 
         # Call Parent
-        super(RunTestCaseScriptArgs, self).tearDown()
+        super(RunTestCaseScriptArgsKey, self).tearDown()
 
-class RunTestCaseScriptStdin(RunTestCaseTestsMixin, RunTestCaseScriptBase):
+
+class RunTestCaseScriptStdinKey(RunTestCaseAddTestsMixin, RunTestCaseScriptBase):
 
     def setUp(self):
 
         # Call Parent
-        super(RunTestCaseScriptStdin, self).setUp()
+        super(RunTestCaseScriptStdinKey, self).setUp()
 
         # Call Helper
-        self._setup("grade_add_stdin.py")
+        self._setup("grade_add_stdin.py", file_key="script")
+        self.tst['path_script'] = ""
 
     def tearDown(self):
 
@@ -684,332 +803,47 @@ class RunTestCaseScriptStdin(RunTestCaseTestsMixin, RunTestCaseScriptBase):
         self._teardown()
 
         # Call Parent
-        super(RunTestCaseScriptStdin, self).tearDown()
+        super(RunTestCaseScriptStdinKey, self).tearDown()
 
 
-class RunTestCaseScript(test_common_backend.SubMixin,
-                        test_common_backend.UUIDHashMixin,
-                        StructsTestCase):
+class RunTestCaseScriptArgsPath(RunTestCaseAddTestsMixin, RunTestCaseScriptBase):
 
     def setUp(self):
 
         # Call Parent
-        super(RunTestCaseScript, self).setUp()
+        super(RunTestCaseScriptArgsPath, self).setUp()
 
-        # Create Args Test Script
-        file_bse = open("{:s}/grade_add_args.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                       filename="grade.py",
-                                                       name='script')
-        data = copy.copy(test_common.FILE_TESTDICT)
-        self.tst_file_args = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
-        file_obj.close()
-
-        # Create Stdin Test Script
-        file_bse = open("{:s}/grade_add_stdin.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                       filename="grade.py",
-                                                       name='script')
-        data = copy.copy(test_common.FILE_TESTDICT)
-        self.tst_file_stdin = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
-        file_obj.close()
-
-        # Create Hanging Script
-        file_bse = open("{:s}/pgm_hang.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                       filename="pgm.py",
-                                                       name='script')
-        data = copy.copy(test_common.FILE_TESTDICT)
-        self.pgm_hang = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
-        file_obj.close()
-
-        # Create Busy Script
-        file_bse = open("{:s}/pgm_busy.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                       filename="pgm.py",
-                                                       name='script')
-        data = copy.copy(test_common.FILE_TESTDICT)
-        self.pgm_busy = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
-        file_obj.close()
-
-        # Create Forkbomb Script
-        file_bse = open("{:s}/pgm_forkbomb.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                       filename="pgm.py",
-                                                       name='script')
-        data = copy.copy(test_common.FILE_TESTDICT)
-        self.pgm_fork = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
-        file_obj.close()
-
-        # Create Good Sub File
-        file_bse = open("{:s}/add_good.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                       filename="add.py",
-                                                       name='submission')
-        data = copy.copy(test_common.FILE_TESTDICT)
-        self.sub_file_good = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
-        file_obj.close()
-
-        # Create Bad Sub File
-        file_bse = open("{:s}/add_bad.py".format(test_common.TEST_INPUT_PATH), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                       filename="add.py",
-                                                       name='submission')
-        data = copy.copy(test_common.FILE_TESTDICT)
-        self.sub_file_bad = self.srv.create_file(data, file_obj=file_obj, owner=self.testuser)
-        file_obj.close()
-
-        # Create Reporter
-        data = copy.copy(test_common.REPORTER_TESTDICT)
-        data['mod'] = "moodle"
-        data['asn_id'] = test_common.REPMOD_MOODLE_ASN
-        self.rpt_moodle = self.srv.create_reporter(data, owner=self.testuser)
-
-        # Create Assignment
-        self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.testuser)
-
-        # Create Tests
-        self.tst_args = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.testuser)
-        self.tst_args.add_files([str(self.tst_file_args.uuid)])
-        self.tst_args.add_reporters([str(self.rpt_moodle.uuid)])
-        self.tst_stdin = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.testuser)
-        self.tst_stdin.add_files([str(self.tst_file_stdin.uuid)])
-        self.tst_stdin.add_reporters([str(self.rpt_moodle.uuid)])
-        self.tst_hang = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.testuser)
-        self.tst_hang.add_files([str(self.pgm_hang.uuid)])
-        self.tst_hang.add_reporters([str(self.rpt_moodle.uuid)])
-        self.tst_busy = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.testuser)
-        self.tst_busy.add_files([str(self.pgm_busy.uuid)])
-        self.tst_busy.add_reporters([str(self.rpt_moodle.uuid)])
-        self.tst_fork = self.asn.create_test(test_common.TEST_TESTDICT, owner=self.testuser)
-        self.tst_fork.add_files([str(self.pgm_fork.uuid)])
-        self.tst_fork.add_reporters([str(self.rpt_moodle.uuid)])
-
-        # Create Submission User
-        self.student = self.auth.create_user(test_common.USER_TESTDICT,
-                                             username=test_common.AUTHMOD_MOODLE_STUDENT_USERNAME,
-                                             password=test_common.AUTHMOD_MOODLE_STUDENT_PASSWORD,
-                                             authmod="moodle")
-
-        # Create Submissions
-        self.sub_good = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.student)
-        self.sub_good.add_files([str(self.sub_file_good.uuid)])
-        self.sub_bad = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.student)
-        self.sub_bad.add_files([str(self.sub_file_bad.uuid)])
-        self.sub_null = self.asn.create_submission(test_common.SUBMISSION_TESTDICT, owner=self.student)
+        # Call Helper
+        self._setup("grade_add_args.py", file_key="")
+        self.tst['path_script'] = "grade_add_args.py"
 
     def tearDown(self):
 
-        # Cleanup Structs
-        self.sub_null.delete()
-        self.sub_bad.delete()
-        self.sub_good.delete()
-        self.student.delete()
-        self.tst_fork.delete()
-        self.tst_busy.delete()
-        self.tst_hang.delete()
-        self.tst_stdin.delete()
-        self.tst_args.delete()
-        self.asn.delete()
-        self.rpt_moodle.delete()
-        self.sub_file_bad.delete()
-        self.sub_file_good.delete()
-        self.pgm_hang.delete()
-        self.pgm_busy.delete()
-        self.pgm_fork.delete()
-        self.tst_file_stdin.delete()
-        self.tst_file_args.delete()
+        # Call Helper
+        self._teardown()
 
         # Call Parent
-        super(RunTestCaseScript, self).tearDown()
+        super(RunTestCaseScriptArgsPath, self).tearDown()
 
-    def test_execute_run_args_good(self):
 
-        # Test Good
-        data = copy.copy(test_common.RUN_TESTDICT)
-        data['test'] = str(self.tst_args.uuid)
-        run = self.sub_good.execute_run(data, workers=self.workers, owner=self.testuser)
-        self.assertTrue(run)
-        while not run.is_complete():
-            time.sleep(1)
-        try:
-            self.assertEqual(run['status'], "complete")
-            self.assertEqual(int(run['retcode']), 0)
-            self.assertTrue(run['output'])
-            self.assertEqual(float(run['score']), 10)
-        except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
-            raise
-        finally:
-            run.delete()
+class RunTestCaseScriptStdinPath(RunTestCaseAddTestsMixin, RunTestCaseScriptBase):
 
-    def test_execute_run_args_good_nokey(self):
+    def setUp(self):
 
-        # Test Good
-        self.tst_file_args['key'] = "None"
-        self.tst_args['path_script'] = self.tst_file_args['name']
-        data = copy.copy(test_common.RUN_TESTDICT)
-        data['test'] = str(self.tst_args.uuid)
-        run = self.sub_good.execute_run(data, workers=self.workers, owner=self.testuser)
-        self.assertTrue(run)
-        while not run.is_complete():
-            time.sleep(1)
-        try:
-            self.assertEqual(run['status'], "complete")
-            self.assertEqual(int(run['retcode']), 0)
-            self.assertTrue(run['output'])
-            self.assertEqual(float(run['score']), 10)
-        except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
-            raise
-        finally:
-            run.delete()
+        # Call Parent
+        super(RunTestCaseScriptStdinPath, self).setUp()
 
-    def test_execute_run_args_bad(self):
+        # Call Helper
+        self._setup("grade_add_stdin.py", file_key="")
+        self.tst['path_script'] = "grade_add_stdin.py"
 
-        # Test Bad
-        data = copy.copy(test_common.RUN_TESTDICT)
-        data['test'] = str(self.tst_args.uuid)
-        run = self.sub_bad.execute_run(data, workers=self.workers, owner=self.testuser)
-        self.assertTrue(run)
-        while not run.is_complete():
-            time.sleep(1)
-        try:
-            self.assertEqual(run['status'], "complete")
-            self.assertEqual(int(run['retcode']), 0)
-            self.assertTrue(run['output'])
-            self.assertLess(float(run['score']), 10)
-        except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
-            raise
-        finally:
-            run.delete()
+    def tearDown(self):
 
-    def test_execute_run_stdin_good(self):
+        # Call Helper
+        self._teardown()
 
-        # Test Good
-        data = copy.copy(test_common.RUN_TESTDICT)
-        data['test'] = str(self.tst_stdin.uuid)
-        run = self.sub_good.execute_run(data, workers=self.workers, owner=self.testuser)
-        self.assertTrue(run)
-        while not run.is_complete():
-            time.sleep(1)
-        try:
-            self.assertEqual(run['status'], "complete")
-            self.assertEqual(int(run['retcode']), 0)
-            self.assertTrue(run['output'])
-            self.assertEqual(float(run['score']), 10)
-        except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
-            raise
-        finally:
-            run.delete()
-
-    def test_execute_run_stdin_bad(self):
-
-        # Test Bad
-        data = copy.copy(test_common.RUN_TESTDICT)
-        data['test'] = str(self.tst_stdin.uuid)
-        run = self.sub_bad.execute_run(data, workers=self.workers, owner=self.testuser)
-        self.assertTrue(run)
-        while not run.is_complete():
-            time.sleep(1)
-        try:
-            self.assertEqual(run['status'], "complete")
-            self.assertEqual(int(run['retcode']), 0)
-            self.assertTrue(run['output'])
-            self.assertLess(float(run['score']), 10)
-        except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
-            raise
-        finally:
-            run.delete()
-
-    def test_execute_run_parallel(self):
-
-        # Start Runs
-        runs = []
-        for i in range(25):
-            data = copy.copy(test_common.RUN_TESTDICT)
-            data['test'] = str(self.tst_args.uuid)
-            run = self.sub_good.execute_run(data, workers=self.workers, owner=self.testuser)
-            self.assertTrue(run)
-            runs.append(run)
-
-        # Wait for Completion
-        for run in runs:
-            while not run.is_complete():
-                time.sleep(1)
-
-        # Check Output and Cleanup
-        for run in runs:
-            try:
-                self.assertEqual(run['status'], "complete")
-                self.assertEqual(int(run['retcode']), 0)
-                self.assertTrue(run['output'])
-                self.assertEqual(float(run['score']), 10)
-            except AssertionError:
-                print("run = {:s}".format(run.get_dict()))
-                raise
-            finally:
-                run.delete()
-
-    def test_execute_run_hang(self):
-
-        # Test Hang
-        data = copy.copy(test_common.RUN_TESTDICT)
-        data['test'] = str(self.tst_hang.uuid)
-        run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
-        self.assertTrue(run)
-        while not run.is_complete():
-            time.sleep(1)
-        try:
-            self.assertEqual(run['status'], "complete")
-            self.assertEqual(int(run['retcode']), 124)
-            self.assertFalse(run['output'])
-        except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
-            raise
-        finally:
-            run.delete()
-
-    def test_execute_run_busy(self):
-
-        # Test Busy
-        data = copy.copy(test_common.RUN_TESTDICT)
-        data['test'] = str(self.tst_busy.uuid)
-        run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
-        self.assertTrue(run)
-        while not run.is_complete():
-            time.sleep(1)
-        try:
-            self.assertEqual(run['status'], "complete")
-            self.assertNotEqual(int(run['retcode']), 0)
-            self.assertFalse(run['output'])
-        except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
-            raise
-        finally:
-            run.delete()
-
-    def test_execute_run_fork(self):
-
-        # Test Fork
-        data = copy.copy(test_common.RUN_TESTDICT)
-        data['test'] = str(self.tst_fork.uuid)
-        run = self.sub_null.execute_run(data, workers=self.workers, owner=self.testuser)
-        self.assertTrue(run)
-        while not run.is_complete():
-            time.sleep(1)
-        try:
-            self.assertEqual(run['status'], "complete")
-            self.assertNotEqual(int(run['retcode']), 0)
-            self.assertTrue(run['output'])
-        except AssertionError:
-            print("run = {:s}".format(run.get_dict()))
-            raise
-        finally:
-            run.delete()
+        # Call Parent
+        super(RunTestCaseScriptStdinPath, self).tearDown()
 
 
 class RunTestCaseIO(test_common_backend.SubMixin,
