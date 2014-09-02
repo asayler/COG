@@ -532,6 +532,18 @@ class RunTestCaseTestsMixin(object):
             print("run = {:s}".format(out))
             raise
 
+    def test_execute_run_sub_null(self):
+
+        out = self._test_execute_run_sub("null", file_name="add.py")
+        try:
+            self.assertEqual(out['status'], "complete")
+            self.assertNotEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
     def test_execute_run_sub_hang(self):
 
         out = self._test_execute_run_sub("pgm_hang.py", file_name="add.py")
