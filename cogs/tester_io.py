@@ -5,12 +5,9 @@
 # Univerity of Colorado
 
 import os
-import stat
-import subprocess
-import mimetypes
-import shutil
 import copy
 import logging
+import traceback
 
 import config
 
@@ -131,22 +128,12 @@ class Tester(tester.Tester):
             input_fles.append(None)
 
         # Setup Cmd
-        sudo_cmd = ['sudo', '-u', config.TESTER_SCRIPT_USER, '-g', config.TESTER_SCRIPT_GROUP]
-        sandbox_path = self.env.sandbox['path']
-        sandbox_cmd = [sandbox_path]
-        os.chmod(sandbox_path, 0775)
         sol_path = sol_fle['path']
         sol_cmd = [sol_path]
         os.chmod(sol_path, 0775)
         sub_path = sub_fle['path']
         sub_cmd = [sub_path]
         os.chmod(sub_path, 0775)
-
-        # Change WD
-        owd = os.getcwd()
-        msg = "Changing to directory '{:s}'".format(self.env.wd)
-        logger.debug(self._format_msg(msg))
-        os.chdir(self.env.wd)
 
         # Run Test Inputs
         ret_val = 0
@@ -164,19 +151,15 @@ class Tester(tester.Tester):
                 input_file = open(input_fle['path'], 'r')
             else:
                 input_file = None
-            cmd = sudo_cmd + sandbox_cmd + sol_cmd
-            msg = "Preparing to run '{:s}'".format(cmd)
-            logger.info(self._format_msg(msg))
+            cmd = sol_cmd
             ret = 1
             stdout = ""
             stderr = ""
             try:
-                p = subprocess.Popen(cmd, env=self.env.env,
-                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=input_file)
-                stdout, stderr = p.communicate()
-                ret = p.returncode
+                ret, stdout, stderr = self.env.run_cmd(cmd, stdin=input_file)
             except Exception as e:
-                output += "Exception running reference solution: {:s}\n".format(str(e))
+                output += "run_cmd raised error: {:s}\n".format(traceback.format_exc())
+                continue
             finally:
                 if input_file:
                     input_file.close()
@@ -195,19 +178,15 @@ class Tester(tester.Tester):
                 input_file = open(input_fle['path'], 'r')
             else:
                 input_file = None
-            cmd = sudo_cmd + sandbox_cmd + sub_cmd
-            msg = "Preparing to run '{:s}'".format(cmd)
-            logger.info(self._format_msg(msg))
+            cmd = sub_cmd
             ret = 1
             stdout = ""
             stderr = ""
             try:
-                p = subprocess.Popen(cmd, env=self.env.env,
-                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=input_file)
-                stdout, stderr = p.communicate()
-                ret = p.returncode
+                ret, stdout, stderr = self.env.run_cmd(cmd, stdin=input_file)
             except Exception as e:
-                output += "Exception running submission: {:s}\n".format(str(e))
+                output += "run_cmd raised error: {:s}\n".format(traceback.format_exc())
+                continue
             finally:
                 if input_file:
                     input_file.close()
@@ -221,15 +200,10 @@ class Tester(tester.Tester):
 
             output += "Expected: '{:s}', Received: '{:s}'".format(exp, rec)
             if (rec == exp):
-                output += "   +1 pts\n"
+                output += "   CORRECT\n"
                 pts += 1
             else:
-                output += "   +0 pts\n"
-
-        # Change Back to OWD
-        msg = "Changing back to directory '{:s}'".format(owd)
-        logger.debug(self._format_msg(msg))
-        os.chdir(owd)
+                output += "   WRONG\n"
 
         # Calculate Score
         score = (pts / float(len(input_fles))) * float(self.tst['maxscore'])
