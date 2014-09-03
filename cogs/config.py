@@ -77,9 +77,9 @@ REPMOD_MOODLE_USERNAME = os.environ.get('COGS_REPMOD_MOODLE_USERNAME',
 REPMOD_MOODLE_PASSWORD = os.environ.get('COGS_REPMOD_MOODLE_PASSWORD',
                                         config.get(SEC_REPMOD_MOODLE, 'PASSWORD'))
 ENV_LOCAL_LIMIT_TIME_CPU = int(os.environ.get('COGS_ENV_LOCAL_LIMIT_TIME_CPU',
-                                              config.get(SEC_ENV_LOCAL, 'LIMIT_TIME_CPU'))
+                                              config.get(SEC_ENV_LOCAL, 'LIMIT_TIME_CPU')))
 ENV_LOCAL_LIMIT_TIME_WALL = int(os.environ.get('COGS_ENV_LOCAL_LIMIT_TIME_WALL',
-                                              config.get(SEC_ENV_LOCAL, 'LIMIT_TIME_WALL'))
+                                               config.get(SEC_ENV_LOCAL, 'LIMIT_TIME_WALL')))
 
 ENV_LOCAL_SANDBOX_SCRIPT = config.get(SEC_ENV_LOCAL, 'SANDBOX_SCRIPT')
 ENV_LOCAL_USER = config.get(SEC_ENV_LOCAL, 'USER')
