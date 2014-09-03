@@ -20,10 +20,13 @@ SEC_REPMOD_MOODLE = "repmod_moodle"
 config.add_section(SEC_REPMOD_MOODLE)
 SEC_AUTHMOD_MOODLE = "authmod_moodle"
 config.add_section(SEC_AUTHMOD_MOODLE)
+SEC_ENV_LOCAL = "env_local"
+config.add_section(SEC_ENV_LOCAL)
 
 # Set Paths
 MOD_PATH = os.path.dirname(os.path.realpath(__file__))
 ROOT_PATH = os.path.realpath("{:s}/..".format(MOD_PATH))
+SCRIPTS_PATH = os.path.realpath("{:s}/{:s}".format(ROOT_PATH, "scripts"))
 CONF_PATH = os.path.realpath("{:s}/{:s}".format(ROOT_PATH, "cog.conf"))
 
 # Set Default Vals
@@ -39,12 +42,14 @@ config.set(SEC_REPMOD_MOODLE, 'HOST', None)
 config.set(SEC_REPMOD_MOODLE, 'SERVICE', None)
 config.set(SEC_REPMOD_MOODLE, 'USERNAME', None)
 config.set(SEC_REPMOD_MOODLE, 'PASSWORD', None)
-DEFAULT_SCRIPT_PATH = os.path.realpath("{:s}/scripts".format(ROOT_PATH))
-DEFAULT_ARCHIVE_PATH = "/tmp/cogs/archives"
+config.set(SEC_ENV_LOCAL, 'SANDBOX_SCRIPT', "local_sandbox.py")
+config.set(SEC_ENV_LOCAL, 'USER', "nobody")
+config.set(SEC_ENV_LOCAL, 'GROUP', "nogroup")
+config.set(SEC_ENV_LOCAL, 'LIMIT_TIME_CPU', "1")
+config.set(SEC_ENV_LOCAL, 'LIMIT_TIME_WALL', "10")
+
 DEFAULT_ENV_LOCAL_TMP_PATH = "/tmp/cogs/envs"
-DEFAULT_ENV_LOCAL_SANDBOX = "local_sandbox.py"
-DEFAULT_TESTER_SCRIPT_USER = "nobody"
-DEFAULT_TESTER_SCRIPT_GROUP = "nogroup"
+DEFAULT_ARCHIVE_PATH = "/tmp/cogs/archives"
 
 # Read Config File
 config.read(CONF_PATH)
@@ -71,10 +76,14 @@ REPMOD_MOODLE_USERNAME = os.environ.get('COGS_REPMOD_MOODLE_USERNAME',
                                         config.get(SEC_REPMOD_MOODLE, 'USERNAME'))
 REPMOD_MOODLE_PASSWORD = os.environ.get('COGS_REPMOD_MOODLE_PASSWORD',
                                         config.get(SEC_REPMOD_MOODLE, 'PASSWORD'))
+ENV_LOCAL_LIMIT_TIME_CPU = int(os.environ.get('COGS_ENV_LOCAL_LIMIT_TIME_CPU',
+                                              config.get(SEC_ENV_LOCAL, 'LIMIT_TIME_CPU'))
+ENV_LOCAL_LIMIT_TIME_WALL = int(os.environ.get('COGS_ENV_LOCAL_LIMIT_TIME_WALL',
+                                              config.get(SEC_ENV_LOCAL, 'LIMIT_TIME_WALL'))
 
-SCRIPT_PATH = os.environ.get('COGS_SCRIPT_PATH', DEFAULT_SCRIPT_PATH)
+ENV_LOCAL_SANDBOX_SCRIPT = config.get(SEC_ENV_LOCAL, 'SANDBOX_SCRIPT')
+ENV_LOCAL_USER = config.get(SEC_ENV_LOCAL, 'USER')
+ENV_LOCAL_GROUP = config.get(SEC_ENV_LOCAL, 'GROUP')
+
 ARCHIVE_PATH = os.environ.get('COGS_ARCHIVE_PATH', DEFAULT_ARCHIVE_PATH)
 ENV_LOCAL_TMP_PATH = os.environ.get('COGS_ENV_LOCAL_TMP_PATH', DEFAULT_ENV_LOCAL_TMP_PATH)
-ENV_LOCAL_SANDBOX = os.environ.get('COGS_ENV_LOCAL_SANDBOX', DEFAULT_ENV_LOCAL_SANDBOX)
-TESTER_SCRIPT_USER = os.environ.get('COGS_TESTER_SCRIPT_USER', DEFAULT_TESTER_SCRIPT_USER)
-TESTER_SCRIPT_GROUP = os.environ.get('COGS_TESTER_SCRIPT_GROUP', DEFAULT_TESTER_SCRIPT_GROUP)
