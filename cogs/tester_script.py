@@ -5,12 +5,9 @@
 # Univerity of Colorado
 
 import os
-import stat
-import subprocess
-import mimetypes
-import shutil
 import copy
 import logging
+import traceback
 
 import config
 
@@ -67,39 +64,21 @@ class Tester(tester.Tester):
             raise Exception(msg)
 
         # Setup Cmd
-        sudo_cmd = ['sudo', '-u', config.TESTER_SCRIPT_USER, '-g', config.TESTER_SCRIPT_GROUP]
-        sandbox_path = self.env.sandbox['path']
-        sandbox_cmd = [sandbox_path]
-        os.chmod(sandbox_path, 0775)
         tst_path = tst_fle['path']
         tst_cmd = [tst_path, self.env.wd_sub]
         os.chmod(tst_path, 0775)
-        cmd = sudo_cmd + sandbox_cmd + tst_cmd
-        msg = "Preparing to run '{:s}'".format(cmd)
-        logger.info(self._format_msg(msg))
-
-        # Change WD
-        owd = os.getcwd()
-        msg = "Changing to directory '{:s}'".format(self.env.wd)
-        logger.debug(self._format_msg(msg))
-        os.chdir(self.env.wd)
+        cmd = tst_cmd
 
         # Run Script
         score = float(0)
         try:
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.env.env)
-            stdout, stderr = p.communicate()
-            ret = p.returncode
+            ret, stdout, stderr = self.env.run_cmd(cmd)
         except Exception as e:
-            msg = "Script raised error: {:s}".format(e)
+            msg = "run_cmd raised error: {:s}".format(traceback.format_exc())
             logger.error(self._format_msg(msg))
+            ret = 1
+            stdout = ""
             stderr = msg
-            ret = -1
-
-        # Change Back to OWD
-        msg = "Changing back to directory '{:s}'".format(owd)
-        logger.debug(self._format_msg(msg))
-        os.chdir(owd)
 
         # Process Results
         if (ret == 0):
@@ -110,7 +89,7 @@ class Tester(tester.Tester):
                 msg = "Could not convert score '{:s}' to float: {:s}".format(stdout_clean, e)
                 logger.error(self._format_msg(msg))
                 stderr = msg
-                ret = -1
+                ret = 1
         else:
             msg = "Script returned non-zero value: {:d}".format(ret)
             logger.warning(self._format_msg(msg))
