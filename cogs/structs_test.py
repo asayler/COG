@@ -14,6 +14,7 @@ import multiprocessing
 import random
 import zipfile
 import logging
+import shutil
 
 import test_common
 import test_common_backend
@@ -186,7 +187,7 @@ class FileTestCase(test_common_backend.UUIDHashMixin,
 
     def _run_zip_test(self, file_names):
 
-        # Check Input
+        # Process Input
         file_paths = {}
         for file_name in file_names:
             file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
@@ -488,9 +489,13 @@ class RunTestCaseBaseMixin(object):
                                                        filename=file_name,
                                                        name=file_key)
         data = copy.copy(test_common.FILE_TESTDICT)
-        fle_submission = self.srv.create_file(data, file_obj=file_obj, owner=self.student)
+        if file_key == "extract":
+            fles = self.srv.create_files(data, archive_obj=file_obj, owner=self.admin)
+        else:
+            fles = [self.srv.create_file(data, file_obj=file_obj, owner=self.student)]
+        uuids = [str(fle.uuid) for fle in fles]
+        self.sub.add_files(uuids)
         file_obj.close()
-        self.sub.add_files([str(fle_submission.uuid)])
 
         # Run Submission
         data = copy.copy(test_common.RUN_TESTDICT)
@@ -503,7 +508,8 @@ class RunTestCaseBaseMixin(object):
 
         # Cleanup
         run.delete()
-        fle_submission.delete()
+        for fle in fles:
+            fle.delete()
 
         # Return
         return out
@@ -638,6 +644,74 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
             raise
 
 
+class RunTestCaseAddTestsZipMixin(RunTestCaseBaseMixin):
+
+    def _copy_test_file(self, input_name, output_name):
+        src = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, input_name)
+        dst = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, output_name)
+        shutil.copy(src, dst)
+
+    def test_execute_run_sub_zip_good(self):
+
+        # Setup Zip
+        self._copy_test_file("add_good.py", self.sub_name)
+        file_name = self.sub_name
+        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
+        archive_name = "submission.zip"
+        archive_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, archive_name)
+        self._create_zip(archive_path, [file_path])
+
+        # Add Zip
+        out = self._test_execute_run_sub(archive_name, file_key="extract")
+
+        # Remove Zip and Copy
+        os.remove(archive_path)
+        os.remove(file_path)
+
+        # Check Output
+        try:
+            self.assertEqual(out['status'], self.status_ok)
+            if self.retcode_ok:
+                self.assertEqual(int(out['retcode']), self.retcode_ok)
+            else:
+                self.assertEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 10)
+        except AssertionError as e:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_sub_zip_bad(self):
+
+        # Setup Zip
+        self._copy_test_file("add_bad.py", self.sub_name)
+        file_name = self.sub_name
+        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
+        archive_name = "submission.zip"
+        archive_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, archive_name)
+        self._create_zip(archive_path, [file_path])
+
+        # Add Zip
+        out = self._test_execute_run_sub(archive_name, file_key="extract")
+
+        # Remove Zip and Copy
+        os.remove(archive_path)
+        os.remove(file_path)
+
+        # Check Output
+        try:
+            self.assertEqual(out['status'], self.status_ok)
+            if self.retcode_ok:
+                self.assertEqual(int(out['retcode']), self.retcode_ok)
+            else:
+                self.assertEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertLess(float(out['score']), 10)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+
 class RunTestCaseHelloTestsMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_sub_good(self):
@@ -710,9 +784,9 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
         file_name = self.fle_script['name']
         file_key = self.fle_script['key']
-        self._del_test_file(self.fle_script)
-        self.fle_script = self._add_test_file("null",
-                                              file_name=file_name, file_key=file_key)
+        self._del_test_files([self.fle_script])
+        fles = self._add_test_files("null", file_name=file_name, file_key=file_key)
+        self.fle_script = fles[0]
 
         out = self._test_execute_run_sub("null", file_name="add.py")
         try:
@@ -728,9 +802,9 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
         file_name = self.fle_script['name']
         file_key = self.fle_script['key']
-        self._del_test_file(self.fle_script)
-        self.fle_script = self._add_test_file("pgm_hang.py",
-                                              file_name=file_name, file_key=file_key)
+        self._del_test_files([self.fle_script])
+        fles = self._add_test_files("pgm_hang.py", file_name=file_name, file_key=file_key)
+        self.fle_script = fles[0]
 
         out = self._test_execute_run_sub("null", file_name="add.py")
         try:
@@ -746,9 +820,9 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
         file_name = self.fle_script['name']
         file_key = self.fle_script['key']
-        self._del_test_file(self.fle_script)
-        self.fle_script = self._add_test_file("pgm_busy.py",
-                                              file_name=file_name, file_key=file_key)
+        self._del_test_files([self.fle_script])
+        fles = self._add_test_files("pgm_busy.py", file_name=file_name, file_key=file_key)
+        self.fle_script = fles[0]
 
         out = self._test_execute_run_sub("null", file_name="add.py")
         try:
@@ -764,9 +838,9 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
         file_name = self.fle_script['name']
         file_key = self.fle_script['key']
-        self._del_test_file(self.fle_script)
-        self.fle_script = self._add_test_file("pgm_forkbomb.py",
-                                              file_name=file_name, file_key=file_key)
+        self._del_test_files([self.fle_script])
+        fles = self._add_test_files("pgm_forkbomb.py", file_name=file_name, file_key=file_key)
+        self.fle_script = fles[0]
 
         out = self._test_execute_run_sub("null", file_name="add.py")
         try:
@@ -816,9 +890,9 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
 
         file_name = self.fle_solution['name']
         file_key = self.fle_solution['key']
-        self._del_test_file(self.fle_solution)
-        self.fle_solution = self._add_test_file("null",
-                                                file_name=file_name, file_key=file_key)
+        self._del_test_files([self.fle_solution])
+        fles = self._add_test_files("null", file_name=file_name, file_key=file_key)
+        self.fle_solution = fles[0]
 
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
@@ -835,9 +909,9 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
 
         file_name = self.fle_solution['name']
         file_key = self.fle_solution['key']
-        self._del_test_file(self.fle_solution)
-        self.fle_solution = self._add_test_file("pgm_hang.py",
-                                                file_name=file_name, file_key=file_key)
+        self._del_test_files([self.fle_solution])
+        fles = self._add_test_files("pgm_hang.py", file_name=file_name, file_key=file_key)
+        self.fle_solution = fles[0]
 
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
@@ -854,9 +928,9 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
 
         file_name = self.fle_solution['name']
         file_key = self.fle_solution['key']
-        self._del_test_file(self.fle_solution)
-        self.fle_solution = self._add_test_file("pgm_busy.py",
-                                                file_name=file_name, file_key=file_key)
+        self._del_test_files([self.fle_solution])
+        fles = self._add_test_files("pgm_busy.py", file_name=file_name, file_key=file_key)
+        self.fle_solution = fles[0]
 
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
@@ -873,9 +947,9 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
 
         file_name = self.fle_solution['name']
         file_key = self.fle_solution['key']
-        self._del_test_file(self.fle_solution)
-        self.fle_solution = self._add_test_file("pgm_forkbomb.py",
-                                                file_name=file_name, file_key=file_key)
+        self._del_test_files([self.fle_solution])
+        fles = self._add_test_files("pgm_forkbomb.py", file_name=file_name, file_key=file_key)
+        self.fle_solution = fles[0]
 
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
@@ -930,9 +1004,9 @@ class RunTestCaseBadInputMixin(RunTestCaseBaseMixin):
 
         file_name = self.fle_input1['name']
         file_key = self.fle_input1['key']
-        self._del_test_file(self.fle_input1)
-        self.fle_input1 = self._add_test_file("null",
-                                              file_name=file_name, file_key=file_key)
+        self._del_test_files([self.fle_input1])
+        fles = self._add_test_files("null", file_name=file_name, file_key=file_key)
+        self.fle_input1 = fles[0]
 
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
@@ -993,7 +1067,7 @@ class RunTestCaseBase(StructsTestCase):
     def _teardown_test(self):
         self.tst.delete()
 
-    def _add_test_file(self, test_file, file_name=None, file_key=None):
+    def _add_test_files(self, test_file, file_name=None, file_key=None):
 
         # Proces Input
         if file_name is None:
@@ -1001,23 +1075,28 @@ class RunTestCaseBase(StructsTestCase):
         if file_key is None:
             file_key = ""
 
-        # Setup Test File
+        # Setup Test Files
         file_bse = open("{:s}/{:s}".format(test_common.TEST_INPUT_PATH, test_file), 'rb')
         file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
                                                        filename=file_name,
                                                        name=file_key)
         data = copy.copy(test_common.FILE_TESTDICT)
-        fle = self.srv.create_file(data, file_obj=file_obj, owner=self.admin)
+        if file_key == "extract":
+            fles = self.srv.create_files(data, archive_obj=file_obj, owner=self.admin)
+        else:
+            fles = [self.srv.create_file(data, file_obj=file_obj, owner=self.admin)]
+        uuids = [str(fle.uuid) for fle in fles]
+        self.tst.add_files(uuids)
         file_obj.close()
-        self.tst.add_files([str(fle.uuid)])
 
-        return fle
+        return fles
 
-    def _del_test_file(self, fle):
+    def _del_test_files(self, fles):
 
-        # Cleanup Test File
-        self.tst.rem_files([str(fle.uuid)])
-        fle.delete()
+        # Cleanup Test Files
+        for fle in fles:
+            self.tst.rem_files([str(fle.uuid)])
+            fle.delete()
 
 
 class RunTestCaseScriptBase(RunTestCaseBase):
@@ -1058,7 +1137,8 @@ class RunTestCaseScriptArgsKey(RunTestCaseBadScriptMixin,
         super(RunTestCaseScriptArgsKey, self).setUp()
 
         # Add Script File
-        self.fle_script = self._add_test_file("grade_add_args.py", file_key="script")
+        fles = self._add_test_files("grade_add_args.py", file_key="script")
+        self.fle_script = fles[0]
         self.tst['path_script'] = ""
 
         # Set Mixin Values
@@ -1068,14 +1148,13 @@ class RunTestCaseScriptArgsKey(RunTestCaseBadScriptMixin,
     def tearDown(self):
 
         # Remove Script File
-        self._del_test_file(self.fle_script)
+        self._del_test_files([self.fle_script])
 
         # Call Parent
         super(RunTestCaseScriptArgsKey, self).tearDown()
 
 
-class RunTestCaseScriptStdinKey(RunTestCaseBadScriptMixin,
-                                RunTestCaseAddTestsMixin,
+class RunTestCaseScriptStdinKey(RunTestCaseAddTestsMixin,
                                 RunTestCaseBadTestsMixin,
                                 RunTestCaseScriptBase):
 
@@ -1085,7 +1164,8 @@ class RunTestCaseScriptStdinKey(RunTestCaseBadScriptMixin,
         super(RunTestCaseScriptStdinKey, self).setUp()
 
         # Add Script File
-        self.fle_script = self._add_test_file("grade_add_stdin.py", file_key="script")
+        fles = self._add_test_files("grade_add_stdin.py", file_key="script")
+        self.fle_script = fles[0]
         self.tst['path_script'] = ""
 
         # Set Mixin Values
@@ -1095,7 +1175,7 @@ class RunTestCaseScriptStdinKey(RunTestCaseBadScriptMixin,
     def tearDown(self):
 
         # Remove Script File
-        self._del_test_file(self.fle_script)
+        self._del_test_files([self.fle_script])
 
         # Call Parent
         super(RunTestCaseScriptStdinKey, self).tearDown()
@@ -1103,6 +1183,7 @@ class RunTestCaseScriptStdinKey(RunTestCaseBadScriptMixin,
 
 class RunTestCaseScriptArgsPath(RunTestCaseBadScriptMixin,
                                 RunTestCaseAddTestsMixin,
+                                RunTestCaseAddTestsZipMixin,
                                 RunTestCaseBadTestsMixin,
                                 RunTestCaseScriptBase):
 
@@ -1112,8 +1193,9 @@ class RunTestCaseScriptArgsPath(RunTestCaseBadScriptMixin,
         super(RunTestCaseScriptArgsPath, self).setUp()
 
         # Add Script File
-        self.fle_script = self._add_test_file("grade_add_args.py",)
         self.tst['path_script'] = "grade_add_args.py"
+        fles = self._add_test_files(self.tst['path_script'])
+        self.fle_script = fles[0]
 
         # Set Mixin Values
         self.sub_name = "add.py"
@@ -1122,14 +1204,50 @@ class RunTestCaseScriptArgsPath(RunTestCaseBadScriptMixin,
     def tearDown(self):
 
         # Remove Script File
-        self._del_test_file(self.fle_script)
+        self._del_test_files([self.fle_script])
 
         # Call Parent
         super(RunTestCaseScriptArgsPath, self).tearDown()
 
 
-class RunTestCaseScriptStdinPath(RunTestCaseBadScriptMixin,
-                                 RunTestCaseAddTestsMixin,
+class RunTestCaseScriptArgsPathZip(RunTestCaseAddTestsMixin,
+                                   RunTestCaseAddTestsZipMixin,
+                                   RunTestCaseScriptBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseScriptArgsPathZip, self).setUp()
+
+        # Setup Zip
+        self.tst['path_script'] = "grade_add_args.py"
+        file_name = self.tst['path_script']
+        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
+        archive_name = "tester.zip"
+        archive_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, archive_name)
+        self._create_zip(archive_path, [file_path])
+
+        # Add Tester Zip
+        self.fles_tester = self._add_test_files(archive_name, file_key="extract")
+
+        # Remove Zip
+        os.remove(archive_path)
+
+        # Set Mixin Values
+        self.sub_name = "add.py"
+        self.sub_key = ""
+
+    def tearDown(self):
+
+        # Remove Files
+        self._del_test_files(self.fles_tester)
+
+        # Call Parent
+        super(RunTestCaseScriptArgsPathZip, self).tearDown()
+
+
+class RunTestCaseScriptStdinPath(RunTestCaseAddTestsMixin,
+                                 RunTestCaseAddTestsZipMixin,
                                  RunTestCaseBadTestsMixin,
                                  RunTestCaseScriptBase):
 
@@ -1139,8 +1257,9 @@ class RunTestCaseScriptStdinPath(RunTestCaseBadScriptMixin,
         super(RunTestCaseScriptStdinPath, self).setUp()
 
         # Add Script File
-        self.fle_script = self._add_test_file("grade_add_stdin.py",)
         self.tst['path_script'] = "grade_add_stdin.py"
+        fles = self._add_test_files(self.tst['path_script'])
+        self.fle_script = fles[0]
 
         # Set Mixin Values
         self.sub_name = "add.py"
@@ -1149,10 +1268,46 @@ class RunTestCaseScriptStdinPath(RunTestCaseBadScriptMixin,
     def tearDown(self):
 
         # Remove Script File
-        self._del_test_file(self.fle_script)
+        self._del_test_files([self.fle_script])
 
         # Call Parent
         super(RunTestCaseScriptStdinPath, self).tearDown()
+
+
+class RunTestCaseScriptStdinPathZip(RunTestCaseAddTestsMixin,
+                                    RunTestCaseAddTestsZipMixin,
+                                    RunTestCaseScriptBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseScriptStdinPathZip, self).setUp()
+
+        # Setup Zip
+        self.tst['path_script'] = "grade_add_stdin.py"
+        file_name = self.tst['path_script']
+        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
+        archive_name = "tester.zip"
+        archive_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, archive_name)
+        self._create_zip(archive_path, [file_path])
+
+        # Add Tester Zip
+        self.fles_tester = self._add_test_files(archive_name, file_key="extract")
+
+        # Remove Zip
+        os.remove(archive_path)
+
+        # Set Mixin Values
+        self.sub_name = "add.py"
+        self.sub_key = ""
+
+    def tearDown(self):
+
+        # Remove Files
+        self._del_test_files(self.fles_tester)
+
+        # Call Parent
+        super(RunTestCaseScriptStdinPathZip, self).tearDown()
 
 
 class RunTestCaseIOBase(RunTestCaseBase):
@@ -1195,16 +1350,17 @@ class RunTestCaseIOKeyAdd(RunTestCaseBadSolnMixin,
 
         # Add Solution
         self.tst['path_solution'] = ""
-        self.fle_solution = self._add_test_file("add_good.py", file_key="solution")
+        fles = self._add_test_files("add_good.py", file_key="solution")
+        self.fle_solution = fles[0]
 
         # Add Test Inputs
         self.tst['prefix_input'] = ""
-        self.fle_input1 = self._add_test_file("add_input1.txt",
-                                              file_name="input1.txt", file_key="input")
-        self.fle_input2 = self._add_test_file("add_input2.txt",
-                                              file_name="input2.txt", file_key="input")
-        self.fle_input3 = self._add_test_file("add_input3.txt",
-                                              file_name="input3.txt", file_key="input")
+        fles = self._add_test_files("add_input1.txt", file_name="input1.txt", file_key="input")
+        self.fle_input1 = fles[0]
+        fles = self._add_test_files("add_input2.txt", file_name="input2.txt", file_key="input")
+        self.fle_input2 = fles[0]
+        fles = self._add_test_files("add_input3.txt", file_name="input3.txt", file_key="input")
+        self.fle_input3 = fles[0]
 
         # Set Mixin Values
         self.tst['path_submission'] = ""
@@ -1214,10 +1370,8 @@ class RunTestCaseIOKeyAdd(RunTestCaseBadSolnMixin,
     def tearDown(self):
 
         # Remove Solution
-        self._del_test_file(self.fle_input3)
-        self._del_test_file(self.fle_input2)
-        self._del_test_file(self.fle_input1)
-        self._del_test_file(self.fle_solution)
+        self._del_test_files([self.fle_input3, self.fle_input2, self.fle_input1])
+        self._del_test_files([self.fle_solution])
 
         # Call Parent
         super(RunTestCaseIOKeyAdd, self).tearDown()
@@ -1235,7 +1389,8 @@ class RunTestCaseIOKeyHello(RunTestCaseBadSolnMixin,
 
         # Add Solution
         self.tst['path_solution'] = ""
-        self.fle_solution = self._add_test_file("hello_good.py", file_key="solution")
+        fles = self._add_test_files("hello_good.py", file_key="solution")
+        self.fle_solution = fles[0]
 
         # Set Mixin Values
         self.tst['path_submission'] = ""
@@ -1245,7 +1400,7 @@ class RunTestCaseIOKeyHello(RunTestCaseBadSolnMixin,
     def tearDown(self):
 
         # Remove Solution
-        self._del_test_file(self.fle_solution)
+        self._del_test_files([self.fle_solution])
 
         # Call Parent
         super(RunTestCaseIOKeyHello, self).tearDown()
@@ -1264,13 +1419,17 @@ class RunTestCaseIOPathAdd(RunTestCaseBadSolnMixin,
 
         # Add Solution
         self.tst['path_solution'] = "add_good.py"
-        self.fle_solution = self._add_test_file("add_good.py")
+        fles = self._add_test_files(self.tst['path_solution'])
+        self.fle_solution = fles[0]
 
         # Add Test Inputs
         self.tst['prefix_input'] = "input"
-        self.fle_input1 = self._add_test_file("add_input1.txt", file_name="input1.txt")
-        self.fle_input2 = self._add_test_file("add_input2.txt", file_name="input2.txt")
-        self.fle_input3 = self._add_test_file("add_input3.txt", file_name="input3.txt")
+        fles = self._add_test_files("add_input1.txt", file_name="input1.txt")
+        self.fle_input1 = fles[0]
+        fles = self._add_test_files("add_input2.txt", file_name="input2.txt")
+        self.fle_input2 = fles[0]
+        fles = self._add_test_files("add_input3.txt", file_name="input3.txt")
+        self.fle_input3 = fles[0]
 
         # Set Mixin Values
         self.tst['path_submission'] = "add.py"
@@ -1280,10 +1439,8 @@ class RunTestCaseIOPathAdd(RunTestCaseBadSolnMixin,
     def tearDown(self):
 
         # Remove Solution
-        self._del_test_file(self.fle_input3)
-        self._del_test_file(self.fle_input2)
-        self._del_test_file(self.fle_input1)
-        self._del_test_file(self.fle_solution)
+        self._del_test_files([self.fle_input3, self.fle_input2, self.fle_input1])
+        self._del_test_files([self.fle_solution])
 
         # Call Parent
         super(RunTestCaseIOPathAdd, self).tearDown()
@@ -1301,7 +1458,8 @@ class RunTestCaseIOPathHello(RunTestCaseBadSolnMixin,
 
         # Add Solution
         self.tst['path_solution'] = "hello_good.py"
-        self.fle_solution = self._add_test_file("hello_good.py")
+        fles = self._add_test_files(self.tst['path_solution'])
+        self.fle_solution = fles[0]
 
         # Set Mixin Values
         self.tst['path_submission'] = "hello.py"
@@ -1311,7 +1469,7 @@ class RunTestCaseIOPathHello(RunTestCaseBadSolnMixin,
     def tearDown(self):
 
         # Remove Solution
-        self._del_test_file(self.fle_solution)
+        self._del_test_files([self.fle_solution])
 
         # Call Parent
         super(RunTestCaseIOPathHello, self).tearDown()
