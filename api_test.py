@@ -13,6 +13,7 @@ import unittest
 import uuid
 import os
 import time
+import zipfile
 
 import cogs.test_common
 
@@ -75,6 +76,27 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
 
         return self.open_auth(method, url, username=username, **kwargs)
 
+    ## File Helpers ##
+
+    def _create_test_zip(self, zip_name, file_names):
+        zip_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, zip_name)
+        if os.path.exists(zip_path):
+            raise Exception("{:s} already exists".format(zip_path))
+        with zipfile.ZipFile(zip_path, 'w') as archive:
+            for file_name in file_names:
+                file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, file_name)
+                archive.write(file_path, file_name)
+
+    def _copy_test_file(self, input_name, output_name):
+        src = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, input_name)
+        dst = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, output_name)
+        shutil.copy(src, dst)
+
+    def _del_test_file(self, file_name):
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, file_name)
+        os.remove(file_path)
+
+
 class CogsApiObjectHelpers(object):
 
     ## Object Helpers ##
@@ -83,7 +105,11 @@ class CogsApiObjectHelpers(object):
         if json_data:
             data = json.dumps(data)
         res = self.open_user('POST', url, user=user, data=data)
-        self.assertEqual(res.status_code, 200)
+        try:
+            self.assertEqual(res.status_code, 200)
+        except AssertionError as e:
+            print(res.data)
+            raise
         res_obj = json.loads(res.data)
         self.assertTrue(res_obj)
         res_keys = res_obj.keys()
@@ -95,7 +121,11 @@ class CogsApiObjectHelpers(object):
 
     def lst_objects(self, url, key, user=None):
         res = self.open_user('GET', url, user=user)
-        self.assertEqual(res.status_code, 200)
+        try:
+            self.assertEqual(res.status_code, 200)
+        except AssertionError as e:
+            print(res.data)
+            raise
         res_obj = json.loads(res.data)
         self.assertTrue(res_obj)
         res_keys = res_obj.keys()
@@ -107,7 +137,11 @@ class CogsApiObjectHelpers(object):
     def add_objects(self, url, key, lst, user=None):
         data = json.dumps({str(key): list(lst)})
         res = self.open_user('PUT', url, data=data, user=user)
-        self.assertEqual(res.status_code, 200)
+        try:
+            self.assertEqual(res.status_code, 200)
+        except AssertionError as e:
+            print(res.data)
+            raise
         res_obj = json.loads(res.data)
         self.assertTrue(res_obj)
         res_keys = res_obj.keys()
@@ -120,7 +154,11 @@ class CogsApiObjectHelpers(object):
     def rem_objects(self, url, key, lst, user=None):
         data = json.dumps({str(key): list(lst)})
         res = self.open_user('DELETE', url, data=data, user=user)
-        self.assertEqual(res.status_code, 200)
+        try:
+            self.assertEqual(res.status_code, 200)
+        except AssertionError as e:
+            print(res.data)
+            raise
         res_obj = json.loads(res.data)
         self.assertTrue(res_obj)
         res_keys = res_obj.keys()
@@ -418,7 +456,7 @@ class CogsApiFileTestCase(CogsApiObjectTests, CogsApiTestCase):
 
         # Create Object
         obj_uuids = self.create_objects(self.url, self.key, self.data,
-                                   json_data=self.json_data, user=self.user)
+                                        json_data=self.json_data, user=self.user)
 
         for obj_uuid in obj_uuids:
 
@@ -439,7 +477,81 @@ class CogsApiFileTestCase(CogsApiObjectTests, CogsApiTestCase):
 
         # Create Object
         obj_uuids = self.create_objects(self.url, self.key, self.data,
-                                   json_data=self.json_data, user=self.user)
+                                        json_data=self.json_data, user=self.user)
+
+        for obj_uuid in obj_uuids:
+
+            # Update Object (Not Allowed on Files - Should Fail with a 405 Error)
+            try:
+                obj = self.set_object(self.url, obj_uuid, self.data,
+                                      json_data=self.json_data, user=self.user)
+            except AssertionError as e:
+                if int(str(e).split()[-1]) != 405:
+                    raise
+
+            # Delete Object
+            obj = self.delete_object(self.url, obj_uuid, user=self.user)
+            self.assertIsNotNone(obj)
+
+
+class CogsApiZipFileTestCase(CogsApiObjectTests, CogsApiTestCase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(CogsApiZipFileTestCase, self).setUp()
+
+        # Create Test Zip
+        test_files = ["test1.txt", "test2.txt", "test3.txt"]
+        test_zip = "test.zip"
+        self._create_test_zip(test_zip, test_files)
+
+        # Setup test
+        self.user = self.admin
+        self.url = '/files/'
+        self.key = 'files'
+        self.file_key = "extract"
+        self.file_name = test_zip
+        self.file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, self.file_name)
+        self.data = {self.file_key: (self.file_path, self.file_name)}
+        self.json_data = False
+
+    def tearDown(self):
+
+        # Delete Zip
+        self._del_test_file(self.file_name)
+
+        # Call Parent
+        super(CogsApiZipFileTestCase, self).tearDown()
+
+    # Override default test_get_object
+    def test_get_object(self):
+
+        # Create Object
+        obj_uuids = self.create_objects(self.url, self.key, self.data,
+                                        json_data=self.json_data, user=self.user)
+
+        for obj_uuid in obj_uuids:
+
+            # Get Object
+            obj = self.get_object(self.url, obj_uuid, user=self.user)
+            self.assertEqual(obj['key'], "from_{:s}".format(self.file_name))
+            src_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, obj['name'])
+            self.assertTrue(os.path.exists(src_path))
+            self.assertTrue(os.path.exists(obj['path']))
+            self.assertEqual(os.path.getsize(obj['path']), os.path.getsize(src_path))
+            self.assertEqual(str(self.user.uuid), obj['owner'])
+
+            # Delete Object
+            obj = self.delete_object(self.url, obj_uuid, user=self.user)
+            self.assertIsNotNone(obj)
+
+    # Override default test_set_object
+    def test_set_object(self):
+
+        # Create Object
+        obj_uuids = self.create_objects(self.url, self.key, self.data,
+                                        json_data=self.json_data, user=self.user)
 
         for obj_uuid in obj_uuids:
 

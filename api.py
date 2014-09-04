@@ -152,9 +152,9 @@ def create_stub_file(func_create, files=[]):
 def create_stub_files(func_create, files=[]):
 
     obj_lst = []
-    for file_obj in files:
+    for archive_obj in files:
         data = {}
-        objs = func_create(data, file_obj=file_obj, owner=flask.g.user)
+        objs = func_create(data, archive_obj=archive_obj, owner=flask.g.user)
         for obj in objs:
             obj_lst.append(str(obj.uuid))
     return obj_lst
@@ -308,7 +308,7 @@ def process_files_post():
     obj_lst = []
     if files_extract:
         obj_lst += process_objects(None, srv.create_files, _FILES_KEY,
-                                   create_stub=create_stub_files, raw=True, files=files_direct)
+                                   create_stub=create_stub_files, raw=True, files=files_extract)
     if files_direct:
         obj_lst += process_objects(None, srv.create_file, _FILES_KEY,
                                    create_stub=create_stub_file, raw=True, files=files_direct)
