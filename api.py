@@ -59,10 +59,18 @@ if cogs.config.LOGGING_ENABLED:
 
     handler_stream = logging.StreamHandler()
     handler_stream.setFormatter(formatter_line)
-    handler_stream.setLevel(logging.INFO)
+    handler_stream.setLevel(logging.WARNING)
+
+    if not os.path.exists(cogs.config.LOGGING_PATH):
+        os.makedirs(cogs.config.LOGGING_PATH)
+    logfile_path = "{:s}/{:s}".format(cogs.config.LOGGING_PATH, "api.log")
+    handler_file = logging.FileHandler(logfile_path)
+    handler_file.setFormatter(formatter_line)
+    handler_file.setLevel(logging.INFO)
 
     for logger in loggers:
         logger.addHandler(handler_stream)
+        logger.addHandler(handler_file)
 
 
 ### Functions ###

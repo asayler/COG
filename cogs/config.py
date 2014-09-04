@@ -36,6 +36,7 @@ config.set(SEC_REDIS, 'DB', "4")
 config.set(SEC_REDIS, 'PASSWORD', None)
 config.set(SEC_FILESTORAGE, 'PATH', "{:s}/files".format(ROOT_PATH))
 config.set(SEC_LOGGING, 'ENABLED', "True")
+config.set(SEC_LOGGING, 'PATH', "{:s}/logs".format(ROOT_PATH))
 config.set(SEC_AUTHMOD_MOODLE, 'HOST', None)
 config.set(SEC_AUTHMOD_MOODLE, 'SERVICE', None)
 config.set(SEC_REPMOD_MOODLE, 'HOST', None)
@@ -64,6 +65,8 @@ FILESTORAGE_PATH = os.path.realpath(FILESTORAGE_PATH)
 ARCHIVE_PATH = os.path.realpath(DEFAULT_ARCHIVE_PATH)
 LOGGING_ENABLED = os.environ.get('COGS_LOGGING_ENABLED', config.get(SEC_LOGGING, 'ENABLED'))
 LOGGING_ENABLED = LOGGING_ENABLED.lower() in ['true', 'yes', 'on', '1']
+LOGGING_PATH = os.environ.get('COGS_LOGGING_PATH', config.get(SEC_LOGGING, 'PATH'))
+LOGGING_PATH = os.path.realpath(LOGGING_PATH)
 AUTHMOD_MOODLE_HOST = os.environ.get('COGS_AUTHMOD_MOODLE_HOST',
                                      config.get(SEC_AUTHMOD_MOODLE, 'HOST'))
 AUTHMOD_MOODLE_SERVICE = os.environ.get('COGS_AUTHMOD_MOODLE_SERVICE',
