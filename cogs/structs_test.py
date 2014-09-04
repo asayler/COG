@@ -57,7 +57,6 @@ class StructsTestCase(test_common.CogsTestCase):
         super(StructsTestCase, self).tearDown()
 
     def _create_zip(self, zip_path, file_paths):
-
         if os.path.exists(zip_path):
             raise Exception("{:s} already exists".format(zip_path))
         with zipfile.ZipFile(zip_path, 'w') as archive:
@@ -65,6 +64,10 @@ class StructsTestCase(test_common.CogsTestCase):
                 file_name = os.path.relpath(file_path, test_common.TEST_INPUT_PATH)
                 archive.write(file_path, file_name)
 
+    def _copy_test_file(self, input_name, output_name):
+        src = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, input_name)
+        dst = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, output_name)
+        shutil.copy(src, dst)
 
 class ServerTestCase(test_common_backend.SubMixin,
                      StructsTestCase):
@@ -645,11 +648,6 @@ class RunTestCaseAddTestsMixin(RunTestCaseBaseMixin):
 
 
 class RunTestCaseAddTestsZipMixin(RunTestCaseBaseMixin):
-
-    def _copy_test_file(self, input_name, output_name):
-        src = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, input_name)
-        dst = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, output_name)
-        shutil.copy(src, dst)
 
     def test_execute_run_sub_zip_good(self):
 
@@ -1377,9 +1375,8 @@ class RunTestCaseIOKeyAdd(RunTestCaseBadSolnMixin,
         super(RunTestCaseIOKeyAdd, self).tearDown()
 
 
-class RunTestCaseIOKeyHello(RunTestCaseBadSolnMixin,
+class RunTestCaseIOKeyHello(RunTestCaseHelloTestsMixin,
                             RunTestCaseBadTestsMixin,
-                            RunTestCaseHelloTestsMixin,
                             RunTestCaseIOBase):
 
     def setUp(self):
@@ -1410,6 +1407,7 @@ class RunTestCaseIOPathAdd(RunTestCaseBadSolnMixin,
                            RunTestCaseBadInputMixin,
                            RunTestCaseBadTestsMixin,
                            RunTestCaseAddTestsMixin,
+                           RunTestCaseAddTestsZipMixin,
                            RunTestCaseIOBase):
 
     def setUp(self):
@@ -1446,8 +1444,56 @@ class RunTestCaseIOPathAdd(RunTestCaseBadSolnMixin,
         super(RunTestCaseIOPathAdd, self).tearDown()
 
 
-class RunTestCaseIOPathHello(RunTestCaseBadSolnMixin,
-                             RunTestCaseBadTestsMixin,
+class RunTestCaseIOPathAddZip(RunTestCaseBadTestsMixin,
+                              RunTestCaseAddTestsMixin,
+                              RunTestCaseAddTestsZipMixin,
+                              RunTestCaseIOBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseIOPathAddZip, self).setUp()
+
+        # Setup Files
+        self.tst['path_solution'] = "add_good.py"
+        self.tst['prefix_input'] = "input"
+        self._copy_test_file("add_input1.txt", "input1.txt")
+        self._copy_test_file("add_input2.txt", "input2.txt")
+        self._copy_test_file("add_input3.txt", "input3.txt")
+
+        file_names = ["add_good.py", "input1.txt", "input2.txt", "input3.txt"]
+        file_paths = []
+        for file_name in file_names:
+            file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
+            file_paths.append(file_path)
+        archive_name = "tester.zip"
+        archive_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, archive_name)
+        self._create_zip(archive_path, file_paths)
+
+        # Add Tester Zip
+        self.fles_tester = self._add_test_files(archive_name, file_key="extract")
+
+        # Remove Zip and Copies
+        os.remove(archive_path)
+        for file_name in ["input1.txt", "input2.txt", "input3.txt"]:
+            file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
+            os.remove(file_path)
+
+        # Set Mixin Values
+        self.tst['path_submission'] = "add.py"
+        self.sub_name = "add.py"
+        self.sub_key = ""
+
+    def tearDown(self):
+
+        # Remove Solution
+        self._del_test_files(self.fles_tester)
+
+        # Call Parent
+        super(RunTestCaseIOPathAddZip, self).tearDown()
+
+
+class RunTestCaseIOPathHello(RunTestCaseBadTestsMixin,
                              RunTestCaseHelloTestsMixin,
                              RunTestCaseIOBase):
 
