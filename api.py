@@ -35,7 +35,7 @@ _TESTS_KEY = "tests"
 _SUBMISSIONS_KEY = "submissions"
 _RUNS_KEY = "runs"
 _TOKEN_KEY = "token"
-
+_EXTRACT_KEY = "extract"
 
 ### Global Setup ###
 
@@ -140,15 +140,23 @@ def create_stub_json(func_create, **kwargs):
     obj_lst = list([str(obj.uuid)])
     return obj_lst
 
-def create_stub_file(func_create, **kwargs):
+def create_stub_file(func_create, files=[]):
 
     obj_lst = []
-    files = flask.request.files
-    for key in files:
+    for file_obj in files:
         data = {}
-        file_obj = files[key]
-        obj = func_create(data, file_obj=file_obj, owner=flask.g.user, **kwargs)
+        obj = func_create(data, file_obj=file_obj, owner=flask.g.user)
         obj_lst.append(str(obj.uuid))
+    return obj_lst
+
+def create_stub_files(func_create, files=[]):
+
+    obj_lst = []
+    for file_obj in files:
+        data = {}
+        objs = func_create(data, file_obj=file_obj, owner=flask.g.user)
+        for obj in objs:
+            obj_lst.append(str(obj.uuid))
     return obj_lst
 
 def update_stub_json(obj):
@@ -158,7 +166,7 @@ def update_stub_json(obj):
     obj_dict = obj.get_dict()
     return obj_dict
 
-def process_objects(func_list, func_create, key, create_stub=create_stub_json, **kwargs):
+def process_objects(func_list, func_create, key, create_stub=create_stub_json, raw=False, **kwargs):
 
     # List Objects
     if flask.request.method == 'GET':
@@ -174,10 +182,13 @@ def process_objects(func_list, func_create, key, create_stub=create_stub_json, *
         raise Exception("Unhandled Method")
 
     # Return Object List
-    out = {key: obj_lst}
-    return flask.jsonify(out)
+    if raw:
+        return obj_lst
+    else:
+        out = {key: obj_lst}
+        return flask.jsonify(out)
 
-def process_object(func_get, obj_uuid, update_stub=update_stub_json):
+def process_object(func_get, obj_uuid, update_stub=update_stub_json, raw=False):
 
     # Get Object
     obj = func_get(obj_uuid)
@@ -200,8 +211,11 @@ def process_object(func_get, obj_uuid, update_stub=update_stub_json):
         raise Exception("Unhandled Method")
 
     # Return Object
-    out = {str(obj.uuid): obj_dict}
-    return flask.jsonify(out)
+    if raw:
+        return obj_dict
+    else:
+        out = {str(obj.uuid): obj_dict}
+        return flask.jsonify(out)
 
 def process_uuid_list(func_list, func_add, func_remove, key):
 
@@ -239,6 +253,7 @@ def process_uuid_list(func_list, func_add, func_remove, key):
         raise Exception("Unhandled Method")
 
     # Return Object List
+
     out_obj = {key: out_lst}
     return flask.jsonify(out_obj)
 
@@ -270,11 +285,36 @@ def get_token():
 
 ## File Endpoints ##
 
-@app.route("/files/", methods=['GET', 'POST'])
+@app.route("/files/", methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
-def process_files():
-    return process_objects(srv.list_files, srv.create_file, _FILES_KEY, create_stub=create_stub_file)
+def process_files_get():
+    return process_objects(srv.list_files, None, _FILES_KEY, create_stub=None)
+
+@app.route("/files/", methods=['POST'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_files_post():
+
+    files = flask.request.files
+    files_extract = []
+    files_direct = []
+    for key in files:
+        if key == _EXTRACT_KEY:
+            files_extract += files.getlist(key)
+        else:
+            files_direct += files.getlist(key)
+
+    obj_lst = []
+    if files_extract:
+        obj_lst += process_objects(None, srv.create_files, _FILES_KEY,
+                                   create_stub=create_stub_files, raw=True, files=files_direct)
+    if files_direct:
+        obj_lst += process_objects(None, srv.create_file, _FILES_KEY,
+                                   create_stub=create_stub_file, raw=True, files=files_direct)
+
+    out = {_FILES_KEY: obj_lst}
+    return flask.jsonify(out)
 
 @app.route("/files/<obj_uuid>/", methods=['GET', 'DELETE'])
 @httpauth.login_required
