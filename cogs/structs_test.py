@@ -745,6 +745,69 @@ class RunTestCaseHelloTestsMixin(RunTestCaseBaseMixin):
             raise
 
 
+class RunTestCaseHelloTestsZipMixin(RunTestCaseBaseMixin):
+
+    def test_execute_run_sub_good_zip(self):
+
+        # Setup Zip
+        self._copy_test_file("hello_good.py", self.sub_name)
+        file_name = self.sub_name
+        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
+        archive_name = "submission.zip"
+        archive_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, archive_name)
+        self._create_zip(archive_path, [file_path])
+
+        # Add Zip
+        out = self._test_execute_run_sub(archive_name, file_key="extract")
+
+        # Remove Zip and Copy
+        os.remove(archive_path)
+        os.remove(file_path)
+
+        # Check Output
+        try:
+            self.assertEqual(out['status'], self.status_ok)
+            if self.retcode_ok:
+                self.assertEqual(int(out['retcode']), self.retcode_ok)
+            else:
+                self.assertEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 10)
+        except AssertionError as e:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_execute_run_sub_bad_zip(self):
+
+        # Setup Zip
+        self._copy_test_file("hello_bad.py", self.sub_name)
+        file_name = self.sub_name
+        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
+        archive_name = "submission.zip"
+        archive_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, archive_name)
+        self._create_zip(archive_path, [file_path])
+
+        # Add Zip
+        out = self._test_execute_run_sub(archive_name, file_key="extract")
+
+        # Remove Zip and Copy
+        os.remove(archive_path)
+        os.remove(file_path)
+
+        # Check Output
+        try:
+            self.assertEqual(out['status'], self.status_ok)
+            if self.retcode_ok:
+                self.assertEqual(int(out['retcode']), self.retcode_ok)
+            else:
+                self.assertEqual(int(out['retcode']), 0)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+
 class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_script_none(self):
@@ -1461,6 +1524,7 @@ class RunTestCaseIOPathAddZip(RunTestCaseBadTestsMixin,
         self._copy_test_file("add_input2.txt", "input2.txt")
         self._copy_test_file("add_input3.txt", "input3.txt")
 
+        # Setup Zip
         file_names = ["add_good.py", "input1.txt", "input2.txt", "input3.txt"]
         file_paths = []
         for file_name in file_names:
@@ -1495,6 +1559,7 @@ class RunTestCaseIOPathAddZip(RunTestCaseBadTestsMixin,
 
 class RunTestCaseIOPathHello(RunTestCaseBadTestsMixin,
                              RunTestCaseHelloTestsMixin,
+                             RunTestCaseHelloTestsZipMixin,
                              RunTestCaseIOBase):
 
     def setUp(self):
@@ -1519,6 +1584,44 @@ class RunTestCaseIOPathHello(RunTestCaseBadTestsMixin,
 
         # Call Parent
         super(RunTestCaseIOPathHello, self).tearDown()
+
+
+class RunTestCaseIOPathHelloZip(RunTestCaseBadTestsMixin,
+                                RunTestCaseHelloTestsMixin,
+                                RunTestCaseHelloTestsZipMixin,
+                                RunTestCaseIOBase):
+
+    def setUp(self):
+
+        # Call Parent
+        super(RunTestCaseIOPathHelloZip, self).setUp()
+
+        # Setup Zip
+        self.tst['path_solution'] = "hello_good.py"
+        file_name = self.tst['path_solution']
+        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
+        archive_name = "tester.zip"
+        archive_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, archive_name)
+        self._create_zip(archive_path, [file_path])
+
+        # Add Tester Zip
+        self.fles_tester = self._add_test_files(archive_name, file_key="extract")
+
+        # Remove Zip and Copies
+        os.remove(archive_path)
+
+        # Set Mixin Values
+        self.tst['path_submission'] = "hello.py"
+        self.sub_name = "hello.py"
+        self.sub_key = ""
+
+    def tearDown(self):
+
+        # Remove Solution
+        self._del_test_files(self.fles_tester)
+
+        # Call Parent
+        super(RunTestCaseIOPathHelloZip, self).tearDown()
 
 
 # Main
