@@ -14,6 +14,7 @@ import uuid
 import os
 import time
 import zipfile
+import shutil
 
 import cogs.test_common
 
@@ -909,13 +910,6 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
 
     def test_run_script_good(self):
 
-        # Update Test
-        data = copy.copy(cogs.test_common.TEST_TESTDICT)
-        data['tester'] = 'script'
-        tst = self.set_object('/tests/', self.tst_uuid, data,
-                              json_data=True, user=self.admin)
-        self.assertTrue(tst)
-
         # Upload Script File and Attach to Test
         file_key = "script"
         file_name = "grade_add_args.py"
@@ -986,13 +980,6 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
 
     def test_run_script_bad(self):
 
-        # Update Test
-        data = copy.copy(cogs.test_common.TEST_TESTDICT)
-        data['tester'] = 'script'
-        tst = self.set_object('/tests/', self.tst_uuid, data,
-                              json_data=True, user=self.admin)
-        self.assertTrue(tst)
-
         # Upload Script File and Attach to Test
         file_key = "script"
         file_name = "grade_add_args.py"
@@ -1061,63 +1048,56 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         fle_script = self.delete_object('/files/', fle_uuid_script, user=self.admin)
         self.assertIsNotNone(fle_script)
 
-    def test_run_io_good(self):
+    def test_run_script_zip(self):
 
         # Update Test
-        data = copy.copy(cogs.test_common.TEST_TESTDICT)
-        data['tester'] = 'io'
+        data = {}
+        data['path_script'] = 'grade_add_args.py'
         tst = self.set_object('/tests/', self.tst_uuid, data,
                               json_data=True, user=self.admin)
         self.assertTrue(tst)
 
-        # Upload Solution File and Attach to Test
-        file_key = "solution"
-        file_name = "add.py"
-        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, "add_good.py")
+        # Upload Script File and Attach to Test
+        file_key = "extract"
+        file_name = data['path_script']
+        zip_name = "script.zip"
+        self._create_test_zip(zip_name, [file_name])
+        zip_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, zip_name)
         url = '/files/'
-        fle_uuids_sol = self.create_objects(url, 'files',
-                                           {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.admin)
-        self.assertEqual(len(fle_uuids_sol), 1)
-        fle_uuid_sol = fle_uuids_sol.pop()
-        self.assertTrue(fle_uuid_sol)
+        fle_uuids_script = self.create_objects(url, 'files',
+                                               {file_key: (zip_path, zip_name)},
+                                               json_data=False, user=self.admin)
+        self.assertEqual(len(fle_uuids_script), 1)
+        fle_uuid_script = fle_uuids_script.pop()
+        self.assertTrue(fle_uuid_script)
         url = '/tests/{:s}/files/'.format(self.tst_uuid)
-        fle_lst = self.add_objects(url, 'files', [fle_uuid_sol], user=self.admin)
-        self.assertTrue(fle_lst)
-
-        # Upload Input File
-        file_key = "input"
-        file_name = "add_input1.txt"
-        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, file_name)
-        url = '/files/'
-        fle_uuids_in1 = self.create_objects(url, 'files',
-                                           {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.admin)
-        self.assertEqual(len(fle_uuids_in1), 1)
-        fle_uuid_in1 = fle_uuids_in1.pop()
-        self.assertTrue(fle_uuid_in1)
-        url = '/tests/{:s}/files/'.format(self.tst_uuid)
-        fle_lst = self.add_objects(url, 'files', [fle_uuid_in1], user=self.admin)
-        self.assertTrue(fle_lst)
+        fle_lst_tst = self.add_objects(url, 'files', [fle_uuid_script], user=self.admin)
+        self.assertTrue(fle_lst_tst)
+        self._del_test_file(zip_name)
 
         # Upload Submission File and Attach to Submission
-        file_key = "submission"
+        file_key = "extract"
         file_name = "add.py"
-        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, "add_good.py")
+        self._copy_test_file("add_good.py", file_name)
+        zip_name = "submission.zip"
+        self._create_test_zip(zip_name, [file_name])
+        zip_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, zip_name)
         url = '/files/'
         fle_uuids_sub = self.create_objects(url, 'files',
-                                           {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.student)
+                                            {file_key: (zip_path, zip_name)},
+                                            json_data=False, user=self.student)
         self.assertEqual(len(fle_uuids_sub), 1)
         fle_uuid_sub = fle_uuids_sub.pop()
         self.assertTrue(fle_uuid_sub)
         url = '/submissions/{:s}/files/'.format(self.sub_uuid)
         fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.student)
         self.assertTrue(fle_lst_sub)
+        self._del_test_file(file_name)
+        self._del_test_file(zip_name)
 
         # Create Run
         run_uuids = self.create_objects(self.url_lst, self.key, self.data,
-                                       json_data=self.json_data, user=self.student)
+                                        json_data=self.json_data, user=self.student)
 
         for run_uuid in run_uuids:
 
@@ -1145,113 +1125,13 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
             run = self.delete_object(self.url_obj, run_uuid, user=self.student)
             self.assertIsNotNone(run)
 
-        # Delete Submission
+        # Delete Submission File
         fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.student)
         self.assertIsNotNone(fle_sub)
 
-        # Delete Input
-        fle_in1 = self.delete_object('/files/', fle_uuid_in1, user=self.admin)
-        self.assertIsNotNone(fle_sub)
-
-        # Delete Solution
-        fle_sol = self.delete_object('/files/', fle_uuid_sol, user=self.admin)
-        self.assertIsNotNone(fle_sol)
-
-    def test_run_io_bad(self):
-
-        # Update Test
-        data = copy.copy(cogs.test_common.TEST_TESTDICT)
-        data['tester'] = 'io'
-        tst = self.set_object('/tests/', self.tst_uuid, data,
-                              json_data=True, user=self.admin)
-        self.assertTrue(tst)
-
-        # Upload Solution File and Attach to Test
-        file_key = "solution"
-        file_name = "add.py"
-        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, "add_good.py")
-        url = '/files/'
-        fle_uuids_sol = self.create_objects(url, 'files',
-                                           {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.admin)
-        self.assertEqual(len(fle_uuids_sol), 1)
-        fle_uuid_sol = fle_uuids_sol.pop()
-        self.assertTrue(fle_uuid_sol)
-        url = '/tests/{:s}/files/'.format(self.tst_uuid)
-        fle_lst = self.add_objects(url, 'files', [fle_uuid_sol], user=self.admin)
-        self.assertTrue(fle_lst)
-
-        # Upload Input File
-        file_key = "input"
-        file_name = "add_input1.txt"
-        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, file_name)
-        url = '/files/'
-        fle_uuids_in1 = self.create_objects(url, 'files',
-                                           {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.admin)
-        self.assertEqual(len(fle_uuids_in1), 1)
-        fle_uuid_in1 = fle_uuids_in1.pop()
-        self.assertTrue(fle_uuid_in1)
-        url = '/tests/{:s}/files/'.format(self.tst_uuid)
-        fle_lst = self.add_objects(url, 'files', [fle_uuid_in1], user=self.admin)
-        self.assertTrue(fle_lst)
-
-        # Upload Submission File and Attach to Submission
-        file_key = "submission"
-        file_name = "add.py"
-        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, "add_bad.py")
-        url = '/files/'
-        fle_uuids_sub = self.create_objects(url, 'files',
-                                           {file_key: (file_path, file_name)},
-                                           json_data=False, user=self.student)
-        self.assertEqual(len(fle_uuids_sub), 1)
-        fle_uuid_sub = fle_uuids_sub.pop()
-        self.assertTrue(fle_uuid_sub)
-        url = '/submissions/{:s}/files/'.format(self.sub_uuid)
-        fle_lst_sub = self.add_objects(url, 'files', [fle_uuid_sub], user=self.student)
-        self.assertTrue(fle_lst_sub)
-
-        # Create Run
-        run_uuids = self.create_objects(self.url_lst, self.key, self.data,
-                                       json_data=self.json_data, user=self.student)
-
-        for run_uuid in run_uuids:
-
-            # Wait for Run Completion
-            run = None
-            status = ""
-            while not status.startswith('complete'):
-                run = self.get_object(self.url_obj, run_uuid, user=self.student)
-                self.assertTrue(run)
-                self.assertTrue(run['status'])
-                status = run['status']
-                time.sleep(1)
-
-            # Check Object
-            try:
-                self.assertEqual(run['status'], 'complete')
-                self.assertEqual(int(run['retcode']), 0)
-                self.assertLess(float(run['score']), 10)
-                self.assertTrue(run['output'])
-            except AssertionError:
-                print("run = {:s}".format(run))
-                raise
-
-            # Delete Run
-            run = self.delete_object(self.url_obj, run_uuid, user=self.student)
-            self.assertIsNotNone(run)
-
-        # Delete Submission
-        fle_sub = self.delete_object('/files/', fle_uuid_sub, user=self.student)
-        self.assertIsNotNone(fle_sub)
-
-        # Delete Input
-        fle_in1 = self.delete_object('/files/', fle_uuid_in1, user=self.admin)
-        self.assertIsNotNone(fle_sub)
-
-        # Delete Solution
-        fle_sol = self.delete_object('/files/', fle_uuid_sol, user=self.admin)
-        self.assertIsNotNone(fle_sol)
+        # Delete Script File
+        fle_script = self.delete_object('/files/', fle_uuid_script, user=self.admin)
+        self.assertIsNotNone(fle_script)
 
 
 ### Main ###
