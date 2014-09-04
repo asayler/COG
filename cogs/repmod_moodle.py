@@ -10,7 +10,9 @@ import moodle.ws
 
 import config
 
-EXTRA_REPORTER_SCHEMA = ['asn_id']
+EXTRA_REPORTER_SCHEMA = ['moodle_asn_id', 'moodle_respect_duedate']
+EXTRA_REPORTER_DEFAULTS = {'moodle_respect_duedate': "1"}
+
 _MAX_COMMENT_LEN = 2000
 
 class RepModMoodleError(Exception):
@@ -32,7 +34,7 @@ class Reporter(object):
         super(Reporter, self).__init__()
 
         # Save vars
-        self.asn_id = rpt['asn_id']
+        self.asn_id = rpt['moodle_asn_id']
 
         # Setup Vars
         self.host = config.REPMOD_MOODLE_HOST

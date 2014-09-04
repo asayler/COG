@@ -91,7 +91,7 @@ class ServerTestCase(test_common_backend.SubMixin,
     def test_reporters(self):
         data = copy.copy(test_common.REPORTER_TESTDICT)
         data['mod'] = "moodle"
-        data['asn_id'] = test_common.REPMOD_MOODLE_ASN
+        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN
         self.subHashDirectHelper(self.srv.create_reporter,
                                  self.srv.get_reporter,
                                  self.srv.list_reporters,
@@ -255,7 +255,7 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
 
         self.data = copy.copy(test_common.REPORTER_TESTDICT)
         self.data['mod'] = "moodle"
-        self.data['asn_id'] = test_common.REPMOD_MOODLE_ASN
+        self.data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN
 
         self.student = self.auth.create_user(test_common.USER_TESTDICT,
                                              username=test_common.AUTHMOD_MOODLE_STUDENT_USERNAME,
@@ -357,7 +357,7 @@ class TestTestCase(test_common_backend.SubMixin,
         # Create Reporters
         data = copy.copy(test_common.REPORTER_TESTDICT)
         data['mod'] = "moodle"
-        data['asn_id'] = test_common.REPMOD_MOODLE_ASN
+        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN
         self.reporters = set([])
         for i in range(10):
             self.reporters.add(str(self.srv.create_reporter(data, owner=self.testuser).uuid))
@@ -1096,7 +1096,7 @@ class RunTestCaseBase(StructsTestCase):
         # Setup Reporter
         data = copy.copy(test_common.REPORTER_TESTDICT)
         data['mod'] = "moodle"
-        data['asn_id'] = test_common.REPMOD_MOODLE_ASN
+        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN
         self.rpt_moodle = self.srv.create_reporter(data, owner=self.admin)
 
         # Create Submission User

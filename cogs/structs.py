@@ -32,7 +32,9 @@ import tester_io
 
 _FILE_SCHEMA = ['key', 'name', 'type', 'encoding', 'path']
 _REPORTER_SCHEMA = ['mod']
-_ASSIGNMENT_SCHEMA = ['name', 'env']
+_REPORTER_DEFAULTS = {}
+_ASSIGNMENT_SCHEMA = ['name', 'env', 'duedate']
+_ASSIGNMENT_DEFAULTS = {'duedate': ""}
 _TEST_SCHEMA = ['assignment', 'name', 'maxscore', 'tester']
 _TEST_DEFAULTS = {}
 _SUBMISSION_SCHEMA = ['assignment']
@@ -290,6 +292,16 @@ class Reporter(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Ha
             raise Exception("Unknown repmod {:s}".format(mod))
         kwargs['schema'] = schema
 
+        # Set Defaults
+        defaults = copy.copy(_REPORTER_DEFAULTS)
+        if mod == 'moodle':
+            defaults.update(repmod_moodle.EXTRA_REPORTER_DEFAULTS)
+        else:
+            raise Exception("Unknown repmod {:s}".format(mod))
+        for key in defaults:
+            if key not in data:
+                data[key] = defaults[key]
+
         # Call Parent
         reporter = super(Reporter, cls).from_new(data, **kwargs)
 
@@ -343,6 +355,12 @@ class Assignment(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
         # Set Schema
         schema = set(_ASSIGNMENT_SCHEMA)
         kwargs['schema'] = schema
+
+        # Set Defaults
+        defaults = copy.copy(_ASSIGNMENT_DEFAULTS)
+        for key in defaults:
+            if key not in data:
+                data[key] = defaults[key]
 
         # Call Parent
         assignment = super(Assignment, cls).from_new(data, **kwargs)

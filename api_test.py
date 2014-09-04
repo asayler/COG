@@ -466,7 +466,7 @@ class CogsApiReporterTestCase(CogsApiObjectTests, CogsApiTestCase):
         self.key = 'reporters'
         self.data = copy.copy(cogs.test_common.REPORTER_TESTDICT)
         self.data['mod'] = "moodle"
-        self.data['asn_id'] = cogs.test_common.REPMOD_MOODLE_ASN
+        self.data['moodle_asn_id'] = cogs.test_common.REPMOD_MOODLE_ASN
         self.json_data = True
 
     def tearDown(self):
@@ -559,7 +559,7 @@ class CogsApiTestTestCase(CogsApiObjectTests, CogsApiTestCase):
         reporter_lst = []
         reporter_data = copy.copy(cogs.test_common.REPORTER_TESTDICT)
         reporter_data['mod'] = "moodle"
-        reporter_data['asn_id'] = cogs.test_common.REPMOD_MOODLE_ASN
+        reporter_data['moodle_asn_id'] = cogs.test_common.REPMOD_MOODLE_ASN
         for i in range(10):
             reporter_uuids = self.create_objects('/reporters/', 'reporters',
                                                  data=reporter_data,
@@ -773,7 +773,7 @@ class CogsApiRunExecuteTestCase(CogsApiRunBase):
         # Setup Reporter and Attach to Test
         data = copy.copy(cogs.test_common.REPORTER_TESTDICT)
         data['mod'] = "moodle"
-        data['asn_id'] = cogs.test_common.REPMOD_MOODLE_ASN
+        data['moodle_asn_id'] = cogs.test_common.REPMOD_MOODLE_ASN
         self.rpt_key = 'reporters'
         self.rpt_url = "/{:s}/".format(self.rpt_key)
         rpt_uuids = self.create_objects(self.rpt_url, self.rpt_key, data,
