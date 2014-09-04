@@ -57,6 +57,11 @@ class Tester(tester.Tester):
                 logger.error(self._format_msg(msg))
                 raise Exception(msg)
 
+        # Finally, if there is only a single test file, use that
+        if not tst_fle:
+            if (len(self.env.tst_files) == 1):
+                tst_fle = fle
+
         # Raise error if not found
         if not tst_fle:
             msg = "Module requires a test script file, but none found"

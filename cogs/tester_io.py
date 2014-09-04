@@ -94,6 +94,11 @@ class Tester(tester.Tester):
                 logger.error(self._format_msg(msg))
                 raise Exception(msg)
 
+        # Finally, if there is only a single submission file, use that
+        if not sub_fle:
+            if (len(self.env.sub_files) == 1):
+                sub_fle = fle
+
         # Raise error if not found
         if not sub_fle:
             msg = "Module requires a submission, but none found"
