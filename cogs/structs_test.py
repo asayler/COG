@@ -833,7 +833,7 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
         try:
-            self.assertEqual(out['status'], "complete-exception-run")
+            self.assertEqual(out['status'], "complete-error")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
