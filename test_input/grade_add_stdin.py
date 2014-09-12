@@ -13,8 +13,24 @@ SUB_NAME = "add.py"
 
 def grade(argv):
 
-    sub_path = os.path.abspath("{:s}/{:s}".format(argv[0], SUB_NAME))
+    # Extract Paths from Args
+    sub_dir = os.path.abspath(argv[0])
+    tst_dir = os.path.abspath(argv[1])
+    sub_path = "{:s}/{:s}".format(sub_dir, SUB_NAME)
 
+    # Check Paths
+    if not os.path.exists(sub_dir):
+        sys.stderr.write("Could not find submission directory: '{:s}'\n".format(sub_dir))
+        return -1
+    if not os.path.exists(tst_dir):
+        sys.stderr.write("Could not find test directory: '{:s}'\n".format(tst_dir))
+        return -1
+    if not os.path.exists(sub_path):
+        sys.stderr.write("Could not find submission: '{:s}'\n".format(SUB_NAME))
+        sys.stdout.write("{:2d}\n".format(0))
+        return 0
+
+    # Grade
     sys.stderr.write("Grading {:s}\n".format(sub_path))
     sys.stderr.write("__________________________\n")
 
