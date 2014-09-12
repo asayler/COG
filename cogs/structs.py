@@ -16,6 +16,7 @@ import sys
 import uuid
 import zipfile
 import shutil
+import logging
 
 import config
 
@@ -26,6 +27,10 @@ import testrun
 import repmod_moodle
 import tester_script
 import tester_io
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.NullHandler())
 
 
 ### Constants ###
@@ -772,7 +777,7 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         # TODO Prevent delete while still running
         if not force:
             while not self.is_complete():
-                sys.stderr.write("Waiting for run to complete...")
+                logger.warning("Waiting for run {:s} to complete...".format(self.uuid))
                 time.sleep(1)
 
         # Remove from submission
