@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.NullHandler())
 
+
 ### Constants ###
 
 _USER_SCHEMA = ['username', 'first', 'last', 'auth', 'token', 'email']
