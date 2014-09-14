@@ -1,0 +1,12 @@
+To set permissions on a fresh server install:
+
+GET    /tokens/        ALLOW ALL
+GET    /assignments/   ALLOW ALL
+POST   /files/         ALLOW ALL
+
+To set permissions for a new assignment:
+
+GET    /assignments/<asn_uuid>/              ALLOW ALL
+GET    /assignments/<asn_uuid>/tests         ALLOW ALL
+POST   /assignments/<asn_uuid>/submissions   ALLOW ALL
+GET    /tests/<tst_uuid>/                    ALLOW ALL
