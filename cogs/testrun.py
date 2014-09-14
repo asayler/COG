@@ -76,7 +76,9 @@ def test(asn, sub, tst, run):
         # Cleanup
         env.close()
     finally:
+
         # Update Run
+        # TODO Prevent update if run has been deleted
         run['retcode'] = retcode
         run['score'] = score
         run['output'] = output

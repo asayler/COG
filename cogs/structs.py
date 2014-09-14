@@ -774,11 +774,9 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
     # Override Delete
     def delete(self, force=False):
 
-        # TODO Prevent delete while still running
         if not force:
-            while not self.is_complete():
-                logger.warning("Waiting for run {:s} to complete...".format(self.uuid))
-                time.sleep(1)
+            if not self.is_complete():
+                logger.warning("Deleting run {:s} before complete...".format(self.uuid))
 
         # Remove from submission
         run_uuid = str(self.uuid)
@@ -800,6 +798,3 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
 class RunList(backend.Set):
     """COGS Run List Class"""
     pass
-
-
-#  LocalWords:  kwargs
