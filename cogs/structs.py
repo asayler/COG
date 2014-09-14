@@ -785,6 +785,7 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
             sub = self.SubmissionFactory.from_existing(sub_uuid)
             if not sub._rem_runs([run_uuid]):
                 msg = "Could not remove Run {:s} from Submission {:s}".format(run_uuid, sub_uuid)
+                logger.error(msg)
                 raise backend.PersistentObjectError(msg)
 
         # Call Parent
