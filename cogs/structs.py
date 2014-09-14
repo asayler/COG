@@ -377,10 +377,19 @@ class Assignment(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
     def delete(self):
         """Delete Assignment and Children"""
 
-        # Remove Test Objects
+        asn_uuid = str(self.uuid)
+
+        # Delete Test Objects
         for tst_uuid in self.list_tests():
-            tst = self.TestFactory.from_existing(tst_uuid)
-            tst.delete()
+            try:
+                tst = self.TestFactory.from_existing(tst_uuid)
+            except ObjectDNE:
+                msg = ("Could not delete Test {:s} ".format(tst_uuid) +
+                       "from Assignment {:s}: Test DNE".format(asn_uuid))
+                logger.warning(msg)
+                self._rem_tests([tst_uuid])
+            else:
+                tst.delete()
         assert(not self.list_tests())
 
         # Remove Test List
@@ -389,8 +398,15 @@ class Assignment(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
 
         # Remove Submission Objects
         for sub_uuid in self.list_submissions():
-            sub = self.SubmissionFactory.from_existing(sub_uuid)
-            sub.delete()
+            try:
+                sub = self.SubmissionFactory.from_existing(sub_uuid)
+            except ObjectDNE:
+                msg = ("Could not delete Submission {:s} ".format(sub_uuid) +
+                       "from Assignment {:s}: Submission DNE".format(asn_uuid))
+                logger.warning(msg)
+                self._rem_submissions([sub_uuid])
+            else:
+                sub.delete()
         assert(not self.list_submissions())
 
         # Remove Submission List
@@ -508,10 +524,19 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         tst_uuid = str(self.uuid)
         asn_uuid = self['assignment']
         if asn_uuid:
-            asn = self.AssignmentFactory.from_existing(asn_uuid)
-            if not asn._rem_tests([tst_uuid]):
-                msg = "Could not remove Test {:s} from Assignment {:s}".format(tst_uuid, asn_uuid)
-                raise backend.PersistentObjectError(msg)
+            try:
+                asn = self.AssignmentFactory.from_existing(asn_uuid)
+            except ObjectDNE:
+                msg = ("Could not remove Test {:s} ".format(tst_uuid) +
+                       "from Assignment {:s}: Assignment DNE".format(asn_uuid))
+                logger.warning(msg)
+            else:
+                ret = asn._rem_tests([tst_uuid])
+                if not ret:
+                    msg = ("Could not remove Test {:s} ".format(tst_uuid) +
+                           "from Assignment {:s}: Returned {:d}".format(asn_uuid, ret))
+                    logger.error(msg)
+                    raise backend.PersistentObjectError(msg)
 
         # Remove file list
         if self.files.exists():
@@ -625,15 +650,31 @@ class Submission(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
         sub_uuid = str(self.uuid)
         asn_uuid = self['assignment']
         if asn_uuid:
-            asn = self.AssignmentFactory.from_existing(asn_uuid)
-            if not asn._rem_submissions([sub_uuid]):
-                msg = "Could not remove Submission {:s} from Assignment {:s}".format(sub_uuid, asn_uuid)
-                raise backend.PersistentObjectError(msg)
+            try:
+                asn = self.AssignmentFactory.from_existing(asn_uuid)
+            except ObjectDNE:
+                msg = ("Could not remove Submission {:s} ".format(sub_uuid) +
+                       "from Assignment {:s}: Assignment DNE".format(asn_uuid))
+                logger.warning(msg)
+            else:
+                ret = asn._rem_submissions([sub_uuid])
+                if not ret:
+                    msg = ("Could not remove Submission {:s} ".format(sub_uuid) +
+                           "from Assignment {:s}: Returned {:d}".format(asn_uuid, ret))
+                    logger.error(msg)
+                    raise backend.PersistentObjectError(msg)
 
-        # Remove run objects
+        # Delete run objects
         for run_uuid in self.list_runs():
-            run = self.RunFactory.from_existing(run_uuid)
-            run.delete()
+            try:
+                run = self.RunFactory.from_existing(run_uuid)
+            except ObjectDNE:
+                msg = ("Could not delete Run {:s} ".format(run_uuid) +
+                       "from Submission {:s}: Run DNE".format(sub_uuid))
+                logger.warning(msg)
+                self._rem_runs([run_uuid])
+            else:
+                run.delete()
         assert(not self.list_runs())
 
         # Remove run list
@@ -782,11 +823,19 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         run_uuid = str(self.uuid)
         sub_uuid = self['submission']
         if sub_uuid:
-            sub = self.SubmissionFactory.from_existing(sub_uuid)
-            if not sub._rem_runs([run_uuid]):
-                msg = "Could not remove Run {:s} from Submission {:s}".format(run_uuid, sub_uuid)
-                logger.error(msg)
-                raise backend.PersistentObjectError(msg)
+            try:
+                sub = self.SubmissionFactory.from_existing(sub_uuid)
+            except ObjectDNE:
+                msg = ("Could not remove Run {:s} ".format(run_uuid) +
+                       "from Submission {:s}: Submission DNE".format(sub_uuid))
+                logger.warning(msg)
+            else:
+                ret = sub._rem_runs([run_uuid])
+                if not ret:
+                    msg = ("Could not remove Run {:s} ".format(run_uuid) +
+                           "from Submission {:s}: Returned {:d}".format(sub_uuid, ret))
+                    logger.error(msg)
+                    raise backend.PersistentObjectError(msg)
 
         # Call Parent
         super(Run, self).delete()
