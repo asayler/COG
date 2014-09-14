@@ -366,7 +366,7 @@ class SchemaHash(Hash):
             raise KeyError(msg)
 
         hsh = super(SchemaHash, cls).from_new(data, **kwargs)
-        hsh.schema.add_vals(keys)
+        hsh.schema.add_vals(schema)
         return hsh
 
     def __setitem__(self, key, val):
@@ -397,3 +397,12 @@ class SchemaHash(Hash):
             raise KeyError(msg)
 
         return super(SchemaHash, self).set_dict(data)
+
+    def delete(self):
+        """ Delete Object"""
+
+        # Delete Schema Set
+        self.schema.delete()
+
+        # Call Parent
+        super(SchemaHash, self).delete()
