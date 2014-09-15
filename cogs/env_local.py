@@ -47,6 +47,7 @@ class Env(env.Env):
         os.makedirs(self.wd)
         os.makedirs(self.wd_tst)
         os.makedirs(self.wd_sub)
+        os.chmod(self.wd_sub, 0777)
 
         # Copy Tester Files
         self.tst_files = []
