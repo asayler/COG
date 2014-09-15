@@ -63,12 +63,16 @@ class Env(env.Env):
             self.sub_files.append(fle_cpy)
 
         # Sanitze Files
-        for fle in (tst_files + sub_files):
+        for fle in (self.tst_files + self.sub_files):
             for pgm in _FILE_SANITIZERS:
                 cmd_sanitize = [pgm, fle['path']]
                 p = subprocess.Popen(cmd_sanitize, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 stdout, stderr = p.communicate()
                 ret = p.returncode
+                if stdout:
+                    logger.debug(stdout)
+                if stderr:
+                    logger.info(stderr)
                 if (ret != 0):
                     msg = ("Sanitize pgm '{:s}' failed ".format(pgm) +
                            "on file '{:s}': ".format(fle_cpy['name']) +
