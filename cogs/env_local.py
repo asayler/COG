@@ -18,6 +18,7 @@ import env
 
 _TST_DIR = "test"
 _SUB_DIR = "submission"
+_FILE_SANITIZERS = ["dos2unix", "mac2unix"]
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -52,12 +53,27 @@ class Env(env.Env):
         # Copy Tester Files
         self.tst_files = []
         for fle in tst_files:
-            self.tst_files.append(self.copy_fle(fle.get_dict(), self.wd_tst))
+            fle_cpy = self.copy_fle(fle.get_dict(), self.wd_tst)
+            self.tst_files.append(fle_cpy)
 
         # Copy Submission Files
         self.sub_files = []
         for fle in sub_files:
-            self.sub_files.append(self.copy_fle(fle.get_dict(), self.wd_sub))
+            fle_cpy = self.copy_fle(fle.get_dict(), self.wd_sub)
+            self.sub_files.append(fle_cpy)
+
+        # Sanitze Files
+        for fle in (tst_files + sub_files):
+            for pgm in _FILE_SANITIZERS:
+                cmd_sanitize = [pgm, fle['path']]
+                p = subprocess.Popen(cmd_sanitize, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                stdout, stderr = p.communicate()
+                ret = p.returncode
+                if (ret != 0):
+                    msg = ("Sanitize pgm '{:s}' failed ".format(pgm) +
+                           "on file '{:s}': ".format(fle_cpy['name']) +
+                           "{:s}".format(stderr))
+                    logger.warning(msg)
 
         # Clean ENV
         self._env_vars = {}
