@@ -1,0 +1,18 @@
+1. Create New Assignment
+curl -u <token>: -X POST -d '{"name": "<name>", "env": "<env>"}' \
+https://api-cog.cs.colorado.edu/assignments/
+
+2. Create New Test
+curl -u <token>: -X POST -d '{"tester": "<tester>", "name": "<name>", "maxscore": "<score>"}' \
+https://api-cog.cs.colorado.edu/assignments/<asn_uuid>/tests/
+
+3. Upload Files
+curl -u <token>: -X POST -F <key>=@<path> \
+https://api-cog.cs.colorado.edu/files/
+
+4. Add Files
+curl -u <token>: -X PUT -d '{"files": ["<file_uuid>"]}' \
+https://api-cog.cs.colorado.edu/tests/<tst_uuid>/files/
+
+5. Set Permissions
+See PERMISSIONS
