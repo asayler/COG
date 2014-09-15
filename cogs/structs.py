@@ -479,10 +479,10 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         asn = kwargs.pop('asn', None)
         if not asn:
             raise TypeError("Requires 'asn'")
-        if 'tester' in data:
-            mod = data['tester']
-        else:
+        mod = data.get('tester', None)
+        if not mod:
             raise TypeError("Requires 'tester'")
+
         data = copy.copy(data)
 
         # Set Schema
