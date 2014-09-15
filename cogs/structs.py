@@ -481,7 +481,7 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
             raise TypeError("Requires 'asn'")
         mod = data.get('tester', None)
         if not mod:
-            raise TypeError("Requires 'tester'")
+            raise KeyError("Requires 'tester'")
 
         data = copy.copy(data)
 
