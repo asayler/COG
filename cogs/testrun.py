@@ -69,9 +69,7 @@ def test(asn, sub, tst, run):
                     try:
                         rpt.file_report(user, grade, comments)
                     except Exception as e:
-                        retcode = -1
-                        score = 0
-                        output = traceback.format_exc()
+                        output += "\nReporting failed: {:s}".format(e)
                         status = "complete-exception-reporter"
         # Cleanup
         env.close()
