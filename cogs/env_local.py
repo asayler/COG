@@ -114,12 +114,6 @@ class Env(env.Env):
                        str(config.ENV_LOCAL_LIMIT_TIME_WALL)]
         os.chmod(sandbox_path, 0775)
 
-        # Change to WD
-        owd = os.getcwd()
-        msg = "Changing to directory '{:s}'".format(self.wd)
-        logger.debug(self._format_msg(msg))
-        os.chdir(self.wd)
-
         # Run Command
         full_cmd = sudo_cmd + sandbox_cmd + user_cmd
         msg = "Preparing to run '{:s}'".format(full_cmd)
@@ -128,11 +122,6 @@ class Env(env.Env):
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=stdin)
         stdout, stderr = p.communicate()
         ret = p.returncode
-
-        # Change Back to OWD
-        msg = "Changing back to directory '{:s}'".format(owd)
-        logger.debug(self._format_msg(msg))
-        os.chdir(owd)
 
         return ret, stdout, stderr
 
