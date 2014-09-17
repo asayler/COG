@@ -6,13 +6,21 @@ https://api-cog.cs.colorado.edu/assignments/
 curl -u <token>: -X POST -d '{"tester": "<tester>", "name": "<name>", "maxscore": "<score>"}' \
 https://api-cog.cs.colorado.edu/assignments/<asn_uuid>/tests/
 
-3. Upload Files
+3. Upload Test Files
 curl -u <token>: -X POST -F <key>=@<path> \
 https://api-cog.cs.colorado.edu/files/
 
-4. Add Files
+4. Add Files to Test
 curl -u <token>: -X PUT -d '{"files": ["<file_uuid>"]}' \
 https://api-cog.cs.colorado.edu/tests/<tst_uuid>/files/
 
 5. Set Permissions
 See PERMISSIONS
+
+6. Create Reporter (OPTIONAL)
+curl -u <token>: -X POST -d '{"mod": "<repmod>", ...}' \
+https://api-cog.cs.colorado.edu/reporters/
+
+7. Add Reporter to Test (OPTIONAL)
+curl -u <token>: -X PUT -d '{"reporters": ["<reporter_uuid>"]}' \
+https://api-cog.cs.colorado.edu/tests/<tst_uuid>/reporters/
