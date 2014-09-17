@@ -5,6 +5,7 @@
 # Univerity of Colorado
 
 import string
+import time
 
 import moodle.ws
 
@@ -47,9 +48,34 @@ class Reporter(object):
 
     def file_report(self, user, grade, comment):
 
+        # Check Moodle User
         if user['auth'] != 'moodle':
             raise RepModMoodleError("Repmod requires users with authmod 'moodle'")
 
+        # Check Due Date
+        time_due = None
+        courses = self.ws.mod_assign_get_assignments([])["courses"]
+        for course in courses:
+            assignments = course["assignments"]
+            for assignment in assignments:
+                if (int(assignment["id"]) == int(self.asn_id)):
+                    time_due = float(assignment["duedate"])
+                if time_due is not None:
+                    break
+            if time_due is not None:
+                break
+        if time_due is None:
+            raise RepModMoodleError("Could not find assignment {:s}".format(self.asn_id))
+        if time_due > 0:
+            time_now = time.time()
+            if (time_now > time_due):
+                time_now_str = time.strftime("%d/%m/%y %H:%M:%S %Z", time.localtime(time_now))
+                time_due_str = time.strftime("%d/%m/%y %H:%M:%S %Z", time.localtime(time_due))
+                msg = "Current time ({:s}) is past due date ({:s}): ".format(time_now_str, time_due_str)
+                msg += "No grade written to Moodle"
+                raise RepModMoodleError(msg)
+
+        # Limit Output
         warning = "\nWARNING: Output Truncated"
         max_len = (_MAX_COMMENT_LEN - len(warning))
         if len(comment) > max_len:
