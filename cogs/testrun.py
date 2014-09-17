@@ -66,7 +66,7 @@ def test(asn, sub, tst, run):
                 user = a.get_user(sub['owner'])
                 grade = score
                 comments = "COG Grading Report\n"
-                comments += "{:s}\n".format(time.asctime())
+                comments += "{:s}\n".format(time.strftime("%a %d %b %Y %H:%M:%S %Z"))
                 comments += "Assignment: {:s}\n".format(repr(asn))
                 comments += "Test: {:s}\n".format(repr(tst))
                 comments += "Submission: {:s}\n".format(repr(sub))
