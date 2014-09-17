@@ -5,6 +5,7 @@
 # Univerity of Colorado
 
 import traceback
+import time
 
 import env_local
 import tester_script
@@ -64,15 +65,26 @@ def test(asn, sub, tst, run):
                 a = auth.Auth()
                 user = a.get_user(sub['owner'])
                 grade = score
-                comments = output
+                comments = "COG Grading Report\n"
+                comments += "{:s}\n".format(time.asctime())
+                comments += "Assignment: {:s}\n".format(repr(asn))
+                comments += "Test: {:s}\n".format(repr(tst))
+                comments += "Submission: {:s}\n".format(repr(sub))
+                comments += "Run: {:s}\n".format(repr(run))
+                comments += "Run Score: {:s} of {:s}\n".format(score, tst['maxscore'])
+                comments += "Run Return: {:s}\n".format(retcode)
+                comments += "Run Status: {:s}\n".format(status)
+                comments += "Run Output:\n"
+                comments += output
                 for rpt in tst.get_reporters():
                     try:
                         rpt.file_report(user, grade, comments)
                     except Exception as e:
-                        output += "\nReporting failed: {:s}".format(e)
+                        output += "\nReporting Failed: {:s}".format(e)
                         status = "complete-exception-reporter"
         # Cleanup
         env.close()
+
     finally:
 
         # Update Run
