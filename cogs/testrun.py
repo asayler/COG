@@ -80,7 +80,7 @@ def test(asn, sub, tst, run):
                     try:
                         rpt.file_report(user, grade, comments)
                     except Exception as e:
-                        output += "\nReporting Failed: {:s}".format(e)
+                        output += "\nWARNING: Reporting Failed: {:s}".format(e)
                         status = "complete-exception-reporter"
         # Cleanup
         env.close()
