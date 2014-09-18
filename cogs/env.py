@@ -13,7 +13,7 @@ class Env(object):
     __metaclass__ = abc.ABCMeta
 
     def _format_msg(self, msg):
-        return "{:s}: {:s}".format(repr(self._run), msg)
+        return "{:s}: {:s}".format(str(self._run), msg)
 
     @abc.abstractmethod
     def __init__(self, asn, sub, tst, run):

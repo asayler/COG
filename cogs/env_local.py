@@ -32,6 +32,8 @@ class Env(env.Env):
         # Call Parent
         super(Env, self).__init__(asn, sub, tst, run)
 
+        logger.info(self._format_msg("Creating env_local"))
+
         # Setup Factory
         FileFactory = backend.UUIDFactory(structs.File)
 
@@ -70,14 +72,14 @@ class Env(env.Env):
                 stdout, stderr = p.communicate()
                 ret = p.returncode
                 if stdout:
-                    logger.debug(stdout)
+                    logger.debug(self._format_msg(stdout))
                 if stderr:
-                    logger.info(stderr)
+                    logger.debug(self._format_msg(stderr))
                 if (ret != 0):
                     msg = ("Sanitize pgm '{:s}' failed ".format(pgm) +
                            "on file '{:s}': ".format(fle_cpy['name']) +
                            "{:s}".format(stderr))
-                    logger.warning(msg)
+                    logger.warning(self._format_msg(msg))
 
         # Clean ENV
         self._env_vars = {}
@@ -86,14 +88,24 @@ class Env(env.Env):
                 self._env_vars[var] = os.environ[var]
 
     def copy_fle(self, fle, dst_dir):
+
         new_fle = copy.copy(fle)
+
+        # Setup Paths
         src = os.path.abspath("{:s}".format(new_fle['path']))
         dst = os.path.abspath("{:s}/{:s}".format(dst_dir, fle['name']))
         dst_dir = os.path.dirname(dst)
+        logger.info(self._format_msg("Copying '{:s}' to '{:s}'".format(src, dst)))
+
+        # Setup Dst
         if not os.path.exists(dst_dir):
             os.makedirs(dst_dir)
+
+        # Copy
         shutil.copy(src, dst)
         new_fle['path'] = dst
+
+        # Return
         return new_fle
 
     def run_cmd(self, user_cmd, stdin=None):
@@ -116,7 +128,7 @@ class Env(env.Env):
 
         # Run Command
         full_cmd = sudo_cmd + sandbox_cmd + user_cmd
-        msg = "Preparing to run '{:s}'".format(full_cmd)
+        msg = "Running '{:s}'".format(full_cmd)
         logger.info(self._format_msg(msg))
         p = subprocess.Popen(full_cmd, env=self._env_vars,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=stdin)
@@ -127,6 +139,8 @@ class Env(env.Env):
 
 
     def close(self):
+
+        logger.info(self._format_msg("Closing env_Local"))
 
         # Delete Submission Files
         for fle in self.sub_files:
