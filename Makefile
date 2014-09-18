@@ -36,8 +36,8 @@ reqs: $(REQUIRMENTS)
 	$(MAKE) -C $(MOODLE) $@
 
 conf:
+	chmod 440 "./conf/sudoers.d/nobody"
 	cp --preserve=mode "./conf/sudoers.d/nobody" "/etc/sudoers.d/"
-#	chmod 440 "/etc/sudoers.d/nobody"
 	cp --preserve=mode "./conf/logrotate.d/cog-api" "/etc/logrotate.d/"
 
 lint: $(PYLINT_CONF)
