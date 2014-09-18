@@ -21,7 +21,7 @@ EXPORT_PATH = export PYTHONPATH="$(PYTHONPATH)"
 COGS = cogs
 MOODLE = moodle
 
-.PHONY: all git reqs test clean
+.PHONY: all git reqs conf test clean
 
 all:
 	$(ECHO) "This is a python project; nothing to build!"
@@ -34,8 +34,11 @@ reqs: $(REQUIRMENTS)
 	$(PIP) install -r "$<" -U
 	$(MAKE) -C $(COGS) $@
 	$(MAKE) -C $(MOODLE) $@
-	sudo cp "./conf/sudoers.d/nobody" "/etc/sudoers.d/"
-	sudo chmod 440 "/etc/sudoers.d/nobody"
+
+conf:
+	cp --preserve=mode "./conf/sudoers.d/nobody" "/etc/sudoers.d/"
+#	chmod 440 "/etc/sudoers.d/nobody"
+	cp --preserve=mode "./conf/logrotate.d/cog-api" "/etc/logrotate.d/"
 
 lint: $(PYLINT_CONF)
 	$(EXPORT_PATH) && $(PYLINT) --rcfile="$<" $(COGS)
