@@ -30,7 +30,10 @@ class Tester(tester.Tester):
 
     def test(self):
 
-        logger.info(self._format_msg("Running test"))
+        # Call Parent
+        super(Tester, self).test()
+        msg = "testmod_io: Running test"
+        logger.info(self._format_msg(msg))
 
         ## Find Reference Solution
         sol_fle = None
@@ -45,7 +48,8 @@ class Tester(tester.Tester):
                     sol_fle = fle
                     break
             if not sol_fle:
-                msg = "User specified 'path_solution', but file {:s} not found".format(sol_path)
+                msg = "testmod_io: User specified 'path_solution', "
+                msg += "but file {:s} not found".format(sol_path)
                 logger.warning(self._format_msg(msg))
 
         # Next look for any files with the solution key
@@ -57,13 +61,14 @@ class Tester(tester.Tester):
                     sol_fle = fle
                     count += 1
             if (count > 1):
-                msg = "Module only supports single reference solution, but {:d} found".format(count)
+                msg = "testmod_io: Module only supports single reference solution, "
+                msg += "but {:d} found".format(count)
                 logger.error(self._format_msg(msg))
                 raise Exception(msg)
 
         # Raise error if not found
         if not sol_fle:
-            msg = "Module requires a reference solution, but none found"
+            msg = "testmod_io: Module requires a reference solution, but none found"
             logger.error(self._format_msg(msg))
             raise Exception(msg)
 
@@ -80,7 +85,8 @@ class Tester(tester.Tester):
                     sub_fle = fle
                     break
             if not sub_fle:
-                msg = "User specified 'path_submission', but file {:s} not found".format(sub_path)
+                msg = "testmod_io: User specified 'path_submission', "
+                msg += "but file {:s} not found".format(sub_path)
                 logger.warning(self._format_msg(msg))
 
         # Next look for any files with the submission key
@@ -92,7 +98,8 @@ class Tester(tester.Tester):
                     sub_fle = fle
                     count += 1
             if (count > 1):
-                msg = "Module only supports single submission, but {:d} found".format(count)
+                msg = "testmod_io: Module only supports single submission, "
+                msg += "but {:d} found".format(count)
                 logger.error(self._format_msg(msg))
                 raise Exception(msg)
 
@@ -103,7 +110,7 @@ class Tester(tester.Tester):
 
         # Raise error if not found
         if not sub_fle:
-            msg = "Module requires a submission, but none found"
+            msg = "testmod_io: Module requires a submission, but none found"
             logger.error(self._format_msg(msg))
             raise Exception(msg)
 
@@ -119,8 +126,8 @@ class Tester(tester.Tester):
                 if fle_path.startswith(input_prefix):
                     input_fles.append(fle)
             if not input_fles:
-                msg = ("User specified 'prefix_input', " +
-                       "but no files starting with {:s} were found".format(input_prefix))
+                msg = "testmod_io: User specified 'prefix_input', "
+                msg += "but no files starting with {:s} were found".format(input_prefix))
                 logger.warning(self._format_msg(msg))
 
         # Next look for any files with the input key
@@ -216,7 +223,7 @@ class Tester(tester.Tester):
         score = (pts / float(len(input_fles))) * float(self.tst['maxscore'])
 
         # Log Results
-        msg = "retval='{:d}', score='{:.2f}', output='{:s}'".format(ret_val, score, output)
+        msg = "testmod_io: retval='{:d}', score='{:.2f}'".format(ret_val, score)
         logger.info(self._format_msg(msg))
 
         # Return

@@ -28,7 +28,10 @@ class Tester(tester.Tester):
 
     def test(self):
 
-        logger.info(self._format_msg("Running test"))
+        # Call Parent
+        super(Tester, self).test()
+        msg = "testmod_script: Running test"
+        logger.info(self._format_msg(msg))
 
         # Find Grading Script
         tst_fle = None
@@ -43,7 +46,8 @@ class Tester(tester.Tester):
                     tst_fle = fle
                     break
             if not tst_fle:
-                msg = "User specified 'path_script', but file {:s} not found".format(script_path)
+                msg = "testmod_script: User specified 'path_script', "
+                msg += "but file {:s} not found".format(script_path)
                 logger.warning(self._format_msg(msg))
 
         # Next look for any files with the script key
@@ -55,7 +59,8 @@ class Tester(tester.Tester):
                     tst_fle = fle
                     count += 1
             if (count > 1):
-                msg = "Module only supports single test script, but {:d} found".format(count)
+                msg = "testmod_script: Module only supports single test script, "
+                msg += "but {:d} found".format(count)
                 logger.error(self._format_msg(msg))
                 raise Exception(msg)
 
@@ -66,7 +71,7 @@ class Tester(tester.Tester):
 
         # Raise error if not found
         if not tst_fle:
-            msg = "Module requires a test script file, but none found"
+            msg = "testmod_script: Module requires a test script file, but none found"
             logger.error(self._format_msg(msg))
             raise Exception(msg)
 
@@ -81,7 +86,7 @@ class Tester(tester.Tester):
         try:
             ret, stdout, stderr = self.env.run_cmd(cmd)
         except Exception as e:
-            msg = "run_cmd raised error: {:s}".format(traceback.format_exc())
+            msg = "testmod_script: run_cmd raised error: {:s}".format(traceback.format_exc())
             logger.error(self._format_msg(msg))
             ret = 1
             stdout = ""
@@ -93,18 +98,19 @@ class Tester(tester.Tester):
             try:
                 score = float(stdout_clean)
             except Exception as e:
-                msg = "Could not convert score '{:s}' to float: {:s}".format(stdout_clean, e)
+                msg = "testmod_script: Could not convert score "
+                msg += "'{:s}' to float: {:s}".format(stdout_clean, e)
                 logger.error(self._format_msg(msg))
                 stderr = msg
                 ret = 1
         else:
-            msg = "Script returned non-zero value: {:d}".format(ret)
+            msg = "testmod_script: Script returned non-zero value: {:d}".format(ret)
             logger.warning(self._format_msg(msg))
             if not stderr:
                 stderr = msg
 
         # Log Results
-        msg = "retval='{:d}', score='{:.2f}', output='{:s}'".format(ret, score, stderr)
+        msg = "testmod_script: retval='{:d}', score='{:.2f}'".format(ret, score)
         logger.info(self._format_msg(msg))
 
         # Return
