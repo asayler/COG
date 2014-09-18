@@ -82,32 +82,33 @@ class Reporter(repmod.Reporter):
             raise MoodleReporterError(msg)
 
         # Check Due Date
-        time_due = None
-        courses = self.ws.mod_assign_get_assignments([])["courses"]
-        for course in courses:
-            assignments = course["assignments"]
-            for assignment in assignments:
-                if (int(assignment["id"]) == int(self.asn_id)):
-                    time_due = float(assignment["duedate"])
+        if int(self._rpt['moodle_respect_duedate']):
+            time_due = None
+            courses = self.ws.mod_assign_get_assignments([])["courses"]
+            for course in courses:
+                assignments = course["assignments"]
+                for assignment in assignments:
+                    if (int(assignment["id"]) == int(self.asn_id)):
+                        time_due = float(assignment["duedate"])
+                    if time_due is not None:
+                        break
                 if time_due is not None:
                     break
-            if time_due is not None:
-                break
-        if time_due is None:
-            msg = "repmod_moodle: Could not find assignment {:s}".format(self.asn_id)
-            logger.error(self._format_msg(msg))
-            raise MoodleReporterError(msg)
-        if time_due > 0:
-            time_now = time.time()
-            if (time_now > time_due):
-                time_now_str = time.strftime("%d/%m/%y %H:%M:%S %Z", time.localtime(time_now))
-                time_due_str = time.strftime("%d/%m/%y %H:%M:%S %Z", time.localtime(time_due))
-                msg = "repmod_moodle: "
-                msg += "Current time ({:s}) ".format(time_now_str)
-                msg += "is past due date ({:s}): ".format(time_due_str)
-                msg += "No grade written to Moodle"
-                logger.warning(self._format_msg(msg))
+            if time_due is None:
+                msg = "repmod_moodle: Could not find assignment {:s}".format(self.asn_id)
+                logger.error(self._format_msg(msg))
                 raise MoodleReporterError(msg)
+            if time_due > 0:
+                time_now = time.time()
+                if (time_now > time_due):
+                    time_now_str = time.strftime("%d/%m/%y %H:%M:%S %Z", time.localtime(time_now))
+                    time_due_str = time.strftime("%d/%m/%y %H:%M:%S %Z", time.localtime(time_due))
+                    msg = "repmod_moodle: "
+                    msg += "Current time ({:s}) ".format(time_now_str)
+                    msg += "is past due date ({:s}): ".format(time_due_str)
+                    msg += "No grade written to Moodle"
+                    logger.warning(self._format_msg(msg))
+                    raise MoodleReporterError(msg)
 
         # Limit Output
         warning = "\nWARNING: Output Truncated"
