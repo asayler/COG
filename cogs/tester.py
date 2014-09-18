@@ -18,7 +18,7 @@ class Tester(object):
         self.run = run
 
     def _format_msg(self, msg):
-        return "{:s}: {:s}".format(repr(self.run), msg)
+        return "{:s}: {:s}".format(str(self.run), msg)
 
     @abc.abstractmethod
     def test(self):
@@ -26,7 +26,7 @@ class Tester(object):
         # Set Vars
         ret = -1
         score = "0"
-        stderr = "Dummer Tester Test()"
+        stderr = "Dummy Tester Test()"
 
         # Return
         return ret, score, stderr

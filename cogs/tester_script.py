@@ -28,6 +28,8 @@ class Tester(tester.Tester):
 
     def test(self):
 
+        logger.info(self._format_msg("Running test"))
+
         # Find Grading Script
         tst_fle = None
 
