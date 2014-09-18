@@ -1,0 +1,8 @@
+/var/log/cog/*.log {
+        weekly
+        missingok
+	copytruncate
+        rotate 10
+        compress
+        notifempty
+}
