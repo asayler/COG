@@ -314,7 +314,7 @@ class Reporter(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Ha
         return reporter
 
     # Generate New Report
-    def file_report(self, user, grade, comments):
+    def file_report(self, run, user, grade, comments):
 
         mod = self['mod']
         if mod == 'moodle':
@@ -322,7 +322,7 @@ class Reporter(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Ha
         else:
             raise Exception("Unknown repmod: {:s}".format(mod))
 
-        repmod = repmod.Reporter(self)
+        repmod = repmod.Reporter(self, run)
         repmod.file_report(user, grade, comments)
 
 

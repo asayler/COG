@@ -292,8 +292,9 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         comments = "Tested via test_file_report on {:s}.".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(grade)
         reporter = self.srv.create_reporter(self.data, owner=self.testuser)
-        reporter.file_report(self.student, grade, comments)
+        reporter.file_report("FakeRun", self.student, grade, comments)
         reporter.delete()
+
 
 class AssignmentTestCase(test_common_backend.UUIDHashMixin,
                          StructsTestCase):

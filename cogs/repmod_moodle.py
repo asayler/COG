@@ -7,6 +7,7 @@
 
 import string
 import time
+import logging
 
 import moodle.ws
 

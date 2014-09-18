@@ -13,6 +13,7 @@ import tester_io
 
 import auth
 
+
 def test(asn, sub, tst, run):
 
     # Setup Env
@@ -78,7 +79,7 @@ def test(asn, sub, tst, run):
                 comments += output
                 for rpt in tst.get_reporters():
                     try:
-                        rpt.file_report(user, grade, comments)
+                        rpt.file_report(run, user, grade, comments)
                     except Exception as e:
                         output += "\nWARNING: Reporting Failed: {:s}".format(e)
                         status = "complete-exception-reporter"

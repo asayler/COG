@@ -127,7 +127,7 @@ class Tester(tester.Tester):
                     input_fles.append(fle)
             if not input_fles:
                 msg = "testmod_io: User specified 'prefix_input', "
-                msg += "but no files starting with {:s} were found".format(input_prefix))
+                msg += "but no files starting with {:s} were found".format(input_prefix)
                 logger.warning(self._format_msg(msg))
 
         # Next look for any files with the input key
