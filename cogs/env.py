@@ -28,8 +28,8 @@ class Env(object):
         # Private Vars
         self._asn = asn
         self._run = sub
-        self._run = tst
-        self._asn = run
+        self._tst = tst
+        self._run = run
 
     @abc.abstractmethod
     def copy_fle(self, fle, dst_dir):
