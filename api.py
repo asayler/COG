@@ -57,14 +57,16 @@ if cogs.config.LOGGING_ENABLED:
 
     formatter_line = logging.Formatter('%(levelname)s: %(module)s - %(message)s')
 
+    # Stream Handler
     handler_stream = logging.StreamHandler()
     handler_stream.setFormatter(formatter_line)
     handler_stream.setLevel(logging.WARNING)
 
+    # File Handler
     if not os.path.exists(cogs.config.LOGGING_PATH):
         os.makedirs(cogs.config.LOGGING_PATH)
     logfile_path = "{:s}/{:s}".format(cogs.config.LOGGING_PATH, "api.log")
-    handler_file = logging.FileHandler(logfile_path)
+    handler_file = logging.WatchedFileHandler(logfile_path)
     handler_file.setFormatter(formatter_line)
     handler_file.setLevel(logging.INFO)
 
