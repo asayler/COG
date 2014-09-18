@@ -52,6 +52,7 @@ workers = None
 if cogs.config.LOGGING_ENABLED:
 
     import logging
+    import logging.handlers
 
     loggers = [app.logger, logging.getLogger('cogs')]
 
@@ -66,7 +67,7 @@ if cogs.config.LOGGING_ENABLED:
     if not os.path.exists(cogs.config.LOGGING_PATH):
         os.makedirs(cogs.config.LOGGING_PATH)
     logfile_path = "{:s}/{:s}".format(cogs.config.LOGGING_PATH, "api.log")
-    handler_file = logging.WatchedFileHandler(logfile_path)
+    handler_file = logging.handlers.WatchedFileHandler(logfile_path)
     handler_file.setFormatter(formatter_line)
     handler_file.setLevel(logging.INFO)
 
