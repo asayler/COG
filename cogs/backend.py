@@ -349,6 +349,7 @@ class Hash(collections.MutableMapping, TypedObject):
 class TSHash(Hash):
     """
     Time-Stamped Hash Object Class
+
     """
 
     @classmethod
@@ -395,3 +396,28 @@ class TSHash(Hash):
 
         # Return
         return ret
+
+
+class OwnedHash(Hash):
+    """
+    Owned Hash Class
+
+    """
+
+    @classmethod
+    def from_new(cls, data, **kwargs):
+        """New Constructor"""
+
+        owner = kwargs.pop('owner', None)
+        if not owner:
+            raise TypeError("Requires 'owner'")
+
+        # Set Owner
+        data = copy.copy(data)
+        data['owner'] = str(owner.uuid).lower()
+
+        # Call Parent
+        obj = super(OwnedHash, cls).from_new(data, **kwargs)
+
+        # Return Run
+        return obj

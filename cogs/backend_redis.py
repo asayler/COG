@@ -178,33 +178,18 @@ class Hash(backend.Hash, TypedObject):
 
 class TSHash(backend.TSHash, Hash):
     """
-    Redis Time-stamped Hash  Class
+    Redis Time-Stamped Hash Class
+
     """
     pass
 
 
-class OwnedHash(Hash):
+class OwnedHash(backend.OwnedHash, Hash):
     """
-    Owned and Time-stamped Hash  Class
+    Redis Owned Hash Class
+
     """
-
-    @classmethod
-    def from_new(cls, data, **kwargs):
-        """New Constructor"""
-
-        owner = kwargs.pop('owner', None)
-        if not owner:
-            raise TypeError("Requires 'owner'")
-
-        # Set Owner
-        data = copy.copy(data)
-        data['owner'] = str(owner.uuid).lower()
-
-        # Call Parent
-        obj = super(OwnedHash, cls).from_new(data, **kwargs)
-
-        # Return Run
-        return obj
+    pass
 
 
 class Set(collections.MutableSet, TypedObject):
