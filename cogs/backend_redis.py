@@ -100,6 +100,88 @@ class TypedObject(backend.TypedObject):
         return db.exists(self.full_key)
 
 
+### Redis Set Objects ###
+
+class Set(backend.Set, TypedObject):
+    """
+    Redis Set Object Class
+
+    """
+
+    @classmethod
+    def from_new(cls, vals, **kwargs):
+        """New Constructor"""
+
+        # Check Input
+        if not ((type(vals) == list) or (type(vals) == set)):
+            raise TypeError("Vals must be a list or set")
+        if not vals:
+            raise ValueError("Input must not be empty")
+
+        # Call Parent
+        obj = super(Set, cls).from_new(**kwargs)
+
+        # Add lst to DB
+        if not db.sadd(obj.full_key, *vals):
+            raise PersistentObjectError("Create Failed")
+
+        # Return Object
+        return obj
+
+    def __len__(self):
+        """Get Len of Set"""
+
+        return len(db.smembers(self.full_key))
+
+    def __iter__(self):
+        """Iterate Values"""
+
+        for val in db.smembers(self.full_key):
+            yield val
+
+    def __contains__(self, val):
+        """Check if Val in Set"""
+
+        return db.sismember(self.full_key, val)
+
+    def add(self, val):
+        """Add Val to Set"""
+
+        return db.sadd(self.full_key, val)
+
+    def discard(self, val):
+        """Remove Val from Set"""
+
+        return db.srem(self.full_key, val)
+
+    def get_set(self):
+        """Get Static Set from Object"""
+
+        return db.smembers(self.full_key)
+
+    def add_vals(self, vals):
+        """Add Vals to Set"""
+
+        # Check Input
+        if not ((type(vals) == list) or (type(vals) == set)):
+            raise TypeError("Vals must be a list or set")
+        if not vals:
+            raise ValueError("Input must not be empty")
+
+        return db.sadd(self.full_key, *vals)
+
+    def del_vals(self, vals):
+        """Remove Vals from Set"""
+
+        # Check Input
+        if not ((type(vals) == list) or (type(vals) == set)):
+            raise TypeError("Vals must be a list or set")
+        if not vals:
+            raise ValueError("Input must not be empty")
+
+        return db.srem(self.full_key, *vals)
+
+
 ### Redis Hash Objects ###
 
 class Hash(backend.Hash, TypedObject):
@@ -192,88 +274,6 @@ class OwnedHash(backend.OwnedHash, Hash):
 
     """
     pass
-
-
-### Redis Set Objects ###
-
-class Set(backend.Set, TypedObject):
-    """
-    Redis Set Object Class
-
-    """
-
-    @classmethod
-    def from_new(cls, vals, **kwargs):
-        """New Constructor"""
-
-        # Check Input
-        if not ((type(vals) == list) or (type(vals) == set)):
-            raise TypeError("Vals must be a list or set")
-        if not vals:
-            raise ValueError("Input must not be empty")
-
-        # Call Parent
-        obj = super(Set, cls).from_new(**kwargs)
-
-        # Add lst to DB
-        if not db.sadd(obj.full_key, *vals):
-            raise PersistentObjectError("Create Failed")
-
-        # Return Object
-        return obj
-
-    def __len__(self):
-        """Get Len of Set"""
-
-        return len(db.smembers(self.full_key))
-
-    def __iter__(self):
-        """Iterate Values"""
-
-        for val in db.smembers(self.full_key):
-            yield val
-
-    def __contains__(self, val):
-        """Check if Val in Set"""
-
-        return db.sismember(self.full_key, val)
-
-    def add(self, val):
-        """Add Val to Set"""
-
-        return db.sadd(self.full_key, val)
-
-    def discard(self, val):
-        """Remove Val from Set"""
-
-        return db.srem(self.full_key, val)
-
-    def get_set(self):
-        """Get Static Set from Object"""
-
-        return db.smembers(self.full_key)
-
-    def add_vals(self, vals):
-        """Add Vals to Set"""
-
-        # Check Input
-        if not ((type(vals) == list) or (type(vals) == set)):
-            raise TypeError("Vals must be a list or set")
-        if not vals:
-            raise ValueError("Input must not be empty")
-
-        return db.sadd(self.full_key, *vals)
-
-    def del_vals(self, vals):
-        """Remove Vals from Set"""
-
-        # Check Input
-        if not ((type(vals) == list) or (type(vals) == set)):
-            raise TypeError("Vals must be a list or set")
-        if not vals:
-            raise ValueError("Input must not be empty")
-
-        return db.srem(self.full_key, *vals)
 
 
 class Schema(Set):
