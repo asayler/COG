@@ -196,7 +196,7 @@ class OwnedHash(backend.OwnedHash, Hash):
 
 ### Redis Set Objects ###
 
-class Set(collections.MutableSet, TypedObject):
+class Set(backend.Set, TypedObject):
     """
     Redis Set Object Class
 
@@ -234,19 +234,22 @@ class Set(collections.MutableSet, TypedObject):
             yield val
 
     def __contains__(self, val):
+        """Check if Val in Set"""
 
         return db.sismember(self.full_key, val)
 
     def add(self, val):
+        """Add Val to Set"""
 
         return db.sadd(self.full_key, val)
 
     def discard(self, val):
+        """Remove Val from Set"""
 
         return db.srem(self.full_key, val)
 
     def get_set(self):
-        """Get All Vals from Set"""
+        """Get Static Set from Object"""
 
         return db.smembers(self.full_key)
 

@@ -426,3 +426,49 @@ class OwnedHash(Hash):
 
 
 ### Abstract Set Objects ###
+
+class Set(collections.MutableSet, TypedObject):
+    """
+    Set Object Class
+
+    """
+
+    @abc.abstractmethod
+    def __len__(self):
+        """Get Len of Set"""
+        pass
+
+    @abc.abstractmethod
+    def __iter__(self):
+        """Iterate Values"""
+        pass
+
+    @abc.abstractmethod
+    def __contains__(self, val):
+        """Check if Val in Set"""
+        pass
+
+    @abc.abstractmethod
+    def add(self, val):
+        """Add Val to Set"""
+        pass
+
+    @abc.abstractmethod
+    def discard(self, val):
+        """Remove Val from Set"""
+        pass
+
+    @abc.abstractmethod
+    def get_set(self):
+        """Get Static Set from Object"""
+        pass
+
+    @abc.abstractmethod
+    def add_vals(self, vals):
+        """Add Vals to Set"""
+        pass
+
+    @abc.abstractmethod
+    def del_vals(self, vals):
+        """Remove Vals from Set"""
+        pass
