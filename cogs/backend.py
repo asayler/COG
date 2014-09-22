@@ -474,26 +474,16 @@ class OwnedHash(Hash):
         return obj
 
 
-class Schema(Set):
-    """
-    Schema Object Class
-
-    """
-    pass
-
-
 class SchemaHash(Hash):
     """
     Schema-Enforced Hash Object Class
 
     """
 
+    @abc.abstractmethod
     def __init__(self, *args, **kwargs):
 
         super(SchemaHash, self).__init__(*args, **kwargs)
-
-        SchemaFactory = PrefixedFactory(Schema, prefix=self.full_key)
-        self.schema = SchemaFactory.from_raw()
 
     @classmethod
     def from_new(cls, data, **kwargs):

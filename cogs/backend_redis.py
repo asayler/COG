@@ -276,17 +276,18 @@ class OwnedHash(backend.OwnedHash, Hash):
     pass
 
 
-class Schema(backend.Schema, Set):
-    """
-    Redis Schema Object Class
-
-    """
-    pass
-
-
 class SchemaHash(backend.SchemaHash, Hash):
     """
     Redis Schema-Enforced Hash Object Class
 
     """
-    pass
+
+    class Schema(Set):
+        pass
+
+    def __init__(self, *args, **kwargs):
+
+        super(SchemaHash, self).__init__(*args, **kwargs)
+
+        SchemaFactory = PrefixedFactory(self.Schema, prefix=self.full_key)
+        self.schema = SchemaFactory.from_raw()
