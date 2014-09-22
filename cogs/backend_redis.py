@@ -24,7 +24,7 @@ db = redis.StrictRedis(host=config.REDIS_HOST,
                        password=config.REDIS_PASSWORD)
 
 
-### Factories ###
+### Redis Factories ###
 
 class PrefixedFactory(backend.PrefixedFactory):
     """
@@ -61,7 +61,7 @@ class UUIDFactory(backend.UUIDFactory, PrefixedFactory):
     pass
 
 
-### Objects ###
+### Redis Base Objects ###
 
 class TypedObject(backend.TypedObject):
     """
@@ -99,6 +99,8 @@ class TypedObject(backend.TypedObject):
 
         return db.exists(self.full_key)
 
+
+### Redis Hash Objects ###
 
 class Hash(backend.Hash, TypedObject):
     """
@@ -178,7 +180,7 @@ class Hash(backend.Hash, TypedObject):
 
 class TSHash(backend.TSHash, Hash):
     """
-    Redis Time-Stamped Hash Class
+    Redis Time-Stamped Hash Object Class
 
     """
     pass
@@ -186,15 +188,17 @@ class TSHash(backend.TSHash, Hash):
 
 class OwnedHash(backend.OwnedHash, Hash):
     """
-    Redis Owned Hash Class
+    Redis Owned Hash Object Class
 
     """
     pass
 
 
+### Redis Set Objects ###
+
 class Set(collections.MutableSet, TypedObject):
     """
-    Redis Set  Class
+    Redis Set Object Class
 
     """
 

@@ -204,7 +204,7 @@ class UUIDFactory(PrefixedFactory):
         return super(UUIDFactory, self).from_raw(*args, **kwargs)
 
 
-### Abstract Objects ###
+### Abstract Base Objects ###
 
 class PersistentObject(object):
 
@@ -298,6 +298,8 @@ class TypedObject(PersistentObject):
         """Return String Representation"""
         return unicode(self).encode(_ENCODING)
 
+
+### Abstract Hash Objects ###
 
 class Hash(collections.MutableMapping, TypedObject):
     """
@@ -400,7 +402,7 @@ class TSHash(Hash):
 
 class OwnedHash(Hash):
     """
-    Owned Hash Class
+    Owned Hash Object Class
 
     """
 
@@ -421,3 +423,6 @@ class OwnedHash(Hash):
 
         # Return Run
         return obj
+
+
+### Abstract Set Objects ###
