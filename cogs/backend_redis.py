@@ -7,9 +7,8 @@
 
 import copy
 import time
-import uuid
-import collections
 import os
+import collections
 
 import redis
 
@@ -68,7 +67,7 @@ class UUIDFactory(backend.UUIDFactory, PrefixedFactory):
 
 class TypedObject(backend.TypedObject):
     """
-    Typed Redis Object
+    Typed Redis Object Class
 
     """
 
@@ -103,9 +102,9 @@ class TypedObject(backend.TypedObject):
         return db.exists(self.full_key)
 
 
-class Hash(collections.MutableMapping, TypedObject):
+class Hash(backend.Hash, TypedObject):
     """
-    Redis Hash Class
+    Redis Hash Object Class
 
     """
 
@@ -150,6 +149,7 @@ class Hash(collections.MutableMapping, TypedObject):
         return ret
 
     def __delitem__(self, key):
+        """Delete Dict Item"""
         ret = db.hdel(self.full_key, key)
         return ret
 

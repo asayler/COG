@@ -7,7 +7,7 @@
 
 import abc
 import uuid
-
+import collections
 
 _ENCODING = 'utf-8'
 _FIELD_SEP = ':'
@@ -271,6 +271,10 @@ class PersistentObject(object):
 
 
 class TypedObject(PersistentObject):
+    """
+    Typed Object Class
+
+    """
 
     def __init__(self, *args, **kwargs):
         """ Constructor"""
@@ -291,3 +295,50 @@ class TypedObject(PersistentObject):
     def __str__(self):
         """Return String Representation"""
         return unicode(self).encode(_ENCODING)
+
+
+class Hash(collections.MutableMapping, TypedObject):
+    """
+    Hash Object Class
+
+    """
+
+    @abc.abstractmethod
+    def __len__(self):
+        """Get Len of Hash"""
+        pass
+
+    @abc.abstractmethod
+    def __iter__(self):
+        """Iterate Keys"""
+        pass
+
+    @abc.abstractmethod
+    def __getitem__(self, key):
+        """Get Dict Item"""
+        pass
+
+    @abc.abstractmethod
+    def __setitem__(self, key, val):
+        """Set Dict Item"""
+        pass
+
+    @abc.abstractmethod
+    def __delitem__(self, key):
+        """Delete Dict Item"""
+        pass
+
+    @abc.abstractmethod
+    def keys(self):
+        """Get Dict Keys"""
+        pass
+
+    @abc.abstractmethod
+    def get_dict(self):
+        """Get Static Dict"""
+        pass
+
+    @abc.abstractmethod
+    def set_dict(self, data):
+        """Set from Static Dict"""
+        pass
