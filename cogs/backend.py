@@ -4,7 +4,9 @@
 # Summer 2014
 # Univerity of Colorado
 
+
 import abc
+import uuid
 
 
 _ENCODING = 'utf-8'
@@ -260,3 +262,30 @@ class PrefixedFactory(object):
 
     def from_raw(self, *args, **kwargs):
         return self._add_kwargs(self.cls.from_raw, *args, **kwargs)
+
+
+class UUIDFactory(PrefixedFactory):
+
+    def from_new(self, *args, **kwargs):
+        obj_uuid = uuid.uuid4()
+        kwargs['uuid'] = obj_uuid
+        kwargs['key'] = str(obj_uuid)
+        return super(UUIDFactory, self).from_new(*args, **kwargs)
+
+    def from_custom(self, uuid_str, *args, **kwargs):
+        obj_uuid = uuid.UUID(str(uuid_str))
+        kwargs['uuid'] = obj_uuid
+        kwargs['key'] = str(obj_uuid)
+        return super(UUIDFactory, self).from_new(*args, **kwargs)
+
+    def from_existing(self, uuid_str, *args, **kwargs):
+        obj_uuid = uuid.UUID(str(uuid_str))
+        kwargs['uuid'] = obj_uuid
+        kwargs['key'] = str(obj_uuid)
+        return super(UUIDFactory, self).from_existing(*args, **kwargs)
+
+    def from_raw(self, uuid_str, *args, **kwargs):
+        obj_uuid = uuid.UUID(str(uuid_str))
+        kwargs['uuid'] = obj_uuid
+        kwargs['key'] = str(obj_uuid)
+        return super(UUIDFactory, self).from_raw(*args, **kwargs)

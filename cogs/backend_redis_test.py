@@ -285,6 +285,104 @@ class RedisUUIDFactoryTestCase(BackendRedisTestCase):
         o = of.from_new()
         self.assertTrue(o)
 
+    def test_list(self):
+
+        val = 'val'
+        pre = 'test'
+        cls = backend.TypedObject.__name__.lower()
+
+        # Add Parents w/o Prefix
+        self.db.flushdb()
+        parents = ['p01', 'p02', 'p03']
+        for p in parents:
+            self.db.set("{:s}+{:s}".format(cls, p).lower(), val)
+
+        # Test Parents w/o Prefix
+        hf = backend.UUIDFactory(backend.TypedObject)
+        fam = hf.list_family()
+        self.assertEqual(set(parents), fam)
+        sib = hf.list_siblings()
+        self.assertEqual(set(parents), sib)
+        chd = hf.list_children()
+        self.assertFalse(chd)
+
+        # Add Parents w/ Prefix
+        self.db.flushdb()
+        parents = ['p01', 'p02', 'p03']
+        for p in parents:
+            self.db.set("{:s}:{:s}+{:s}".format(pre, cls, p), val)
+
+        # Test Parents w/ Prefix
+        hf = backend.UUIDFactory(backend.TypedObject, prefix=pre)
+        fam = hf.list_family()
+        self.assertEqual(set(parents), fam)
+        sib = hf.list_siblings()
+        self.assertEqual(set(parents), sib)
+        chd = hf.list_children()
+        self.assertEqual(set([]), chd)
+
+        # Add Parents + Children w/o Prefix
+        self.db.flushdb()
+        parents = ['p01', 'p02', 'p03']
+        for p in parents:
+            self.db.set("{:s}+{:s}".format(cls, p), val)
+        p1_children = ['c01', 'c02', 'c03']
+        full_children = []
+        for c in p1_children:
+            child = "{:s}:{:s}+{:s}".format(parents[0], cls, c)
+            self.db.set("{:s}+{:s}".format(cls, child), val)
+            full_children.append(child)
+
+        # Test Parents + Children w/o Prefix
+        hf = backend.UUIDFactory(backend.TypedObject)
+        fam = hf.list_family()
+        self.assertEqual(set(parents + full_children), fam)
+        sib = hf.list_siblings()
+        self.assertEqual(set(parents), sib)
+        chd = hf.list_children()
+        self.assertEqual(set(full_children), chd)
+
+        # Test Children w/o Prefix
+        chd_pre = "{:s}+{:s}".format(cls, parents[0])
+        hf = backend.UUIDFactory(backend.TypedObject, prefix=chd_pre)
+        fam = hf.list_family()
+        self.assertEqual(set(p1_children), fam)
+        sib = hf.list_siblings()
+        self.assertEqual(set(p1_children), sib)
+        chd = hf.list_children()
+        self.assertEqual(set([]), chd)
+
+        # Add Parents + Children w/ Prefix
+        self.db.flushdb()
+        parents = ['p01', 'p02', 'p03']
+        for p in parents:
+            self.db.set("{:s}:{:s}+{:s}".format(pre, cls, p), val)
+        p1_children = ['c01', 'c02', 'c03']
+        full_children = []
+        for c in p1_children:
+            child = "{:s}:{:s}+{:s}".format(parents[0], cls, c)
+            self.db.set("{:s}:{:s}+{:s}".format(pre, cls, child), val)
+            full_children.append(child)
+
+        # Test Parents + Children w/ Prefix
+        hf = backend.UUIDFactory(backend.TypedObject, prefix=pre)
+        fam = hf.list_family()
+        self.assertEqual(set(parents + full_children), fam)
+        sib = hf.list_siblings()
+        self.assertEqual(set(parents), sib)
+        chd = hf.list_children()
+        self.assertEqual(set(full_children), chd)
+
+        # Test Children w/ Prefix
+        chd_pre = "{:s}:{:s}+{:s}".format(pre, cls, parents[0])
+        hf = backend.UUIDFactory(backend.TypedObject, prefix=chd_pre)
+        fam = hf.list_family()
+        self.assertEqual(set(p1_children), fam)
+        sib = hf.list_siblings()
+        self.assertEqual(set(p1_children), sib)
+        chd = hf.list_children()
+        self.assertEqual(set([]), chd)
+
 
 class RedisHashTestCase(BackendRedisTestCase):
 

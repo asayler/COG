@@ -4,7 +4,6 @@
 # Summer 2014
 # Univerity of Colorado
 
-# pylint: disable=no-member
 
 import copy
 import time
@@ -30,6 +29,10 @@ db = redis.StrictRedis(host=config.REDIS_HOST,
 ### Objects ###
 
 class TypedObject(backend.TypedObject):
+    """
+    Typed Redis Object
+
+    """
 
     @classmethod
     def from_new(cls, *args, **kwargs):
@@ -63,6 +66,10 @@ class TypedObject(backend.TypedObject):
 
 
 class PrefixedFactory(backend.PrefixedFactory):
+    """
+    Prefix Object Factory
+
+    """
 
     def list_family(self):
         """List Factory Objects"""
@@ -85,36 +92,18 @@ class PrefixedFactory(backend.PrefixedFactory):
         return obj_keys
 
 
-class UUIDFactory(PrefixedFactory):
+class UUIDFactory(backend.UUIDFactory, PrefixedFactory):
+    """
+    UUID Object Factory
 
-    def from_new(self, *args, **kwargs):
-        obj_uuid = uuid.uuid4()
-        kwargs['uuid'] = obj_uuid
-        kwargs['key'] = str(obj_uuid)
-        return super(UUIDFactory, self).from_new(*args, **kwargs)
+    """
 
-    def from_custom(self, uuid_str, *args, **kwargs):
-        obj_uuid = uuid.UUID(str(uuid_str))
-        kwargs['uuid'] = obj_uuid
-        kwargs['key'] = str(obj_uuid)
-        return super(UUIDFactory, self).from_new(*args, **kwargs)
-
-    def from_existing(self, uuid_str, *args, **kwargs):
-        obj_uuid = uuid.UUID(str(uuid_str))
-        kwargs['uuid'] = obj_uuid
-        kwargs['key'] = str(obj_uuid)
-        return super(UUIDFactory, self).from_existing(*args, **kwargs)
-
-    def from_raw(self, uuid_str, *args, **kwargs):
-        obj_uuid = uuid.UUID(str(uuid_str))
-        kwargs['uuid'] = obj_uuid
-        kwargs['key'] = str(obj_uuid)
-        return super(UUIDFactory, self).from_raw(*args, **kwargs)
+    pass
 
 
 class Hash(collections.MutableMapping, TypedObject):
     """
-    Redis Hash  Class
+    Redis Hash Class
 
     """
 
