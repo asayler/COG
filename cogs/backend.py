@@ -472,3 +472,80 @@ class OwnedHash(Hash):
 
         # Return Run
         return obj
+
+
+class Schema(Set):
+    """
+    Schema Object Class
+
+    """
+    pass
+
+
+class SchemaHash(Hash):
+    """
+    Schema-Enforced Hash Object Class
+
+    """
+
+    def __init__(self, *args, **kwargs):
+
+        super(SchemaHash, self).__init__(*args, **kwargs)
+
+        SchemaFactory = PrefixedFactory(Schema, prefix=self.full_key)
+        self.schema = SchemaFactory.from_raw()
+
+    @classmethod
+    def from_new(cls, data, **kwargs):
+
+        schema = kwargs.pop('schema', None)
+        if not schema:
+            raise TypeError("Requires 'schema'")
+        schema = set(schema)
+
+        keys = set(data.keys())
+        if (keys != schema):
+            msg = "{:s} do not match {:s}".format(keys, schema)
+            raise KeyError(msg)
+
+        hsh = super(SchemaHash, cls).from_new(data, **kwargs)
+        hsh.schema.add_vals(schema)
+        return hsh
+
+    def __setitem__(self, key, val):
+        """Set Dict Item"""
+        if key in self.schema:
+            return super(SchemaHash, self).__setitem__(key, val)
+        else:
+            msg = "{:s} not in {:s}".format(key, self.schema)
+            raise KeyError(msg)
+
+    def __delitem__(self, key):
+        """Del Dict Item"""
+
+        if key in self.schema:
+            return super(SchemaHash, self).__delitem__(key)
+        else:
+            msg = "{:s} not in {:s}".format(key, self.schema)
+            raise KeyError(msg)
+
+    def set_dict(self, data):
+        """Set Full Dict"""
+
+        schema = self.schema.get_set()
+
+        keys = set(data.keys())
+        if not (keys <= schema):
+            msg = "{:s} do not match {:s}".format(keys, schema)
+            raise KeyError(msg)
+
+        return super(SchemaHash, self).set_dict(data)
+
+    def delete(self):
+        """ Delete Object"""
+
+        # Delete Schema Set
+        self.schema.delete()
+
+        # Call Parent
+        super(SchemaHash, self).delete()
