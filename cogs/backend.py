@@ -62,96 +62,7 @@ class abstractclassmethod(classmethod):
     __isabstractmethod__ = True
 
 
-### Abstract Objects ###
-
-class PersistentObject(object):
-
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self, **kwargs):
-        """ Constructor"""
-
-        # Get Key
-        try:
-            self.key = kwargs.pop('key')
-        except KeyError:
-            raise TypeError("'key' required")
-
-        # Call Parent
-        super(PersistentObject, self).__init__()
-
-        # Set Vars
-        for arg in kwargs:
-            setattr(self, arg, kwargs[arg])
-
-    def __unicode__(self):
-        """Return Unicode Representation"""
-        return unicode(repr(self))
-
-    def __str__(self):
-        """Return String Representation"""
-        return unicode(self).encode(_ENCODING)
-
-    def __repr__(self):
-        """Return Unique Representation"""
-        return "{:s}".format(self.key)
-
-    def __hash__(self):
-        """Return Hash"""
-        return hash(repr(self))
-
-    def __eq__(self, other):
-        """Test Equality"""
-        return (repr(self) == repr(other))
-
-    @abstractclassmethod
-    def from_new(cls, *args, **kwargs):
-        """New Constructor"""
-        return cls(*args, **kwargs)
-
-    @abstractclassmethod
-    def from_existing(cls, *args, **kwargs):
-        """Existing Constructor"""
-        return cls(*args, **kwargs)
-
-    @classmethod
-    def from_raw(cls, *args, **kwargs):
-        """Raw Constructor"""
-        return cls(*args, **kwargs)
-
-    @abc.abstractmethod
-    def delete(self):
-        """Delete Object"""
-        pass
-
-    @abc.abstractmethod
-    def exists(self):
-        """Check if Object Exists"""
-        pass
-
-
-class TypedObject(PersistentObject):
-
-    def __init__(self, *args, **kwargs):
-        """ Constructor"""
-
-        # Get Type Key
-        try:
-            self.typ_key = kwargs.pop('typ_key')
-        except KeyError:
-            raise TypeError("'typ_key' required")
-
-        # Call Parent
-        super(TypedObject, self).__init__(*args, **kwargs)
-
-    def __unicode__(self):
-        """Return Unicode Representation"""
-        return unicode(self.typ_key)
-
-    def __str__(self):
-        """Return String Representation"""
-        return unicode(self).encode(_ENCODING)
-
+### Abstract Factories ###
 
 class PrefixedFactory(object):
 
@@ -289,3 +200,94 @@ class UUIDFactory(PrefixedFactory):
         kwargs['uuid'] = obj_uuid
         kwargs['key'] = str(obj_uuid)
         return super(UUIDFactory, self).from_raw(*args, **kwargs)
+
+
+### Abstract Objects ###
+
+class PersistentObject(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, **kwargs):
+        """ Constructor"""
+
+        # Get Key
+        try:
+            self.key = kwargs.pop('key')
+        except KeyError:
+            raise TypeError("'key' required")
+
+        # Call Parent
+        super(PersistentObject, self).__init__()
+
+        # Set Vars
+        for arg in kwargs:
+            setattr(self, arg, kwargs[arg])
+
+    def __unicode__(self):
+        """Return Unicode Representation"""
+        return unicode(repr(self))
+
+    def __str__(self):
+        """Return String Representation"""
+        return unicode(self).encode(_ENCODING)
+
+    def __repr__(self):
+        """Return Unique Representation"""
+        return "{:s}".format(self.key)
+
+    def __hash__(self):
+        """Return Hash"""
+        return hash(repr(self))
+
+    def __eq__(self, other):
+        """Test Equality"""
+        return (repr(self) == repr(other))
+
+    @abstractclassmethod
+    def from_new(cls, *args, **kwargs):
+        """New Constructor"""
+        return cls(*args, **kwargs)
+
+    @abstractclassmethod
+    def from_existing(cls, *args, **kwargs):
+        """Existing Constructor"""
+        return cls(*args, **kwargs)
+
+    @classmethod
+    def from_raw(cls, *args, **kwargs):
+        """Raw Constructor"""
+        return cls(*args, **kwargs)
+
+    @abc.abstractmethod
+    def delete(self):
+        """Delete Object"""
+        pass
+
+    @abc.abstractmethod
+    def exists(self):
+        """Check if Object Exists"""
+        pass
+
+
+class TypedObject(PersistentObject):
+
+    def __init__(self, *args, **kwargs):
+        """ Constructor"""
+
+        # Get Type Key
+        try:
+            self.typ_key = kwargs.pop('typ_key')
+        except KeyError:
+            raise TypeError("'typ_key' required")
+
+        # Call Parent
+        super(TypedObject, self).__init__(*args, **kwargs)
+
+    def __unicode__(self):
+        """Return Unicode Representation"""
+        return unicode(self.typ_key)
+
+    def __str__(self):
+        """Return String Representation"""
+        return unicode(self).encode(_ENCODING)

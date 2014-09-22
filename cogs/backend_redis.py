@@ -26,6 +26,44 @@ db = redis.StrictRedis(host=config.REDIS_HOST,
                        password=config.REDIS_PASSWORD)
 
 
+### Factories ###
+
+class PrefixedFactory(backend.PrefixedFactory):
+    """
+    Prefix Object Factory
+
+    """
+
+    def list_family(self):
+        """List Factory Objects"""
+        if self.prefix:
+            pre_key = "{:s}{:s}".format(self.prefix, backend._FIELD_SEP).lower()
+        else:
+            pre_key = ""
+        query = "{:s}*".format(pre_key)
+        fam_lst = db.keys(query)
+        obj_keys = set([])
+        for itm in fam_lst:
+            full_key = itm[len(pre_key): ]
+            if self.typed:
+                typ_key = full_key[0:full_key.find(backend._TYPE_SEP)]
+                obj_key = full_key[(len(typ_key) + 1): ]
+                if typ_key == self.cls_name:
+                    obj_keys.add(obj_key)
+            else:
+                obj_keys.add(full_key)
+        return obj_keys
+
+
+class UUIDFactory(backend.UUIDFactory, PrefixedFactory):
+    """
+    UUID Object Factory
+
+    """
+
+    pass
+
+
 ### Objects ###
 
 class TypedObject(backend.TypedObject):
@@ -63,42 +101,6 @@ class TypedObject(backend.TypedObject):
         """Check if object exists"""
 
         return db.exists(self.full_key)
-
-
-class PrefixedFactory(backend.PrefixedFactory):
-    """
-    Prefix Object Factory
-
-    """
-
-    def list_family(self):
-        """List Factory Objects"""
-        if self.prefix:
-            pre_key = "{:s}{:s}".format(self.prefix, backend._FIELD_SEP).lower()
-        else:
-            pre_key = ""
-        query = "{:s}*".format(pre_key)
-        fam_lst = db.keys(query)
-        obj_keys = set([])
-        for itm in fam_lst:
-            full_key = itm[len(pre_key): ]
-            if self.typed:
-                typ_key = full_key[0:full_key.find(backend._TYPE_SEP)]
-                obj_key = full_key[(len(typ_key) + 1): ]
-                if typ_key == self.cls_name:
-                    obj_keys.add(obj_key)
-            else:
-                obj_keys.add(full_key)
-        return obj_keys
-
-
-class UUIDFactory(backend.UUIDFactory, PrefixedFactory):
-    """
-    UUID Object Factory
-
-    """
-
-    pass
 
 
 class Hash(collections.MutableMapping, TypedObject):
