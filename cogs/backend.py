@@ -8,6 +8,8 @@
 import abc
 import uuid
 import collections
+import time
+import copy
 
 _ENCODING = 'utf-8'
 _FIELD_SEP = ':'
@@ -342,3 +344,54 @@ class Hash(collections.MutableMapping, TypedObject):
     def set_dict(self, data):
         """Set from Static Dict"""
         pass
+
+
+class TSHash(Hash):
+    """
+    Time-Stamped Hash Object Class
+    """
+
+    @classmethod
+    def from_new(cls, data, **kwargs):
+        """New Constructor"""
+
+        # Set Times
+        data = copy.copy(data)
+        t = str(time.time())
+        data['created_time'] = t
+        data['modified_time'] = t
+
+        # Call Parent
+        obj = super(TSHash, cls).from_new(data, **kwargs)
+
+        # Return Object
+        return obj
+
+    def __setitem__(self, k, v):
+        """Set Item"""
+
+        # Set Time
+        data = {}
+        data['modified_time'] = str(time.time())
+
+        # Set Value
+        data[k] = v
+
+        # Call Parent
+        ret = super(TSHash, self).set_dict(data)
+
+        # Return
+        return ret
+
+    def set_dict(self, data):
+        """Set Dict"""
+
+        # Set Time
+        data = copy.copy(data)
+        data['modified_time'] = str(time.time())
+
+        # Call Parent
+        ret = super(TSHash, self).set_dict(data)
+
+        # Return
+        return ret

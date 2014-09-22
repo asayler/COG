@@ -6,7 +6,6 @@
 
 
 import copy
-import time
 import os
 import collections
 
@@ -59,7 +58,6 @@ class UUIDFactory(backend.UUIDFactory, PrefixedFactory):
     UUID Object Factory
 
     """
-
     pass
 
 
@@ -178,55 +176,11 @@ class Hash(backend.Hash, TypedObject):
             raise PersistentObjectError("Set Failed")
 
 
-class TSHash(Hash):
+class TSHash(backend.TSHash, Hash):
     """
-    Time-stamped Hash  Class
+    Redis Time-stamped Hash  Class
     """
-
-    @classmethod
-    def from_new(cls, data, **kwargs):
-        """New Constructor"""
-
-        # Set Times
-        data = copy.copy(data)
-        t = str(time.time())
-        data['created_time'] = t
-        data['modified_time'] = t
-
-        # Call Parent
-        obj = super(TSHash, cls).from_new(data, **kwargs)
-
-        # Return Object
-        return obj
-
-    def __setitem__(self, k, v):
-        """Set Item"""
-
-        # Set Time
-        data = {}
-        data['modified_time'] = str(time.time())
-
-        # Set Value
-        data[k] = v
-
-        # Call Parent
-        ret = super(TSHash, self).set_dict(data)
-
-        # Return
-        return ret
-
-    def set_dict(self, d):
-        """Set Dict"""
-
-        # Set Time
-        data = copy.deepcopy(d)
-        data['modified_time'] = str(time.time())
-
-        # Call Parent
-        ret = super(TSHash, self).set_dict(data)
-
-        # Return
-        return ret
+    pass
 
 
 class OwnedHash(Hash):
