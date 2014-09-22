@@ -367,7 +367,7 @@ class TSHash(Hash):
         # Return Object
         return obj
 
-    def __setitem__(self, k, v):
+    def __setitem__(self, key, val):
         """Set Item"""
 
         # Set Time
@@ -375,7 +375,7 @@ class TSHash(Hash):
         data['modified_time'] = str(time.time())
 
         # Set Value
-        data[k] = v
+        data[key] = val
 
         # Call Parent
         ret = super(TSHash, self).set_dict(data)
