@@ -36,13 +36,16 @@ class Authenticator(object):
         except moodle.ws.WSAuthError as e:
             logger.error("AUTH_ERROR: {:s}".format(e))
             ret = False
+        except moodle.ws.WSError as e:
+            logger.error("MOODLEWS_ERROR: {:s}".format(e))
+            ret = False
 
         if ret:
             logger.info("AUTH_ALLOWED {:s}".format(username))
             try:
                 ret = moodlews.get_WSUser()
-            except moodle.ws.WSAuthError as e:
-                logger.error("GETUSER_ERROR: {:s}".format(e))
+            except moodle.ws.WSError as e:
+                logger.error("MOODLEWS_ERROR: {:s}".format(e))
                 ret = None
         else:
             logger.warning("AUTH_DENIED {:s}".format(username))
