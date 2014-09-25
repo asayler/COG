@@ -494,6 +494,36 @@ class CogsApiFileTestCase(CogsApiObjectTests, CogsApiTestCase):
             obj = self.delete_object(self.url, obj_uuid, user=self.user)
             self.assertIsNotNone(obj)
 
+    # Test file download
+    def test_get_contents(self):
+
+        # Create Object
+        obj_uuids = self.create_objects(self.url, self.key, self.data,
+                                        json_data=self.json_data, user=self.user)
+        self.assertEqual(len(obj_uuids), 1)
+        obj_uuid = obj_uuids.pop()
+        self.assertTrue(obj_uuid)
+
+        # Read File
+        in_file = open(self.file_path, 'r')
+        in_contents = in_file.read()
+        in_file.close()
+
+        # Get File Contents
+        url = '{:s}{:s}/contents/'.format(self.url, obj_uuid)
+        res = self.open_user('GET', url, user=self.user)
+        if (res.status_code == 200):
+            out_contents = res.data
+            self.assertEqual(in_contents, out_contents)
+        elif (res.status_code == 404):
+            return None
+        else:
+            self.fail("Bad HTTP status code {:d}".format(res.status_code))
+
+        # Delete Object
+        obj = self.delete_object(self.url, obj_uuid, user=self.user)
+        self.assertIsNotNone(obj)
+
 
 class CogsApiZipFileTestCase(CogsApiObjectTests, CogsApiTestCase):
 

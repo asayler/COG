@@ -6,8 +6,9 @@ GET     /tokens/                                        Get User Auth Token
 
 GET     /files/                                         List All Files
 POST    /files/                                         Create New File
-GET     /files/<ID>/                                    Show File
+GET     /files/<ID>/                                    Show File Info
 DELETE  /files/<ID>/                                    Delete File
+GET     /files/<ID>/contents/                           Download File Contents
 
 GET     /reporters/                                     List All Reporters
 POST    /reporters/                                     Create New Reporter

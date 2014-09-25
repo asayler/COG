@@ -335,6 +335,18 @@ def process_files_post():
 def process_file(obj_uuid):
     return process_object(srv.get_file, obj_uuid, update_stub=None)
 
+@app.route("/files/<obj_uuid>/contents/", methods=['GET'])
+@httpauth.login_required
+@get_owner(srv.get_file)
+@auth.requires_auth_route()
+def process_file_contents(obj_uuid):
+
+    # Serve File Contents
+    file_dict = process_object(srv.get_file, obj_uuid, update_stub=None, raw=True)
+    file_path = file_dict['path']
+    file_name = os.path.basename(file_dict['name'])
+    return flask.send_file(file_path, as_attachment=True, attachment_filename=file_name)
+
 ## Reporter Endpoints ##
 
 @app.route("/reporters/", methods=['GET', 'POST'])
