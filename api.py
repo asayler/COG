@@ -298,6 +298,18 @@ def filter_asns_submitable(asn_list):
 
     return asns_submitable
 
+def filter_asns_runable(asn_list):
+
+    asns_runable = []
+
+    for asn_uuid in asn_list:
+        asn = srv.get_assignment(asn_uuid)
+        if int(asn['accepting_runs']):
+            asns_runable.append(asn_uuid)
+
+    return asns_runable
+
+
 ### Endpoints ###
 
 ## Root Endpoints ##
@@ -404,6 +416,13 @@ def process_assignments():
 def process_assignments_submitable():
     return process_objects(srv.list_assignments, None, _ASSIGNMENTS_KEY,
                            func_filter=filter_asns_submitable, create_stub=None)
+
+@app.route("/assignments/runable/", methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_assignments_runable():
+    return process_objects(srv.list_assignments, None, _ASSIGNMENTS_KEY,
+                           func_filter=filter_asns_runable, create_stub=None)
 
 @app.route("/assignments/<obj_uuid>/", methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required

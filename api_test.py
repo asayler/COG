@@ -630,7 +630,7 @@ class CogsApiAssignmentTestCase(CogsApiObjectTests, CogsApiTestCase):
     def tearDown(self):
         super(CogsApiAssignmentTestCase, self).tearDown()
 
-    def test_list_objects_submitable(self):
+    def test_list_assignments_submitable(self):
 
         # Set URLs
         url_create = self.url
@@ -657,6 +657,52 @@ class CogsApiAssignmentTestCase(CogsApiObjectTests, CogsApiTestCase):
         # Test List (Accepting)
         data = copy.copy(self.data)
         data['accepting_submissions'] = "1"
+        objects_in = set([])
+        for i in range(10):
+            objs = self.create_objects(url_create, self.key, data,
+                                       json_data=self.json_data, user=self.user)
+            for obj_uuid in objs:
+                objects_in.add(obj_uuid)
+        objects_out = self.lst_objects(url_lst_filter, self.key, user=self.user)
+        self.assertEqual(objects_in, objects_out)
+
+        # Cleanup
+        objects_all = self.lst_objects(url_lst, self.key, user=self.user)
+        for obj_uuid in objects_all:
+            obj = self.delete_object(url_obj, obj_uuid, user=self.user)
+            self.assertIsNotNone(obj)
+
+        # Get Object List
+        objects_out = self.lst_objects(url_lst_filter, self.key, user=self.user)
+        self.assertEqual(set([]), objects_out)
+
+    def test_list_assignments_runable(self):
+
+        # Set URLs
+        url_create = self.url
+        url_lst = self.url
+        url_lst_filter = "{:s}{:s}/".format(self.url, "runable")
+        url_obj = self.url
+
+        # Get Object List (Empty)
+        objects_out = self.lst_objects(url_lst_filter, self.key, user=self.user)
+        self.assertEqual(set([]), objects_out)
+
+        # Test List (Not Accepting)
+        data = copy.copy(self.data)
+        data['accepting_runs'] = "0"
+        objects_in = set([])
+        for i in range(10):
+            objs = self.create_objects(url_create, self.key, data,
+                                       json_data=self.json_data, user=self.user)
+            for obj_uuid in objs:
+                objects_in.add(obj_uuid)
+        objects_out = self.lst_objects(url_lst_filter, self.key, user=self.user)
+        self.assertEqual(set([]), objects_out)
+
+        # Test List (Accepting)
+        data = copy.copy(self.data)
+        data['accepting_runs'] = "1"
         objects_in = set([])
         for i in range(10):
             objs = self.create_objects(url_create, self.key, data,
