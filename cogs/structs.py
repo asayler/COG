@@ -38,8 +38,10 @@ logger.addHandler(logging.NullHandler())
 _FILE_SCHEMA = ['key', 'name', 'type', 'encoding', 'path']
 _REPORTER_SCHEMA = ['mod']
 _REPORTER_DEFAULTS = {}
-_ASSIGNMENT_SCHEMA = ['name', 'env', 'duedate', 'accepting_submissions', 'accepting_runs']
-_ASSIGNMENT_DEFAULTS = {'duedate': "", 'accepting_submissions': "0", 'accepting_runs': "1"}
+_ASSIGNMENT_SCHEMA = ['name', 'env', 'duedate', 'respect_duedate',
+                      'accepting_submissions', 'accepting_runs']
+_ASSIGNMENT_DEFAULTS = {'duedate': "", 'respect_duedate': "0",
+                        'accepting_submissions': "0", 'accepting_runs': "1"}
 _TEST_SCHEMA = ['assignment', 'name', 'maxscore', 'tester']
 _TEST_DEFAULTS = {}
 _SUBMISSION_SCHEMA = ['assignment']

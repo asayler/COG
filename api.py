@@ -178,11 +178,11 @@ def update_stub_json(obj):
     obj_dict = obj.get_dict()
     return obj_dict
 
-def process_objects(func_list, func_create, key, create_stub=create_stub_json, raw=False, **kwargs):
+def process_objects(func_list, func_create, key,
+                    func_filter=None, create_stub=create_stub_json, raw=False, **kwargs):
 
     # List Objects
     if flask.request.method == 'GET':
-
         obj_lst = list(func_list())
 
     # Create Object
@@ -192,6 +192,10 @@ def process_objects(func_list, func_create, key, create_stub=create_stub_json, r
     # Bad Method
     else:
         raise Exception("Unhandled Method")
+
+    # Filter List
+    if func_filter:
+        obj_lst = func_filter(obj_lst)
 
     # Return Object List
     if raw:
@@ -269,6 +273,30 @@ def process_uuid_list(func_list, func_add, func_remove, key):
     out_obj = {key: out_lst}
     return flask.jsonify(out_obj)
 
+
+## Filter Functions ##
+
+def filter_asns_submitable(asn_list):
+
+    asns_submitable = []
+
+    for asn_uuid in asn_list:
+        asn = srv.get_assignment(asn_uuid)
+        if int(asn['accepting_submissions']):
+            if int(asn['respect_duedate']):
+                if asn['duedate']:
+                    time_due = float(asn["duedate"])
+                else:
+                    time_due = 0
+                    app.logger.warn("Assignment {:s} set to respect duedate, ".format(asn) +
+                                    "but no duedate provided")
+                time_now = time.time()
+                if (time_now < time_due):
+                    asns_submitable.append(asn_uuid)
+            else:
+                asns_submitable.append(asn_uuid)
+
+    return asns_submitable
 
 ### Endpoints ###
 
@@ -369,6 +397,13 @@ def process_reporter(obj_uuid):
 @auth.requires_auth_route()
 def process_assignments():
     return process_objects(srv.list_assignments, srv.create_assignment, _ASSIGNMENTS_KEY)
+
+@app.route("/assignments/submitable/", methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_assignments_submitable():
+    return process_objects(srv.list_assignments, None, _ASSIGNMENTS_KEY,
+                           func_filter=filter_asns_submitable, create_stub=None)
 
 @app.route("/assignments/<obj_uuid>/", methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required

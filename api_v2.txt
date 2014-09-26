@@ -18,6 +18,7 @@ DELETE  /reporters/<ID>/                                Delete Reporter
 
 GET     /assignments/                                   List Assignments
 POST    /assignments/                                   Create New Assignment
+GET     /assignments/submitable/                        List Assignments Accepting Submissions
 GET     /assignments/<ID>/                              Show Assignment
 PUT     /assignments/<ID>/                              Update Assignment
 DELETE  /assignments/<ID>/                              Delete Assignment
