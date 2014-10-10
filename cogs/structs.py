@@ -27,6 +27,8 @@ import testrun
 import repmod_moodle
 import tester_script
 import tester_io
+import builder_make
+import builder_cmd
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -42,8 +44,8 @@ _ASSIGNMENT_SCHEMA = ['name', 'env', 'duedate', 'respect_duedate',
                       'accepting_submissions', 'accepting_runs']
 _ASSIGNMENT_DEFAULTS = {'duedate': "", 'respect_duedate': "0",
                         'accepting_submissions': "0", 'accepting_runs': "1"}
-_TEST_SCHEMA = ['assignment', 'name', 'maxscore', 'tester']
-_TEST_DEFAULTS = {}
+_TEST_SCHEMA = ['assignment', 'name', 'maxscore', 'builder', 'tester']
+_TEST_DEFAULTS = {'builder': ""}
 _SUBMISSION_SCHEMA = ['assignment']
 _RUN_SCHEMA = ['submission', 'test', 'assignment', 'status', 'score', 'retcode', 'output']
 
@@ -481,30 +483,49 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         asn = kwargs.pop('asn', None)
         if not asn:
             raise TypeError("Requires 'asn'")
-        mod = data.get('tester', None)
-        if not mod:
+        tester = data.get('tester', None)
+        if tester is None:
             raise KeyError("Requires 'tester'")
+        builder = data.get('builder', _TEST_DEFAULTS['builder'])
+        if builder is None:
+            raise KeyError("Requires 'builder'")
 
         data = copy.copy(data)
 
         # Set Schema
         schema = set(_TEST_SCHEMA)
-        if mod == 'script':
+        if tester == 'script':
             schema.update(set(tester_script.EXTRA_TEST_SCHEMA))
-        elif mod == 'io':
+        elif tester == 'io':
             schema.update(set(tester_io.EXTRA_TEST_SCHEMA))
         else:
-            raise Exception("Unknown tester {:s}".format(mod))
+            raise Exception("Unknown tester {:s}".format(tester))
+        if builder == '':
+            pass
+        elif builder == 'make':
+            schema.update(set(builder_make.EXTRA_TEST_SCHEMA))
+        elif builder == 'cmd':
+            schema.update(set(builder_cmd.EXTRA_TEST_SCHEMA))
+        else:
+            raise Exception("Unknown builder {:s}".format(builder))
         kwargs['schema'] = schema
 
         # Set Defaults
         defaults = copy.copy(_TEST_DEFAULTS)
-        if mod == 'script':
+        if tester == 'script':
             defaults.update(tester_script.EXTRA_TEST_DEFAULTS)
-        elif mod == 'io':
+        elif tester == 'io':
             defaults.update(tester_io.EXTRA_TEST_DEFAULTS)
         else:
-            raise Exception("Unknown tester {:s}".format(mod))
+            raise Exception("Unknown tester {:s}".format(tester))
+        if builder == '':
+                pass
+        elif builder == 'make':
+            defaults.update(set(builder_make.EXTRA_TEST_DEFAULTS))
+        elif builder == 'cmd':
+            schema.update(set(builder_cmd.EXTRA_TEST_DEFAULTS))
+        else:
+            raise Exception("Unknown builder {:s}".format(builder))
         for key in defaults:
             if key not in data:
                 data[key] = defaults[key]
