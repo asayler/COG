@@ -37,9 +37,9 @@ class Env(object):
         # return new_fle
 
     @abc.abstractmethod
-    def run_cmd(self, user_cmd, stdin=None):
+    def run_cmd(self, user_cmd, stdin=None, interleave=False):
         pass
-        # return retval, stdout, stdin
+        # return retval, stdout, stderr
 
     @abc.abstractmethod
     def close(self):

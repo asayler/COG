@@ -135,11 +135,11 @@ class Env(env.Env):
         msg = "envmod_local: Running '{:s}'".format(full_cmd)
         logger.info(self._format_msg(msg))
         if not interleave:
-            p = subprocess.Popen(full_cmd, env=self._env_vars,
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=stdin)
+            p = subprocess.Popen(full_cmd, env=self._env_vars, stdin=stdin,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         else:
-            p = subprocess.Popen(full_cmd, env=self._env_vars,
-                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=stdin)
+            p = subprocess.Popen(full_cmd, env=self._env_vars, stdin=stdin,
+                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         stdout, stderr = p.communicate()
         ret = p.returncode
 
