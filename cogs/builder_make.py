@@ -38,15 +38,14 @@ class Builder(builder.Builder):
         # Call Make
         cmd = ['make']
         try:
-            ret, stdout = self.env.run_cmd(cmd, interleave=True)
+            ret, out = self.env.run_cmd(cmd, combine=True)
         except Exception as e:
             msg = "run_cmd raised error: {:s}".format(traceback.format_exc())
             logger.error(self._format_msg(msg))
             ret = 1
-            stdout = msg
+            out = msg
         else:
             # Process Results
-            output = stdout
             if ret:
                 msg = "make returned non-zero value: {:d}".format(ret)
                 logger.warning(self._format_msg(msg))
@@ -56,4 +55,4 @@ class Builder(builder.Builder):
         logger.info(self._format_msg(msg))
 
         # Return
-        return ret, output
+        return ret, out

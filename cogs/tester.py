@@ -29,4 +29,4 @@ class Tester(object):
         stderr = "Dummy Tester Test()"
 
         # Return
-        return ret, score, stderr
+        return ret, score, output

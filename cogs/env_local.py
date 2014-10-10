@@ -112,7 +112,7 @@ class Env(env.Env):
         # Return
         return new_fle
 
-    def run_cmd(self, user_cmd, stdin=None, interleave=False):
+    def run_cmd(self, user_cmd, stdin=None, combine=False):
 
         # Setup Sandbox
         sandbox_exe = config.ENV_LOCAL_SANDBOX_SCRIPT
@@ -134,7 +134,7 @@ class Env(env.Env):
         full_cmd = sudo_cmd + sandbox_cmd + user_cmd
         msg = "envmod_local: Running '{:s}'".format(full_cmd)
         logger.info(self._format_msg(msg))
-        if not interleave:
+        if not combine:
             p = subprocess.Popen(full_cmd, env=self._env_vars, stdin=stdin,
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         else:
