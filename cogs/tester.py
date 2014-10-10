@@ -26,7 +26,7 @@ class Tester(object):
         # Set Vars
         ret = -1
         score = "0"
-        stderr = "Dummy Tester Test()"
+        output = "Dummy Tester Test()"
 
         # Return
         return ret, score, output
