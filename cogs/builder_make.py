@@ -25,10 +25,35 @@ class Builder(builder.Builder):
 
     def build(self):
 
-        # Set Vars
-        ret = -1
-        score = "0"
-        stderr = "Dummy Builder Build()"
+        # Call Parent
+        msg = "Running build"
+        logger.info(self._format_msg(msg))
+
+        # Setup Cmd
+        tst_path = tst_fle['path']
+        tst_cmd = [tst_path, self.env.wd_sub, self.env.wd_tst]
+        os.chmod(tst_path, 0775)
+        cmd = tst_cmd
+
+        # Call Make
+        cmd = ['make']
+        try:
+            ret, stdout = self.env.run_cmd(cmd, interleave=True)
+        except Exception as e:
+            msg = "run_cmd raised error: {:s}".format(traceback.format_exc())
+            logger.error(self._format_msg(msg))
+            ret = 1
+            stdout = msg
+        else:
+            # Process Results
+            output = stdout
+            if ret:
+                msg = "make returned non-zero value: {:d}".format(ret)
+                logger.warning(self._format_msg(msg))
+
+        # Log Results
+        msg = "ret='{:d}'".format(ret)
+        logger.info(self._format_msg(msg))
 
         # Return
-        return ret_val, output
+        return ret, output
