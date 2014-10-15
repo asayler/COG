@@ -10,10 +10,8 @@ import unittest
 import werkzeug
 import os
 import time
-import multiprocessing
 import random
 import zipfile
-import logging
 import shutil
 
 import test_common
@@ -41,9 +39,6 @@ class StructsTestCase(test_common.CogsTestCase):
 
         # Setup Server
         self.srv = structs.Server()
-
-        # Setup Worker Pool
-        self.workers = None
 
     def tearDown(self):
 
