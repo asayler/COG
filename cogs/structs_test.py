@@ -499,7 +499,7 @@ class RunTestCaseBaseMixin(object):
         # Run Submission
         data = copy.copy(test_common.RUN_TESTDICT)
         data['test'] = str(self.tst.uuid)
-        run = self.sub.execute_run(data, workers=self.workers, owner=self.testuser)
+        run = self.sub.execute_run(data, owner=self.testuser)
         self.assertTrue(run)
         while not run.is_complete():
             time.sleep(1)
@@ -521,7 +521,7 @@ class RunTestCaseBadTestsMixin(RunTestCaseBaseMixin):
         # Run Submission
         data = copy.copy(test_common.RUN_TESTDICT)
         data['test'] = str(self.tst.uuid)
-        run = self.sub.execute_run(data, workers=self.workers, owner=self.testuser)
+        run = self.sub.execute_run(data, owner=self.testuser)
         self.assertTrue(run)
         while not run.is_complete():
             time.sleep(1)
