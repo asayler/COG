@@ -74,14 +74,14 @@ class ServerTestCase(test_common_backend.SubMixin,
         super(ServerTestCase, self).tearDown()
 
     def test_files(self):
-        src_file = open("./Makefile", 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=src_file, filename="Makefile")
+        data = copy.copy(test_common.FILE_TESTDICT)
+        file_name = "test1.txt"
+        src_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
         self.subHashDirectHelper(self.srv.create_file,
                                  self.srv.get_file,
                                  self.srv.list_files,
-                                 test_common.FILE_TESTDICT,
-                                 extra_kwargs={'file_obj': file_obj, 'owner': self.testuser})
-        file_obj.close()
+                                 data,
+                                 extra_kwargs={'src_path': src_path, 'owner': self.testuser})
 
     def test_reporters(self):
         data = copy.copy(test_common.REPORTER_TESTDICT)
@@ -145,43 +145,39 @@ class FileTestCase(test_common_backend.UUIDHashMixin,
         # Call Parent
         super(FileTestCase, self).setUp()
 
+        # Setup Data
+        self.data = copy.copy(test_common.FILE_TESTDICT)
+
         # Setup Test File
         file_key = "test"
         file_name = "test1.txt"
-        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
-        file_stream = open(file_path, 'rb')
-        self.file_obj = werkzeug.datastructures.FileStorage(stream=file_stream,
-                                                            filename=file_name,
-                                                            name=file_key)
+        self.src_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
 
     def tearDown(self):
-
-        # Cleanup
-        self.file_obj.close()
 
         # Call Parent
         super(FileTestCase, self).tearDown()
 
     def test_create_file(self):
         self.hashCreateHelper(self.srv.create_file,
-                              test_common.FILE_TESTDICT,
-                              extra_kwargs={'file_obj': self.file_obj, 'owner': self.testuser})
+                              self.data,
+                              extra_kwargs={'src_path': self.src_path, 'owner': self.testuser})
 
     def test_get_file(self):
         self.hashGetHelper(self.srv.create_file,
                            self.srv.get_file,
-                           test_common.FILE_TESTDICT,
-                           extra_kwargs={'file_obj': self.file_obj, 'owner': self.testuser})
+                           self.data,
+                           extra_kwargs={'src_path': self.src_path, 'owner': self.testuser})
 
     def test_update_file(self):
         self.hashUpdateHelper(self.srv.create_file,
-                              test_common.FILE_TESTDICT,
-                              extra_kwargs={'file_obj': self.file_obj, 'owner': self.testuser})
+                              self.data,
+                              extra_kwargs={'src_path': self.src_path, 'owner': self.testuser})
 
     def test_delete_file(self):
         self.hashDeleteHelper(self.srv.create_file,
-                              test_common.FILE_TESTDICT,
-                              extra_kwargs={'file_obj': self.file_obj, 'owner': self.testuser})
+                              self.data,
+                              extra_kwargs={'src_path': self.src_path, 'owner': self.testuser})
 
     def _run_zip_test(self, file_names):
 
@@ -335,20 +331,14 @@ class TestTestCase(test_common_backend.SubMixin,
         self.asn = self.srv.create_assignment(test_common.ASSIGNMENT_TESTDICT, owner=self.testuser)
 
         # Create Files
-        file_key = "test"
         file_name = "test1.txt"
-        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
-        file_stream = open(file_path, 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_stream,
-                                                       filename=file_name,
-                                                       name=file_key)
+        src_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
         self.files = set([])
         for i in range(10):
             data = copy.copy(test_common.FILE_TESTDICT)
             for k in data:
                 data[k] = "test_{:s}_{:02d}".format(k, i)
-            self.files.add(str(self.srv.create_file(data, file_obj=file_obj, owner=self.testuser).uuid))
-        file_obj.close()
+            self.files.add(str(self.srv.create_file(data, src_path=src_path, owner=self.testuser).uuid))
 
         # Create Reporters
         data = copy.copy(test_common.REPORTER_TESTDICT)
@@ -421,18 +411,13 @@ class SubmissionTestCase(test_common_backend.SubMixin,
         # Create Files
         file_key = "test"
         file_name = "test1.txt"
-        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
-        file_stream = open(file_path, 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_stream,
-                                                       filename=file_name,
-                                                       name=file_key)
+        src_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, file_name)
         self.files = set([])
         for i in range(10):
             data = copy.copy(test_common.FILE_TESTDICT)
             for k in data:
                 data[k] = "test_{:s}_{:02d}".format(k, i)
-            self.files.add(str(self.srv.create_file(data, file_obj=file_obj, owner=self.testuser).uuid))
-        file_obj.close()
+            self.files.add(str(self.srv.create_file(data, src_path=src_path, owner=self.testuser).uuid))
 
     def tearDown(self):
 
@@ -482,19 +467,21 @@ class RunTestCaseBaseMixin(object):
             file_key = ""
 
         # Setup Submission File
-        file_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, submission_file)
-        file_bse = open(file_path, 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                       filename=file_name,
-                                                       name=file_key)
+        src_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, submission_file)
         data = copy.copy(test_common.FILE_TESTDICT)
+        data['name'] = file_name
+        data['key'] = file_key
         if file_key == "extract":
+            file_bse = open(src_path, 'rb')
+            file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                           filename=file_name,
+                                                           name=file_key)
             fles = self.srv.create_files(data, archive_obj=file_obj, owner=self.admin)
+            file_obj.close()
         else:
-            fles = [self.srv.create_file(data, file_obj=file_obj, owner=self.student)]
+            fles = [self.srv.create_file(data, src_path=src_path, owner=self.student)]
         uuids = [str(fle.uuid) for fle in fles]
         self.sub.add_files(uuids)
-        file_obj.close()
 
         # Run Submission
         data = copy.copy(test_common.RUN_TESTDICT)
@@ -1133,18 +1120,21 @@ class RunTestCaseBase(StructsTestCase):
             file_key = ""
 
         # Setup Test Files
-        file_bse = open("{:s}/{:s}".format(test_common.TEST_INPUT_PATH, test_file), 'rb')
-        file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                       filename=file_name,
-                                                       name=file_key)
+        src_path = "{:s}/{:s}".format(test_common.TEST_INPUT_PATH, test_file)
         data = copy.copy(test_common.FILE_TESTDICT)
+        data['name'] = file_name
+        data['key'] = file_key
         if file_key == "extract":
+            file_bse = open(src_path, 'rb')
+            file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
+                                                           filename=file_name,
+                                                           name=file_key)
             fles = self.srv.create_files(data, archive_obj=file_obj, owner=self.admin)
+            file_obj.close()
         else:
-            fles = [self.srv.create_file(data, file_obj=file_obj, owner=self.admin)]
+            fles = [self.srv.create_file(data, src_path=src_path, owner=self.admin)]
         uuids = [str(fle.uuid) for fle in fles]
         self.tst.add_files(uuids)
-        file_obj.close()
 
         return fles
 

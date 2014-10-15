@@ -21,7 +21,7 @@ DUMMY_TESTDICT = {'key1': "val1",
                   'key3': "val3"}
 USER_TESTDICT = {}
 GROUP_TESTDICT = {'name': "testgroup"}
-FILE_TESTDICT  = {}
+FILE_TESTDICT  = {'key': "testfile"}
 REPORTER_TESTDICT  = {'mod': "moodle"}
 ASSIGNMENT_TESTDICT = {'name': "Test_Assignment", 'env': "local"}
 TEST_TESTDICT = {'name': "Test_Assignment",
