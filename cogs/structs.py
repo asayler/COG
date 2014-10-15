@@ -154,21 +154,29 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         # Create New Object
         data = copy.copy(data)
 
-        # Setup + Clean Name/Key/Path
-        if file_obj:
-            path = file_obj.filename
-        else:
-            path = src_path
-        name = os.path.normpath(path)
+        # Setup Name
+        name = data.get('name', None)
+        if not name:
+            if file_obj:
+                name = file_obj.filename
+            else:
+                name = os.path.basename(src_path)
+        name = os.path.normpath(name)
         if not name:
             raise KeyError("Valid filename required")
-        data['name'] = str(name)
-        if file_obj:
-            data['key'] = file_obj.name
+        data['name'] = name
+
+        # Setup Key
+        key = data.get('key', None)
+        if not key:
+            if file_obj:
+                data['key'] = file_obj.name
+
+        # Setup Path
         data['path'] = ""
 
         # Get Type
-        typ = mimetypes.guess_type(path)
+        typ = mimetypes.guess_type(name)
         data['type'] = str(typ[0])
         data['encoding'] = str(typ[1])
 
