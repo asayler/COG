@@ -10,7 +10,6 @@
 import copy
 import os
 import time
-import werkzeug
 import mimetypes
 import sys
 import uuid
@@ -81,8 +80,8 @@ class Server(object):
     # File Methods
     def create_file(self, data, file_obj=None, src_path=None, owner=None):
         return self.FileFactory.from_new(data, file_obj=file_obj, src_path=src_path, owner=owner)
-    def create_files(self, data, archive_obj=None, owner=None):
-        return self.FileFactory.from_archive(data, archive_obj=archive_obj, owner=owner)
+    def create_files(self, data, archive_obj=None, archive_src_path=None, owner=None):
+        return self.FileFactory.from_archive(data, archive_obj=archive_obj, archive_src_path=archive_src_path, owner=owner)
     def get_file(self, uuid_hex):
         return self.FileFactory.from_existing(uuid_hex)
     def list_files(self):
@@ -242,27 +241,35 @@ class FileUUIDFactory(backend.UUIDFactory):
         # Extract Args
         archive_obj = kwargs.pop('archive_obj', None)
         if not archive_obj:
-            raise TypeError("archive_obj required")
-        if kwargs.pop('file_obj', None):
-            raise TypeError("from_archive does not take a file_obj")
+            archive_src_path = kwargs.pop('archive_src_path', None)
+            if not archive_src_path:
+                raise TypeError("archive_obj or archive_src_path required")
 
-        # Save archive
+        # Copy Archive
         archive_uuid = uuid.uuid4()
         archive_dir = os.path.abspath("{:s}/{:s}".format(config.ARCHIVE_PATH, archive_uuid))
         os.makedirs(archive_dir)
-        archive_name = os.path.basename(archive_obj.filename)
-        archive_name = werkzeug.utils.secure_filename(archive_name)
-        archive_path = os.path.abspath("{:s}/{:s}".format(archive_dir, archive_name))
-        archive_obj.save(archive_path)
+        archive_name = data.get('name', None)
+        if not archive_name:
+            if archive_obj:
+                archive_name = os.path.basename(archive_obj.filename)
+            else:
+                archive_name = os.path.basename(archive_src_path)
+        archive_name = os.path.normpath(archive_name)
+        archive_dst_path = os.path.abspath("{:s}/{:s}".format(archive_dir, archive_name))
+        if archive_obj:
+            archive_obj.save(archive_dst_path)
+        else:
+            shutil.copy(archive_src_path, archive_dst_path)
 
         # Extract archive
         output_dir = os.path.abspath("{:s}/{:s}".format(archive_dir, 'extracted'))
         os.makedirs(output_dir)
         archive_type, archive_encoding = mimetypes.guess_type(archive_name)
         if archive_type == 'application/zip':
-            if not zipfile.is_zipfile(archive_path):
+            if not zipfile.is_zipfile(archive_dst_path):
                 raise ValueError("Invalid zip file received: {:s}".format(archive_name))
-            with zipfile.ZipFile(archive_path, 'r') as archive_zip:
+            with zipfile.ZipFile(archive_dst_path, 'r') as archive_zip:
                 if archive_zip.testzip():
                     raise ValueError("Corrupted zip file received: {:s}".format(archive_name))
                 archive_zip.extractall(output_dir)
@@ -277,20 +284,16 @@ class FileUUIDFactory(backend.UUIDFactory):
                 for file_name in files:
                     src_path = os.path.abspath("{:s}/{:s}".format(root, file_name))
                     rel_path = os.path.relpath(src_path, output_dir)
-                    src_file = open(src_path, 'rb')
-                    key = "from_{:s}".format(archive_name)
-                    file_obj = werkzeug.datastructures.FileStorage(stream=src_file,
-                                                                   filename=rel_path,
-                                                                   name=key)
-                    # Create New Object
+                    fle_data = copy.copy(data)
+                    fle_data['key'] = "from_{:s}".format(archive_name)
+                    fle_data['name'] = rel_path
                     try:
-                        fle = self.from_new(data, file_obj=file_obj, **kwargs)
+                        # Create New Object
+                        fle = self.from_new(fle_data, src_path=src_path, **kwargs)
                     except Exception as e:
                         raise
                     else:
                         fles.append(fle)
-                    finally:
-                        file_obj.close()
         except Exception as e:
             # Clean up on failure
             for fle in fles:
