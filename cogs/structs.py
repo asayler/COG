@@ -79,8 +79,8 @@ class Server(object):
         pass
 
     # File Methods
-    def create_file(self, data, file_obj=None, dst=None, owner=None):
-        return self.FileFactory.from_new(data, file_obj=file_obj, dst=dst, owner=owner)
+    def create_file(self, data, file_obj=None, owner=None):
+        return self.FileFactory.from_new(data, file_obj=file_obj, owner=owner)
     def create_files(self, data, archive_obj=None, owner=None):
         return self.FileFactory.from_archive(data, archive_obj=archive_obj, owner=owner)
     def get_file(self, uuid_hex):
