@@ -7,7 +7,6 @@
 
 import copy
 import unittest
-import werkzeug
 import os
 import time
 import random
@@ -195,15 +194,12 @@ class FileTestCase(test_common_backend.UUIDHashMixin,
         try:
 
             # Open Zip
-            archive_key = "extract"
-            archive_stream = open(archive_path, 'rb')
-            archive_obj = werkzeug.datastructures.FileStorage(stream=archive_stream,
-                                                              filename=archive_name,
-                                                              name=archive_key)
+            data = copy.copy(test_common.FILE_TESTDICT)
+            data['key'] = "extract"
+            data['name'] = archive_name
 
             # Create from Zip
-            fles = self.srv.create_files({}, archive_obj=archive_obj, owner=self.testuser)
-            archive_obj.close()
+            fles = self.srv.create_files(data, archive_src_path=archive_path, owner=self.testuser)
 
             # Verify Output
             self.assertTrue(fles)
@@ -472,12 +468,7 @@ class RunTestCaseBaseMixin(object):
         data['name'] = file_name
         data['key'] = file_key
         if file_key == "extract":
-            file_bse = open(src_path, 'rb')
-            file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                           filename=file_name,
-                                                           name=file_key)
-            fles = self.srv.create_files(data, archive_obj=file_obj, owner=self.admin)
-            file_obj.close()
+            fles = self.srv.create_files(data, archive_src_path=src_path, owner=self.admin)
         else:
             fles = [self.srv.create_file(data, src_path=src_path, owner=self.student)]
         uuids = [str(fle.uuid) for fle in fles]
@@ -1125,12 +1116,7 @@ class RunTestCaseBase(StructsTestCase):
         data['name'] = file_name
         data['key'] = file_key
         if file_key == "extract":
-            file_bse = open(src_path, 'rb')
-            file_obj = werkzeug.datastructures.FileStorage(stream=file_bse,
-                                                           filename=file_name,
-                                                           name=file_key)
-            fles = self.srv.create_files(data, archive_obj=file_obj, owner=self.admin)
-            file_obj.close()
+            fles = self.srv.create_files(data, archive_src_path=src_path, owner=self.admin)
         else:
             fles = [self.srv.create_file(data, src_path=src_path, owner=self.admin)]
         uuids = [str(fle.uuid) for fle in fles]
