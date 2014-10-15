@@ -80,7 +80,7 @@ class Server(object):
 
     # File Methods
     def create_file(self, data, file_obj=None, src_path=None, owner=None):
-        return self.FileFactory.from_new(data, file_obj=file_obj, src_path=path, owner=owner)
+        return self.FileFactory.from_new(data, file_obj=file_obj, src_path=src_path, owner=owner)
     def create_files(self, data, archive_obj=None, owner=None):
         return self.FileFactory.from_archive(data, archive_obj=archive_obj, owner=owner)
     def get_file(self, uuid_hex):
