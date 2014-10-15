@@ -79,8 +79,8 @@ class Server(object):
         pass
 
     # File Methods
-    def create_file(self, data, file_obj=None, owner=None):
-        return self.FileFactory.from_new(data, file_obj=file_obj, owner=owner)
+    def create_file(self, data, file_obj=None, src_path=None, owner=None):
+        return self.FileFactory.from_new(data, file_obj=file_obj, src_path=path, owner=owner)
     def create_files(self, data, archive_obj=None, owner=None):
         return self.FileFactory.from_archive(data, archive_obj=archive_obj, owner=owner)
     def get_file(self, uuid_hex):
@@ -143,7 +143,9 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         # Extract Args
         file_obj = kwargs.pop('file_obj', None)
         if not file_obj:
-            raise TypeError("file_obj required")
+            src_path = kwargs.pop('src_path', None)
+            if not src_path:
+                raise TypeError("file_obj or src_path required")
 
         # Set Schema
         schema = set(_FILE_SCHEMA)
@@ -153,15 +155,20 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         data = copy.copy(data)
 
         # Setup + Clean Name/Key/Path
-        name = os.path.normpath(file_obj.filename)
+        if file_obj:
+            path = file_obj.filename
+        else:
+            path = src_path
+        name = os.path.normpath(path)
         if not name:
             raise KeyError("Valid filename required")
         data['name'] = str(name)
-        data['key'] = file_obj.name
+        if file_obj:
+            data['key'] = file_obj.name
         data['path'] = ""
 
         # Get Type
-        typ = mimetypes.guess_type(file_obj.filename)
+        typ = mimetypes.guess_type(path)
         data['type'] = str(typ[0])
         data['encoding'] = str(typ[1])
 
@@ -169,15 +176,24 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         fle = super(File, cls).from_new(data, **kwargs)
 
         # Set Path
-        fle['path'] = os.path.abspath("{:s}/{:s}".format(config.FILESTORAGE_PATH, repr(fle)))
+        dst_path = os.path.abspath("{:s}/{:s}".format(config.FILESTORAGE_PATH, repr(fle)))
+        fle['path'] = dst_path
 
         # Save File
-        try:
-            file_obj.save(fle['path'])
-        except IOError:
-            # Clean up on failure
-            fle.delete(force=True)
-            raise
+        if file_obj:
+            try:
+                file_obj.save(dst_path)
+            except IOError:
+                # Clean up on failure
+                fle.delete(force=True)
+                raise
+        else:
+            try:
+                shutil.copy(src_path, dst_path)
+            except IOError:
+                # Clean up on failure
+                fle.delete(force=True)
+                raise
 
         # Return File
         return fle
