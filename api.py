@@ -44,8 +44,6 @@ cors = flask.ext.cors.CORS(app, headers=["Content-Type", "Authorization"])
 httpauth = flask.ext.httpauth.HTTPBasicAuth()
 srv = cogs.structs.Server()
 auth = cogs.auth.Auth()
-#workers = multiprocessing.Pool(10)
-workers = None
 
 ### Logging ###
 
@@ -564,7 +562,7 @@ def process_submission_runs(obj_uuid):
     sub = srv.get_submission(obj_uuid)
 
     # Process Runs
-    return process_objects(sub.list_runs, sub.execute_run, _RUNS_KEY, workers=workers)
+    return process_objects(sub.list_runs, sub.execute_run, _RUNS_KEY)
 
 ## Run Endpoints ##
 
