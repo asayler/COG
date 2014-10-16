@@ -49,12 +49,17 @@ class BuilderRunTestCase(builder_test.BuilderRunTestCase):
         # Call parent
         super(BuilderRunTestCase, self).tearDown()
 
-    def add_files(self, paths, obj):
+    def add_files(self, input_files, obj):
 
         fles = []
-        for path in paths:
+        for input_file in input_files:
+            path, key, name = input_file
             src_path = os.path.abspath("{:s}/{:s}".format(test_common.TEST_INPUT_PATH, path))
             data = copy.copy(test_common.FILE_TESTDICT)
+            if key:
+                data['key'] = key
+            if name:
+                data['name'] = name
             fle = self.srv.create_file(data, src_path=src_path, owner=self.user)
             fles.append(fle)
         uuids = [str(fle.uuid) for fle in fles]
@@ -99,8 +104,8 @@ class BuilderRunTestCase(builder_test.BuilderRunTestCase):
     def test_makefile_empty(self):
 
         # Add Sub Files
-        paths = ["hello_c/Makefile"]
-        fles = self.add_files(paths, self.sub)
+        sub_files = [("hello_c/Makefile", 'makefile', None)]
+        fles = self.add_files(sub_files, self.sub)
 
         # Run Test
         run = self.run_test(self.sub)
@@ -125,8 +130,9 @@ class BuilderRunTestCase(builder_test.BuilderRunTestCase):
     def test_makefile_good(self):
 
         # Add Sub Files
-        paths = ["hello_c/Makefile", "hello_c/hello.c"]
-        fles = self.add_files(paths, self.sub)
+        sub_files = [("hello_c/Makefile", 'makefile', None),
+                     ("hello_c/hello.c", 'source', None)]
+        fles = self.add_files(sub_files, self.sub)
 
         # Run Test
         run = self.run_test(self.sub)
