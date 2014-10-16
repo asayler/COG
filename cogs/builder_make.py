@@ -29,16 +29,10 @@ class Builder(builder.Builder):
         msg = "Running build"
         logger.info(self._format_msg(msg))
 
-        # Setup Cmd
-        tst_path = tst_fle['path']
-        tst_cmd = [tst_path, self.env.wd_sub, self.env.wd_tst]
-        os.chmod(tst_path, 0775)
-        cmd = tst_cmd
-
         # Call Make
-        cmd = ['make']
+        cmd = ['make', '--directory={:s}'.format(self.env.wd_sub)]
         try:
-            ret, out = self.env.run_cmd(cmd, combine=True)
+            ret, out, err = self.env.run_cmd(cmd, combine=True)
         except Exception as e:
             msg = "run_cmd raised error: {:s}".format(traceback.format_exc())
             logger.error(self._format_msg(msg))
