@@ -68,6 +68,10 @@ def test(asn, sub, tst, run):
             score = 0
             output = traceback.format_exc()
             status = 'complete-exception-builder_build'
+        else:
+            if (retcode != 0):
+                score = 0
+                status = 'complete-error-builder_build'
 
     # Setup Tester
     if (retcode == 0):
@@ -95,14 +99,15 @@ def test(asn, sub, tst, run):
             retcode = -1
             score = 0
             output = traceback.format_exc()
-            status = 'complete-exception-run'
+            status = 'complete-exception-tester_run'
         else:
-            if retcode == 0:
-                status = 'complete'
-            else:
-                status = 'complete-error'
+            if (retcode != 0):
+                score = 0
+                status = 'complete-error-tester_run'
 
     # Normalize Results
+    if retcode == 0:
+        status = 'complete'
     retcode = str(retcode)
     score = str(score)
     output = str(output)
