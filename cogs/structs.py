@@ -78,10 +78,10 @@ class Server(object):
         pass
 
     # File Methods
-    def create_file(self, data, file_obj=None, src_path=None, owner=None):
-        return self.FileFactory.from_new(data, file_obj=file_obj, src_path=src_path, owner=owner)
-    def create_files(self, data, archive_obj=None, archive_src_path=None, owner=None):
-        return self.FileFactory.from_archive(data, archive_obj=archive_obj, archive_src_path=archive_src_path, owner=owner)
+    def create_file(self, data, src_path=None, owner=None):
+        return self.FileFactory.from_new(data, src_path=src_path, owner=owner)
+    def create_files(self, data, archive_src_path=None, owner=None):
+        return self.FileFactory.from_archive(data, archive_src_path=archive_src_path, owner=owner)
     def get_file(self, uuid_hex):
         return self.FileFactory.from_existing(uuid_hex)
     def list_files(self):
@@ -140,11 +140,9 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         """New Constructor"""
 
         # Extract Args
-        file_obj = kwargs.pop('file_obj', None)
-        if not file_obj:
-            src_path = kwargs.pop('src_path', None)
-            if not src_path:
-                raise TypeError("file_obj or src_path required")
+        src_path = kwargs.pop('src_path', None)
+        if not src_path:
+            raise TypeError("src_path required")
 
         # Set Schema
         schema = set(_FILE_SCHEMA)
@@ -156,22 +154,13 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         # Setup Name
         name = data.get('name', None)
         if not name:
-            if file_obj:
-                name = file_obj.filename
-            else:
-                name = os.path.basename(src_path)
+            name = os.path.basename(src_path)
         name = os.path.normpath(name)
         if not name:
-            raise KeyError("Valid filename required")
+            raise ValueError("Valid filename required")
         data['name'] = name
 
-        # Setup Key
-        key = data.get('key', None)
-        if not key:
-            if file_obj:
-                data['key'] = file_obj.name
-
-        # Setup Path
+        # Setup Blank Path
         data['path'] = ""
 
         # Get Type
@@ -187,20 +176,12 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         fle['path'] = dst_path
 
         # Save File
-        if file_obj:
-            try:
-                file_obj.save(dst_path)
-            except IOError:
-                # Clean up on failure
-                fle.delete(force=True)
-                raise
-        else:
-            try:
-                shutil.copy(src_path, dst_path)
-            except IOError:
-                # Clean up on failure
-                fle.delete(force=True)
-                raise
+        try:
+            shutil.copy(src_path, dst_path)
+        except IOError:
+            # Clean up on failure
+            fle.delete(force=True)
+            raise
 
         # Return File
         return fle
@@ -239,11 +220,9 @@ class FileUUIDFactory(backend.UUIDFactory):
         """Archive Constructor"""
 
         # Extract Args
-        archive_obj = kwargs.pop('archive_obj', None)
-        if not archive_obj:
-            archive_src_path = kwargs.pop('archive_src_path', None)
-            if not archive_src_path:
-                raise TypeError("archive_obj or archive_src_path required")
+        archive_src_path = kwargs.pop('archive_src_path', None)
+        if not archive_src_path:
+            raise TypeError("archive_src_path required")
 
         # Copy Archive
         archive_uuid = uuid.uuid4()
@@ -251,16 +230,10 @@ class FileUUIDFactory(backend.UUIDFactory):
         os.makedirs(archive_dir)
         archive_name = data.get('name', None)
         if not archive_name:
-            if archive_obj:
-                archive_name = os.path.basename(archive_obj.filename)
-            else:
-                archive_name = os.path.basename(archive_src_path)
+            archive_name = os.path.basename(archive_src_path)
         archive_name = os.path.normpath(archive_name)
         archive_dst_path = os.path.abspath("{:s}/{:s}".format(archive_dir, archive_name))
-        if archive_obj:
-            archive_obj.save(archive_dst_path)
-        else:
-            shutil.copy(archive_src_path, archive_dst_path)
+        shutil.copy(archive_src_path, archive_dst_path)
 
         # Extract archive
         output_dir = os.path.abspath("{:s}/{:s}".format(archive_dir, 'extracted'))
