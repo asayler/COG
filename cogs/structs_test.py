@@ -791,7 +791,7 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
         try:
-            self.assertEqual(out['status'], "complete-exception-run")
+            self.assertEqual(out['status'], "complete-exception-tester_run")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -807,7 +807,7 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
         try:
-            self.assertEqual(out['status'], "complete-error")
+            self.assertEqual(out['status'], "complete-error-tester_run")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -825,7 +825,7 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
         out = self._test_execute_run_sub("null", file_name="add.py")
         try:
-            self.assertEqual(out['status'], "complete-error")
+            self.assertEqual(out['status'], "complete-error-tester_run")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -843,7 +843,7 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
         out = self._test_execute_run_sub("null", file_name="add.py")
         try:
-            self.assertEqual(out['status'], "complete-error")
+            self.assertEqual(out['status'], "complete-error-tester_run")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -861,7 +861,7 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
         out = self._test_execute_run_sub("null", file_name="add.py")
         try:
-            self.assertEqual(out['status'], "complete-error")
+            self.assertEqual(out['status'], "complete-error-tester_run")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -879,7 +879,7 @@ class RunTestCaseBadScriptMixin(RunTestCaseBaseMixin):
 
         out = self._test_execute_run_sub("null", file_name="add.py")
         try:
-            self.assertEqual(out['status'], "complete-error")
+            self.assertEqual(out['status'], "complete-error-tester_run")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -897,7 +897,7 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
         try:
-            self.assertEqual(out['status'], "complete-exception-run")
+            self.assertEqual(out['status'], "complete-exception-tester_run")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -913,7 +913,7 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
         try:
-            self.assertEqual(out['status'], "complete-exception-run")
+            self.assertEqual(out['status'], "complete-exception-tester_run")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -951,7 +951,7 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
         try:
-            self.assertEqual(out['status'], "complete-error")
+            self.assertEqual(out['status'], "complete-error-tester_run")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -970,7 +970,7 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
         try:
-            self.assertEqual(out['status'], "complete-error")
+            self.assertEqual(out['status'], "complete-error-tester_run")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -989,7 +989,7 @@ class RunTestCaseBadSolnMixin(RunTestCaseBaseMixin):
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
         try:
-            self.assertEqual(out['status'], "complete-error")
+            self.assertEqual(out['status'], "complete-error-tester_run")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -1009,7 +1009,7 @@ class RunTestCaseBadInputMixin(RunTestCaseBaseMixin):
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
         try:
-            self.assertEqual(out['status'], "complete-error")
+            self.assertEqual(out['status'], "complete-error-tester_run")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -1027,7 +1027,7 @@ class RunTestCaseBadInputMixin(RunTestCaseBaseMixin):
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
         try:
-            self.assertEqual(out['status'], "complete-error")
+            self.assertEqual(out['status'], "complete-error-tester_run")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -1046,7 +1046,7 @@ class RunTestCaseBadInputMixin(RunTestCaseBaseMixin):
         out = self._test_execute_run_sub("null",
                                          file_name=self.sub_name, file_key=self.sub_key)
         try:
-            self.assertEqual(out['status'], "complete-error")
+            self.assertEqual(out['status'], "complete-error-tester_run")
             self.assertNotEqual(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertEqual(float(out['score']), 0)
@@ -1145,7 +1145,7 @@ class RunTestCaseScriptBase(RunTestCaseBase):
         # Set Mixin Values
         self.status_ok = "complete"
         self.retcode_ok = 0
-        self.status_error = "complete-error"
+        self.status_error = "complete-error-tester_run"
         self.retcode_error = None
         self.status_nosub = "complete"
         self.retcode_nosub = 0
@@ -1358,7 +1358,7 @@ class RunTestCaseIOBase(RunTestCaseBase):
         self.retcode_ok = 0
         self.status_error = "complete"
         self.retcode_error = 0
-        self.status_nosub = "complete-exception-run"
+        self.status_nosub = "complete-exception-tester_run"
         self.retcode_nosub = -1
 
     def tearDown(self):
