@@ -71,6 +71,11 @@ class BuilderRunTestCase(builder_test.BuilderRunTestCase):
             time.sleep(1)
         return run
 
+    def print_fail(self, out):
+        print()
+        print("run = {:s}".format(out))
+        print("{:s}".format(out['output']))
+
     def test_null(self):
 
         # Run Test
@@ -88,7 +93,7 @@ class BuilderRunTestCase(builder_test.BuilderRunTestCase):
             self.assertIn("No targets specified and no makefile found" ,out['output'])
             self.assertEqual(float(out['score']), 0)
         except AssertionError:
-            print("run = {:s}".format(out))
+            self.print_fail(out)
             raise
 
     def test_makefile_empty(self):
@@ -114,7 +119,33 @@ class BuilderRunTestCase(builder_test.BuilderRunTestCase):
             self.assertIn("No rule to make target" ,out['output'])
             self.assertEqual(float(out['score']), 0)
         except AssertionError:
-            print("run = {:s}".format(out))
+            self.print_fail(out)
+            raise
+
+    def test_makefile_good(self):
+
+        # Add Sub Files
+        paths = ["hello_c/Makefile", "hello_c/hello.c"]
+        fles = self.add_files(paths, self.sub)
+
+        # Run Test
+        run = self.run_test(self.sub)
+        out = run.get_dict()
+
+        # Cleanup
+        run.delete()
+        for fle in fles:
+            fle.delete()
+
+        # Check Output
+        try:
+            self.assertEqual(out['status'], "complete-exception-tester_run")
+            self.assertEqual(int(out['retcode']), -1)
+            self.assertTrue(out['output'])
+            self.assertIn("Module requires a test script file, but none found" ,out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            self.print_fail(out)
             raise
 
 # Main
