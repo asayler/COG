@@ -49,24 +49,65 @@ class BuilderRunTestCase(builder_test.BuilderRunTestCase):
         # Call parent
         super(BuilderRunTestCase, self).tearDown()
 
-    def test_null(self):
+    def add_files(self, paths, obj):
+
+        fles = []
+        for path in paths:
+            src_path = os.path.abspath("{:s}/{:s}".format(test_common.TEST_INPUT_PATH, path))
+            data = copy.copy(test_common.FILE_TESTDICT)
+            fle = self.srv.create_file(data, src_path=src_path, owner=self.user)
+            fles.append(fle)
+        uuids = [str(fle.uuid) for fle in fles]
+        obj.add_files(uuids)
+        return fles
+
+    def run_test(self, sub):
 
         data = copy.copy(test_common.RUN_TESTDICT)
         data['test'] = str(self.tst.uuid)
-        run = self.sub.execute_run(data, owner=self.user)
+        run = sub.execute_run(data, owner=self.user)
         self.assertTrue(run)
         while not run.is_complete():
             time.sleep(1)
         out = run.get_dict()
-
-        # Cleanup
         run.delete()
+        return out
 
-        # Check
+    def test_null(self):
+
+        # Run Test
+        out = self.run_test(self.sub)
+
+        # Check Output
         try:
             self.assertEqual(out['status'], "complete-error-builder_build")
             self.assertEqual(int(out['retcode']), 2)
             self.assertTrue(out['output'])
+            self.assertIn("No targets specified and no makefile found" ,out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
+
+    def test_makefile_empty(self):
+
+        # Add Sub Files
+        paths = ["hello_c/Makefile"]
+        fles = self.add_files(paths, self.sub)
+
+        # Run Test
+        out = self.run_test(self.sub)
+
+        # Cleanup
+        for fle in fles:
+            fle.delete()
+
+        # Check Output
+        try:
+            self.assertEqual(out['status'], "complete-error-builder_build")
+            self.assertEqual(int(out['retcode']), 2)
+            self.assertTrue(out['output'])
+            self.assertIn("No rule to make target" ,out['output'])
             self.assertEqual(float(out['score']), 0)
         except AssertionError:
             print("run = {:s}".format(out))
