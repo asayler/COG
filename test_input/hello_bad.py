@@ -4,7 +4,7 @@ import sys
 
 def main(argv):
 
-    print("Hello, world?")
+    print("Goodby, world?")
 
     return 0
 
