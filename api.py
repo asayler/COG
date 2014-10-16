@@ -137,6 +137,16 @@ def get_owner(func_get):
 
 ## Helper Functions ##
 
+def save_upload(file_obj):
+    upload_dir = os.path.abspath(cogs.config.UPLOAD_PATH)
+    if not os.path.exists(upload_dir):
+        os.makedirs(upload_dir)
+    upload_uuid = uuid.uuid4()
+    upload_path = os.path.abspath("{:s}/{:s}".format(upload_dir, upload_uuid))
+    file_obj.save(upload_path)
+    file_obj.close()
+    return upload_path
+
 def error_response(e, status):
 
     err = { 'status': status,
@@ -156,19 +166,41 @@ def create_stub_file(func_create, files=[]):
 
     obj_lst = []
     for file_obj in files:
+
+        # Process upload
         data = {}
-        obj = func_create(data, file_obj=file_obj, owner=flask.g.user)
+        data['key'] = file_obj.name
+        data['name'] = file_obj.filename
+        src_path = save_upload(file_obj)
+
+        # Create File
+        obj = func_create(data, src_path=src_path, owner=flask.g.user)
         obj_lst.append(str(obj.uuid))
+
+        # Cleanup
+        os.remove(src_path)
+
     return obj_lst
 
 def create_stub_files(func_create, files=[]):
 
     obj_lst = []
     for archive_obj in files:
+
+        # Process upload
         data = {}
-        objs = func_create(data, archive_obj=archive_obj, owner=flask.g.user)
+        data['key'] = archive_obj.name
+        data['name'] = archive_obj.filename
+        archive_src_path = save_upload(archive_obj)
+
+        # Create Files
+        objs = func_create(data, archive_src_path=archive_src_path, owner=flask.g.user)
         for obj in objs:
             obj_lst.append(str(obj.uuid))
+
+        # Cleanup
+        os.remove(archive_src_path)
+
     return obj_lst
 
 def update_stub_json(obj):
@@ -352,6 +384,7 @@ def process_files_post():
     files_extract = []
     files_direct = []
     for key in files:
+
         if key == _EXTRACT_KEY:
             files_extract += files.getlist(key)
         else:
