@@ -62,19 +62,15 @@ class BuilderRunTestCase(builder_test.BuilderRunTestCase):
         # Cleanup
         run.delete()
 
-        # Check Output
-        print(out)
-        # try:
-        #     self.assertEqual(out['status'], self.status_nosub)
-        #     if self.retcode_nosub is not None:
-        #         self.assertEqual(int(out['retcode']), self.retcode_nosub)
-        #     else:
-        #         self.assertNotEqual(int(out['retcode']), 0)
-        #     self.assertTrue(out['output'])
-        #     self.assertEqual(float(out['score']), 0)
-        # except AssertionError:
-        #     print("run = {:s}".format(out))
-        #     raise
+        # Check
+        try:
+            self.assertEqual(out['status'], "complete-error-builder_build")
+            self.assertEqual(int(out['retcode']), 2)
+            self.assertTrue(out['output'])
+            self.assertEqual(float(out['score']), 0)
+        except AssertionError:
+            print("run = {:s}".format(out))
+            raise
 
 # Main
 if __name__ == '__main__':
