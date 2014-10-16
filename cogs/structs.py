@@ -740,11 +740,11 @@ class Submission(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.
         return self.files.get_set()
 
     # Run Methods
-    def execute_run(self, data, workers=None, owner=None):
+    def execute_run(self, data, owner=None):
         data = copy.copy(data)
         data['submission'] = str(self.uuid)
         data['assignment'] = self['assignment']
-        run = self.RunFactory.from_new(data, workers=workers, owner=owner)
+        run = self.RunFactory.from_new(data, owner=owner)
         self._add_runs([str(run.uuid)])
         return run
     def list_runs(self):
@@ -787,9 +787,6 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         """New Constructor"""
 
         # Process Args
-        workers = kwargs.pop('workers')
-        # if not workers:
-        #     raise TypeError("Requires Workers")
         asn_uuid = data.get('assignment', None)
         if not asn_uuid:
             raise KeyError("Requires assignment")
@@ -830,10 +827,7 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         run_uuid = str(run.uuid).lower()
 
         # Add Task to Pool
-        if workers:
-            res = workers.apply_async(testrun.test, args=(asn, sub, tst, run))
-        else:
-            res = testrun.test(asn, sub, tst, run)
+        res = testrun.test(asn, sub, tst, run)
 
         # Return Run
         return run
