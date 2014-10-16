@@ -69,14 +69,16 @@ class BuilderRunTestCase(builder_test.BuilderRunTestCase):
         self.assertTrue(run)
         while not run.is_complete():
             time.sleep(1)
-        out = run.get_dict()
-        run.delete()
-        return out
+        return run
 
     def test_null(self):
 
         # Run Test
-        out = self.run_test(self.sub)
+        run = self.run_test(self.sub)
+        out = run.get_dict()
+
+        # Cleanup
+        run.delete()
 
         # Check Output
         try:
@@ -96,9 +98,11 @@ class BuilderRunTestCase(builder_test.BuilderRunTestCase):
         fles = self.add_files(paths, self.sub)
 
         # Run Test
-        out = self.run_test(self.sub)
+        run = self.run_test(self.sub)
+        out = run.get_dict()
 
         # Cleanup
+        run.delete()
         for fle in fles:
             fle.delete()
 
