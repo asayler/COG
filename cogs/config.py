@@ -51,6 +51,7 @@ config.set(SEC_ENV_LOCAL, 'LIMIT_TIME_WALL', "10")
 
 DEFAULT_ENV_LOCAL_TMP_PATH = "/tmp/cogs/envs"
 DEFAULT_ARCHIVE_PATH = "/tmp/cogs/archives"
+DEFAULT_UPLOAD_PATH = "/tmp/cogs/uploads"
 
 # Read Config File
 config.read(CONF_PATH)
@@ -63,6 +64,7 @@ REDIS_PASSWORD = os.environ.get('COGS_REDIS_PASSWORD', config.get(SEC_REDIS, 'PA
 FILESTORAGE_PATH = os.environ.get('COGS_FILESTORAGE_PATH', config.get(SEC_FILESTORAGE, 'PATH'))
 FILESTORAGE_PATH = os.path.realpath(FILESTORAGE_PATH)
 ARCHIVE_PATH = os.path.realpath(DEFAULT_ARCHIVE_PATH)
+UPLOAD_PATH = os.path.realpath(DEFAULT_UPLOAD_PATH)
 LOGGING_ENABLED = os.environ.get('COGS_LOGGING_ENABLED', config.get(SEC_LOGGING, 'ENABLED'))
 LOGGING_ENABLED = LOGGING_ENABLED.lower() in ['true', 'yes', 'on', '1']
 LOGGING_PATH = os.environ.get('COGS_LOGGING_PATH', config.get(SEC_LOGGING, 'PATH'))
@@ -89,4 +91,5 @@ ENV_LOCAL_USER = config.get(SEC_ENV_LOCAL, 'USER')
 ENV_LOCAL_GROUP = config.get(SEC_ENV_LOCAL, 'GROUP')
 
 ARCHIVE_PATH = os.environ.get('COGS_ARCHIVE_PATH', DEFAULT_ARCHIVE_PATH)
+UPLOAD_PATH = os.environ.get('COGS_UPLOAD_PATH', DEFAULT_UPLOAD_PATH)
 ENV_LOCAL_TMP_PATH = os.environ.get('COGS_ENV_LOCAL_TMP_PATH', DEFAULT_ENV_LOCAL_TMP_PATH)
