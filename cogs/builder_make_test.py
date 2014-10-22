@@ -49,38 +49,6 @@ class BuilderRunTestCase(builder_test.BuilderRunTestCase):
         # Call parent
         super(BuilderRunTestCase, self).tearDown()
 
-    def add_files(self, input_files, obj):
-
-        fles = []
-        for input_file in input_files:
-            path, key, name = input_file
-            src_path = os.path.abspath("{:s}/{:s}".format(test_common.TEST_INPUT_PATH, path))
-            data = copy.copy(test_common.FILE_TESTDICT)
-            if key:
-                data['key'] = key
-            if name:
-                data['name'] = name
-            fle = self.srv.create_file(data, src_path=src_path, owner=self.user)
-            fles.append(fle)
-        uuids = [str(fle.uuid) for fle in fles]
-        obj.add_files(uuids)
-        return fles
-
-    def run_test(self, sub):
-
-        data = copy.copy(test_common.RUN_TESTDICT)
-        data['test'] = str(self.tst.uuid)
-        run = sub.execute_run(data, owner=self.user)
-        self.assertTrue(run)
-        while not run.is_complete():
-            time.sleep(1)
-        return run
-
-    def print_fail(self, out):
-        print()
-        print("run = {:s}".format(out))
-        print("{:s}".format(out['output']))
-
     def test_null(self):
 
         # Run Test
