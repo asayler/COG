@@ -521,9 +521,9 @@ class Test(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         if builder == '':
                 pass
         elif builder == 'make':
-            defaults.update(set(builder_make.EXTRA_TEST_DEFAULTS))
+            defaults.update(builder_make.EXTRA_TEST_DEFAULTS)
         elif builder == 'cmd':
-            schema.update(set(builder_cmd.EXTRA_TEST_DEFAULTS))
+            defaults.update(builder_cmd.EXTRA_TEST_DEFAULTS)
         else:
             raise Exception("Unknown builder {:s}".format(builder))
         for key in defaults:
