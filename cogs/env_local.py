@@ -130,8 +130,21 @@ class Env(env.Env):
                        str(config.ENV_LOCAL_LIMIT_TIME_WALL)]
         os.chmod(sandbox_path, 0775)
 
+        # Setup Command
+        if type(user_cmd) is list:
+            if not len(user_cmd):
+                msg = "user_cmd must not be empty"
+                logger.error(self._format_msg(msg))
+                raise(msg)
+            full_cmd = sudo_cmd + sandbox_cmd + user_cmd
+        elif type(user_cmd) is str:
+            full_cmd = sudo_cmd + sandbox_cmd + [user_cmd]
+        else:
+            msg = "user_cmd must be list or str, not {:s}".format(type(user_cmd))
+            logger.error(self._format_msg(msg))
+            raise(msg)
+
         # Run Command
-        full_cmd = sudo_cmd + sandbox_cmd + user_cmd
         msg = "envmod_local: Running '{:s}'".format(full_cmd)
         logger.info(self._format_msg(msg))
         if not combine:
