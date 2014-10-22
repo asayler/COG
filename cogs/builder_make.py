@@ -30,9 +30,9 @@ class Builder(builder.Builder):
         logger.info(self._format_msg(msg))
 
         # Call Make
-        cmd = ['make', '--directory={:s}'.format(self.env.wd_sub)]
+        cmd = ['make']
         try:
-            ret, out, err = self.env.run_cmd(cmd, combine=True)
+            ret, out, err = self.env.run_cmd(cmd, combine=True, cwd=self.env.wd_sub)
         except Exception as e:
             msg = "run_cmd raised error: {:s}".format(traceback.format_exc())
             logger.error(self._format_msg(msg))

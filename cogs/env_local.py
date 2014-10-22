@@ -112,7 +112,7 @@ class Env(env.Env):
         # Return
         return new_fle
 
-    def run_cmd(self, user_cmd, stdin=None, combine=False):
+    def run_cmd(self, user_cmd, stdin=None, combine=False, cwd=None):
 
         # Setup Sandbox
         sandbox_exe = config.ENV_LOCAL_SANDBOX_SCRIPT
@@ -135,10 +135,10 @@ class Env(env.Env):
         msg = "envmod_local: Running '{:s}'".format(full_cmd)
         logger.info(self._format_msg(msg))
         if not combine:
-            p = subprocess.Popen(full_cmd, env=self._env_vars, stdin=stdin,
+            p = subprocess.Popen(full_cmd, env=self._env_vars, cwd=cwd, stdin=stdin,
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         else:
-            p = subprocess.Popen(full_cmd, env=self._env_vars, stdin=stdin,
+            p = subprocess.Popen(full_cmd, env=self._env_vars, cwd=cwd, stdin=stdin,
                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         stdout, stderr = p.communicate()
         ret = p.returncode
