@@ -26,10 +26,28 @@ class Builder(builder.Builder):
 
     def build(self):
 
-        # Set Vars
-        ret = -1
-        score = "0"
-        stderr = "Dummy Builder Build()"
+        # Call Parent
+        msg = "Running build"
+        logger.info(self._format_msg(msg))
+
+        # Call Cmd
+        cmd = [self.tst['builder_cmd']]
+        try:
+            ret, out, err = self.env.run_cmd(cmd, combine=True, cwd=self.env.wd_sub)
+        except Exception as e:
+            msg = "run_cmd raised error: {:s}".format(traceback.format_exc())
+            logger.error(self._format_msg(msg))
+            ret = 1
+            out = msg
+        else:
+            # Process Results
+            if ret:
+                msg = "build cmd returned non-zero value: {:d}".format(ret)
+                logger.warning(self._format_msg(msg))
+
+        # Log Results
+        msg = "ret='{:d}'".format(ret)
+        logger.info(self._format_msg(msg))
 
         # Return
-        return ret_val, output
+        return ret, out
