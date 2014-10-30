@@ -40,6 +40,7 @@ _EXTRACT_KEY = "extract"
 ### Global Setup ###
 
 app = flask.Flask(__name__)
+app.config['JSON_AS_ASCII'] = False
 cors = flask.ext.cors.CORS(app, headers=["Content-Type", "Authorization"])
 httpauth = flask.ext.httpauth.HTTPBasicAuth()
 srv = cogs.structs.Server()
