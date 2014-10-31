@@ -84,11 +84,14 @@ class Env(env.Env):
                     msg += "{:s}".format(stderr)
                     logger.warning(self._format_msg(msg))
 
-        # Clean ENV
+        # Clean and Setup Env Vars
         self._env_vars = {}
         for var in os.environ:
             if not var.startswith("COGS"):
                 self._env_vars[var] = os.environ[var]
+        self._env_vars['LANG'] = "C.UTF-8"
+        msg = "env_vars: {:s}".format(self._env_vars)
+        logger.info(self._format_msg(msg))
 
     def copy_fle(self, fle, dst_dir):
 
