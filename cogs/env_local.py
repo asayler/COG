@@ -87,7 +87,11 @@ class Env(env.Env):
         # Clean and Setup Env Vars
         self._env_vars = {}
         for var in os.environ:
-            if not var.startswith("COGS"):
+            if var.startswith("COGS"):
+                pass
+            elif var.startswith("APACHE"):
+                pass
+            else:
                 self._env_vars[var] = os.environ[var]
         self._env_vars['LANG'] = "C.UTF-8"
         msg = "env_vars: {:s}".format(self._env_vars)
