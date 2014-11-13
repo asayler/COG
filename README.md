@@ -4,6 +4,18 @@ COG: Computerized Online Grading
 By [Andy Sayler](https://www.andysayler.com)  
 University of Colorado, Boulder
 
+About
+-----
+
+COG is a modular and scalable grading framework for student
+programming assignments designed to support a wide range of use cases
+and development techniques. COG aims to provide a versatile set of
+abstractions capable of accommodating a range of automated grading use
+cases. COG provides a Python-based grading backend, a RESTfull API,
+and multiple user frontends (see below). It also supports plugins for
+interfacing with external systems like Moodle, etc. COG is Free
+Software, licensed under the terms of the AGPL.
+
 Status
 ------
 
