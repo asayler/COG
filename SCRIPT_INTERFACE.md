@@ -41,7 +41,6 @@ Thus, the full COG call will look like:
 
  ```
  ./grading.script <student submission path> <grading script path>
-
  ```
 
 Output Convention
@@ -75,7 +74,7 @@ A successful grading script execution should exit with the standard
 zero-value. If a script exits with a non-zero value, COG will ignore
 the grade the script may have output and instead report that an error
 occurred executing the grading script. COG will provide the contents
-of the scripts `stderr` output to the screen if this occurs to allow
+of the script's `stderr` output to the screen if this occurs to allow
 scripts to exit with non-zero values and report errors that can then
 be read by either the student or script creator.
 
