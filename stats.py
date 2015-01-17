@@ -7,6 +7,7 @@
 
 import sys
 import collections
+import pprint
 
 import cogs.structs
 
@@ -39,19 +40,41 @@ def assignment_stats(asn_uuid):
         runs_by_owner = owners_by_tst[tst_uuid]
 
         run_cnts = [len(runs) for runs in runs_by_owner.values()]
-        run_cnt_avgs = averages(run_cnts)
+        run_cnt_avgs, run_cnt_freqs = averages(run_cnts)
 
+        scores_by_owner = {owner: [float(run['score']) for run in runs_by_owner[owner]]
+                           for owner in runs_by_owner.keys()}
+        max_scores = [max(scores) for scores in scores_by_owner.values()]
+        max_score_avgs, max_score_freqs = averages(max_scores)
+        min_scores = [min(scores) for scores in scores_by_owner.values()]
+        min_score_avgs, min_score_freqs = averages(min_scores)
 
+        scores_nonz = filter(None, [filter(None, scores) for scores in scores_by_owner.values()])
+        min_scores_nonz = [min(scores) for scores in scores_nonz]
+        min_score_nonz_avgs, min_score_nonz_freqs = averages(min_scores_nonz)
+        
         print("")
-        print("{:s} ({:s})".format(asn['name'], asn_uuid))
-        print("{:s} ({:s})".format(tst['name'], tst_uuid))
+        print("Assignment: {:s} ({:s})".format(asn['name'], asn_uuid))
+        print("Test: {:s} ({:s})".format(tst['name'], tst_uuid))
+        print("Score Limit: {:s}".format(tst['maxscore']))
         print("submitters = {:d}".format(len(runs_by_owner)))
-        print("run_cnt_tot = {:d}".format(sum(run_cnts)))
-        print("run_cnt_max = {:d}".format(max(run_cnts)))
-        print("run_cnt_min = {:d}".format(min(run_cnts)))
-        print("run_cnt_mean = {:.2f}".format(run_cnt_avgs[0])) 
-        print("run_cnt_medn = {:d}".format(run_cnt_avgs[1]))
-        print("run_cnt_mode = {}".format(run_cnt_avgs[2]))
+
+        print("Run Count Stats:")
+        print("Total = {:d}".format(sum(run_cnts)))
+        print("Freqs = {}".format(run_cnt_freqs))
+        print_stats(run_cnt_avgs)
+
+        print("Max Score Stats:")
+        print("Freqs = {}".format(max_score_freqs))
+        print_stats(max_score_avgs)
+
+        print("Min Score Stats:")
+        print("Freqs = {}".format(min_score_freqs))
+        print_stats(min_score_avgs)
+
+        print("Min Score (Non-Zero) Stats:")
+        print("Freqs = {}".format(min_score_nonz_freqs))
+        print_stats(min_score_nonz_avgs)
 
 def averages(l):
 
@@ -73,7 +96,16 @@ def averages(l):
         else:
             break
     
-    return (mean, median, modes)
+    return ((mean, median, modes, max(l), min(l)), dict(freq))
+
+def print_stats(avgs):
+
+    print("Max = {:.2f}".format(avgs[3]))
+    print("Min = {:.2f}".format(avgs[4]))
+    print("Mean = {:.2f}".format(avgs[0])) 
+    print("Median = {:.2f}".format(avgs[1]))
+    print("Modes = {}".format(avgs[2]))
+
 
 if __name__ == "__main__":
 
