@@ -38,28 +38,69 @@ def assignment_stats(asn_uuid):
 
         tst = srv.get_test(tst_uuid)
 
-        runs_by_owner = owners_by_tst[tst_uuid]
-        scores_by_owner = {owner: [float(run['score']) for run in runs_by_owner[owner]]
-                           for owner in runs_by_owner.keys()}
+        all_runs_by_owner = owners_by_tst[tst_uuid]
+        suc_runs_by_owner = {owner: filter(lambda run: not int(run['retcode']),
+                                           all_runs_by_owner[owner])
+                             for owner in all_runs_by_owner.keys()}
+        noz_runs_by_owner = {owner: filter(lambda run: float(run['score']),
+                                           all_runs_by_owner[owner])
+                             for owner in all_runs_by_owner.keys()}
 
-        run_cnts = [len(runs) for runs in runs_by_owner.values()]
-        max_scores = [max(scores) for scores in scores_by_owner.values()]
-        min_scores = [min(scores) for scores in scores_by_owner.values()]
-        scores_nonz = filter(None, [filter(None, scores) for scores in scores_by_owner.values()])
-        min_scores_nonz = [min(scores) for scores in scores_nonz]
-        
+        all_scores_by_owner = {owner: [float(run['score']) for run in all_runs_by_owner[owner]]
+                               for owner in all_runs_by_owner.keys()}
+        suc_scores_by_owner = {owner: [float(run['score']) for run in suc_runs_by_owner[owner]]
+                               for owner in suc_runs_by_owner.keys()}
+        noz_scores_by_owner = {owner: [float(run['score']) for run in noz_runs_by_owner[owner]]
+                               for owner in noz_runs_by_owner.keys()}
+
+        all_runs = filter(None, all_runs_by_owner.values())
+        suc_runs = filter(None, suc_runs_by_owner.values())
+        noz_runs = filter(None, noz_runs_by_owner.values())
+
+        all_scores = filter(None, all_scores_by_owner.values())
+        suc_scores = filter(None, suc_scores_by_owner.values())
+        noz_scores = filter(None, noz_scores_by_owner.values())
+
+        run_cnts_all = [len(runs) for runs in all_runs]
+        run_cnts_suc = [len(runs) for runs in suc_runs]
+        run_cnts_noz = [len(runs) for runs in noz_runs]
+        raw_scores_all = [i for s in all_scores for i in s]
+        raw_scores_suc = [i for s in suc_scores for i in s]
+        raw_scores_noz = [i for s in noz_scores for i in s]
+        max_scores_all = [max(scores) for scores in all_scores]
+        max_scores_suc = [max(scores) for scores in suc_scores]
+        max_scores_noz = [max(scores) for scores in noz_scores]
+        min_scores_all = [min(scores) for scores in all_scores]
+        min_scores_suc = [min(scores) for scores in suc_scores]
+        min_scores_noz = [min(scores) for scores in noz_scores]
+        dlt_scores_all = [(max(scores) - min(scores)) for scores in all_scores]
+        dlt_scores_suc = [(max(scores) - min(scores)) for scores in suc_scores]
+        dlt_scores_noz = [(max(scores) - min(scores)) for scores in noz_scores]
+
         out = {}
         out['info_asn_name'] = asn['name']
         out['info_asn_uuid'] = asn_uuid
         out['info_tst_name'] = tst['name']
         out['info_tst_uuid'] = tst_uuid
-        out['info_score_limit'] = float(tst['maxscore'])
-        out['info_tot_submitters'] = len(runs_by_owner)
-        out['stats_run_cnt'] = stats(run_cnts)
-        out['stats_max_score'] = stats(max_scores)
-        out['stats_min_score'] = stats(min_scores)
-        out['stats_min_score_nonzero'] = stats(min_scores_nonz)
-        pprint.pprint(out)
+        out['meta_max_score'] = float(tst['maxscore'])
+        out['meta_tot_subs'] = len(all_runs_by_owner)
+        out['stats_run_cnt_all'] = stats(run_cnts_all)
+        out['stats_run_cnt_suc'] = stats(run_cnts_suc)
+        out['stats_run_cnt_noz'] = stats(run_cnts_noz)
+        out['stats_score_raw_all'] = stats(raw_scores_all)
+        out['stats_score_raw_suc'] = stats(raw_scores_suc)
+        out['stats_score_raw_noz'] = stats(raw_scores_noz)
+        out['stats_score_max_all'] = stats(max_scores_all)
+        out['stats_score_max_suc'] = stats(max_scores_suc)
+        out['stats_score_max_noz'] = stats(max_scores_noz)
+        out['stats_score_min_all'] = stats(min_scores_all)
+        out['stats_score_min_suc'] = stats(min_scores_suc)
+        out['stats_score_min_noz'] = stats(min_scores_noz)
+        out['stats_score_dlt_all'] = stats(dlt_scores_all)
+        out['stats_score_dlt_suc'] = stats(dlt_scores_suc)
+        out['stats_score_dlt_noz'] = stats(dlt_scores_noz)
+
+        return out
 
 def stats(l):
 
@@ -96,4 +137,7 @@ def stats(l):
 if __name__ == "__main__":
 
     for asn_uuid in srv.list_assignments():
-        assignment_stats(asn_uuid)
+        out = assignment_stats(asn_uuid)
+        print("")
+        print("--------------------------------------------------------------------------------")
+        pprint.pprint(out)
