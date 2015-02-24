@@ -174,15 +174,24 @@ class Env(env.Env):
         for fle in self.sub_files:
             try:
                 os.remove(fle['path'])
-            except OSError:
-                pass
+            except OSError as e:
+                msg = "Failed to remove '{:s}': {:s}".format(fle['path'], str(e))
+                logger.warning(self._format_msg(msg))
 
         # Delete Tester Files
         for fle in self.tst_files:
             try:
                 os.remove(fle['path'])
-            except OSError:
-                pass
+            except OSError as e:
+                msg = "Failed to remove '{:s}': {:s}".format(fle['path'], str(e))
+                logger.warning(self._format_msg(msg))
 
-        # Delete Directory
-        shutil.rmtree(self.wd)
+        # Delete User-Generated Files and Directories
+        # TODO
+
+        # Delete All Other Files and Directories
+        try:
+            shutil.rmtree(self.wd)
+        except OSError as e:
+            msg = "Failed to remove '{:s}': {:s}".format(self.wd, str(e))
+            logger.warning(self._format_msg(msg))
