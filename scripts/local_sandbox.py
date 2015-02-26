@@ -12,7 +12,7 @@ MBYTE = KBYTE * KBYTE
 _LIMIT_FSIZE = 100000 #Blocks
 _LIMIT_NOFILE = 100 #Files
 _LIMIT_NPROC = 100 #Processes (per user e.g. shared)
-_LIMIT_MEM = 100*MBYTE #Bytes
+_LIMIT_MEM = 1000*MBYTE #Bytes
 _LIMIT_NICE = 15 #Niceness
 
 def sandbox(args):
