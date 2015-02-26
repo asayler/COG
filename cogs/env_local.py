@@ -5,6 +5,7 @@
 # Univerity of Colorado
 
 import os
+import os.path
 import shutil
 import copy
 import subprocess
@@ -44,9 +45,9 @@ class Env(env.Env):
         tst_files = [FileFactory.from_existing(file_uuid) for file_uuid in tst_file_uuids]
 
         # Setup Directories
-        self.wd = os.path.abspath("{:s}/{:s}/".format(config.ENV_LOCAL_TMP_PATH, str(run).lower()))
-        self.wd_tst = "{:s}/{:s}".format(self.wd, _TST_DIR)
-        self.wd_sub = "{:s}/{:s}".format(self.wd, _SUB_DIR)
+        self.wd = os.path.abspath(os.path.join(config.ENV_LOCAL_TMP_PATH, str(run).lower()))
+        self.wd_tst = os.path.join(self.wd, _TST_DIR)
+        self.wd_sub = os.path.join(self.wd, _SUB_DIR)
         os.makedirs(self.wd)
         os.makedirs(self.wd_tst)
         os.makedirs(self.wd_sub)
@@ -187,7 +188,7 @@ class Env(env.Env):
                 logger.warning(self._format_msg(msg))
 
         # Delete User-Generated Files and Directories
-        # TODO
+        self.run_cmd(['rm', '-rf',  self.wd])
 
         # Delete All Other Files and Directories
         try:
