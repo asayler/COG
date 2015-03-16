@@ -112,25 +112,35 @@ def stats(l):
         tot += i
         freq[i] += 1
         
-    mean = tot/cnt
-    median = sorted(l)[cnt/2]
-    common = freq.most_common()
-    modes = []
-    for i in common:
-        if (i[1] == common[0][1]):
-            modes.append(i[0])
-        else:
-            break
-
-    stats = {}
-    stats['avg_mean'] = mean
-    stats['avg_medn'] = median
-    stats['avg_mode'] = modes
-    stats['vals_max'] = max(l)
-    stats['vals_min'] = min(l)
-    stats['vals_cnt'] = cnt
-    stats['vals_sum'] = tot
-    stats['vals_frq'] = dict(freq)
+    if cnt:
+        mean = tot/cnt
+        median = sorted(l)[cnt/2]
+        common = freq.most_common()
+        modes = []
+        for i in common:
+            if (i[1] == common[0][1]):
+                modes.append(i[0])
+            else:
+                break
+        stats = {}
+        stats['avg_mean'] = mean
+        stats['avg_medn'] = median
+        stats['avg_mode'] = modes
+        stats['vals_max'] = max(l)
+        stats['vals_min'] = min(l)
+        stats['vals_cnt'] = cnt
+        stats['vals_sum'] = tot
+        stats['vals_frq'] = dict(freq)
+    else:
+        stats = {}
+        stats['avg_mean'] = None
+        stats['avg_medn'] = None
+        stats['avg_mode'] = None
+        stats['vals_max'] = None
+        stats['vals_min'] = None
+        stats['vals_cnt'] = cnt
+        stats['vals_sum'] = tot
+        stats['vals_frq'] = None
 
     return stats
 
