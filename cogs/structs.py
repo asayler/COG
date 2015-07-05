@@ -197,7 +197,7 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
             if force:
                 pass
             else:
-                logger.warning("Could not remove '{:s}': '{s}'".format(path, str(e)))
+                logger.warning("Could not remove '{:s}': '{s}'".format(self['path'], str(e)))
 
         # Delete Self
         super(File, self).delete()
