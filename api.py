@@ -611,7 +611,7 @@ def bad_key(error):
     return res
 
 @app.errorhandler(ValueError)
-def bad_key(error):
+def bad_value(error):
     err = { 'status': 400,
             'message': "{:s}".format(error) }
     app.logger.warn("Client Error: ValueError: {:s}".format(err))
@@ -620,7 +620,7 @@ def bad_key(error):
     return res
 
 @app.errorhandler(TypeError)
-def bad_key(error):
+def bad_type(error):
     err = { 'status': 400,
             'message': "{:s}".format(error) }
     app.logger.warn("Client Error: TypeError: {:s}".format(err))
