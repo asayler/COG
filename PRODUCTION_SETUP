@@ -1,0 +1,190 @@
+***API Machine***
+
+Starting from Ubuntu 14.04.3 Server:
+
+# Setup /etc/fstab for dedicated /srv, tmpfs /tmp, etc
+
+/dev/vda   /      ext4    defaults,noatime,discard                                       0   0
+/dev/vdb   /srv   btrfs   defaults,noatime,discard,compress=lzo,space_cache,autodefrag   0   0
+tmpfs      /tmp   tmpfs   defaults,noatime,nosuid,nodev,mode=1777,size=1024M             0   0
+
+# Setup Firewall
+
+$ sudo ufw allow ssh
+$ sudo ufw allow http
+$ sudo ufw allow https
+$ sudo ufw enable
+
+# Install packages
+
+$ sudo apt-get install git python python-pip redis-server apache2 libapache2-mod-wsgi
+
+# Setup users and groups
+
+$ sudo useradd -r -s /bin/false cog
+$ sudo usermod -a -G cog ubuntu
+$ sudo usermod -a -G cog www-data
+$ sudo usermod -a -G redis ubuntu
+$ sudo groupadd sudo-nobody
+$ sudo usermod -a -G sudo-nobody cog
+
+# Setup paths (via btrfs)
+
+$ sudo btrfs subvolume create /srv/@redis
+$ sudo chown redis:redis /srv/@redis
+$ sudo chmod 2770 /srv/@redis
+
+$ sudo btrfs subvolume create /srv/@data
+$ sudo chown cog:cog /srv/@data
+$ sudo chmod 2770 /srv/@data
+
+$ sudo btrfs subvolume create /srv/@cog
+$ sudo chown cog:cog /srv/@cog
+$ sudo chmod 2770 /srv/@cog
+
+$ sudo mkdir /var/log/cog
+$ sudo chown cog:cog /var/log/cog
+$ sudo chmod 2770 /var/log/cog 
+
+$ sudo chown cog:cog /var/log/redis
+$ sudo chmod 2770 /var/log/redis
+
+$ sudo chown cog:cog /var/log/redis
+$ sudo chmod 2770 /var/log/redis
+
+$ sudo chmod 2770 /var/log/apache2/
+
+$ sudo mkdir /srv/@data/files
+$ sudo chown cog:cog /srv/@data/files
+$ sudo chmod 2770 /srv/@data/files
+
+# Reboot
+
+$ sudo reboot
+
+# Setup COG
+
+# Note: May need to add deploy key, etc to GitHub
+$ cd /srv/@cog
+$ git clone git@github.com:asayler/COG.git
+
+$ cd srv/@cog/COG
+$ make git
+$ sudo make reqs
+$ sudo make conf
+
+$ emacs /srv/@cog/COG/cog.conf
+
+[redis]
+host: localhost
+port: 9000
+db: 3
+password: <redis_password>
+
+[filestorage]
+path: /srv/@data/files
+
+[logging]
+enabled: True
+path: /var/log/cog
+
+[repmod_moodle]
+host: <moodle_address>
+service: <moodle_service>
+username: <moodle_user>
+password: <moodle_password>
+
+[authmod_moodle]
+host: <moodle_address>
+service: <moodle_service>
+
+[env_local]
+user: nobody
+group: nogroup
+limit_time_cpu: 30
+limit_time_wall: 60
+
+# Setup Redis
+
+$ sudo chown -R redis:redis /etc/redis
+$ sudo chmod 2770 /etc/redis
+$ sudo chmod 440 /etc/redis/*
+
+$ sudo emacs /etc/redis/redis.conf
+
+port 9000
+bind 127.0.0.1
+save 900 1
+save 300 10
+save 60 10000
+dir /srv/@redis
+requirepass <redis_password>
+
+$ echo "vm.overcommit_memory = 1" | sudo tail /etc/sysctl.conf
+$ sudo service redis-server restart
+
+# Setup Apache
+
+$ sudo a2enmod ssl
+$ sudo a2enmod wsgi
+
+<VirtualHost _default_:80>
+
+    # VirtualHost Setup
+    ServerName <URL>
+    ServerAdmin <email>
+    DocumentRoot "/srv/@cog/COG"
+
+    # Logging Setup
+    LogLevel warn
+    ErrorLog ${APACHE_LOG_DIR}/api-cog_error.log
+    CustomLog ${APACHE_LOG_DIR}/api-cog_access.log combined
+
+    # Redirect to SSL
+    Redirect temp / https://<URL>
+
+</VirtualHost>
+
+<VirtualHost _default_:443>
+
+    # VirtualHost Setup
+    ServerName <URL>
+    ServerAdmin <Email>
+    DocumentRoot "/srv/@cog/COG"
+
+    # Logging Setup
+    LogLevel warn
+    ErrorLog ${APACHE_LOG_DIR}/api-cog_ssl_error.log
+    CustomLog ${APACHE_LOG_DIR}/api-cog_ssl_access.log combined
+
+    # SSL Setup
+    SSLEngine on
+    SSLCertificateFile      /etc/ssl/certs/ssl-cert-snakeoil.pem
+    SSLCertificateKeyFile   /etc/ssl/private/ssl-cert-snakeoil.key
+    #SSLCertificateChainFile /etc/ssl/certs/comodo.crt
+    # Enable this if your want HSTS (recommended)
+    #Header add Strict-Transport-Security "max-age=15768000"
+
+    # WSGI Setup
+    WSGIDaemonProcess application user=cog group=cog home=/tmp \
+                                  processes=10 threads=10 maximum-requests=100 \
+                                  inactivity-timeout=600 display-name=cogapi
+    WSGIScriptAlias / /srv/@cog/COG/api.wsgi
+
+    # Directory Setup
+    <Directory "/srv/@cog/COG">
+        Options -Indexes
+        Options FollowSymLinks
+        AllowOverride None
+        Require all granted
+        WSGIProcessGroup application
+        WSGIApplicationGroup %{GLOBAL}
+        WSGIScriptReloading On
+        WSGIPassAuthorization On
+    </Directory>
+
+</VirtualHost>
+
+$ sudo a2dissite 000-default.conf
+$ sudo a2dissite 000-cog.conf
+$ sudo service apach2 restart
