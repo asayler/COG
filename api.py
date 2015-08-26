@@ -587,6 +587,7 @@ def process_run(obj_uuid):
 def not_authorized(error):
     err = { 'status': 401,
             'message': str(error) }
+    app.logger.warn("Client Error: UserNotAuthorized: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
@@ -595,6 +596,7 @@ def not_authorized(error):
 def not_found(error=False):
     err = { 'status': 404,
             'message': "Not Found: {:s}".format(flask.request.url) }
+    app.logger.warn("Client Error: ObjectDNE: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
@@ -603,22 +605,25 @@ def not_found(error=False):
 def bad_key(error):
     err = { 'status': 400,
             'message': "{:s}".format(error) }
+    app.logger.warn("Client Error: KeyError: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
 
 @app.errorhandler(ValueError)
-def bad_key(error):
+def bad_value(error):
     err = { 'status': 400,
             'message': "{:s}".format(error) }
+    app.logger.warn("Client Error: ValueError: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
 
 @app.errorhandler(TypeError)
-def bad_key(error):
+def bad_type(error):
     err = { 'status': 400,
             'message': "{:s}".format(error) }
+    app.logger.warn("Client Error: TypeError: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
@@ -627,6 +632,7 @@ def bad_key(error):
 def bad_request(error=False):
     err = { 'status': 400,
             'message': "Malformed request" }
+    app.logger.warn("Client Error: 400: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
@@ -635,6 +641,7 @@ def bad_request(error=False):
 def not_found(error=False):
     err = { 'status': 404,
             'message': "Not Found: {:s}".format(flask.request.url) }
+    app.logger.warn("Client Error: 404: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
@@ -643,6 +650,7 @@ def not_found(error=False):
 def bad_method(error=False):
     err = { 'status': 405,
             'message': "Bad Method: {:s} {:s}".format(flask.request.method, flask.request.url) }
+    app.logger.warn("Client Error: 405: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res

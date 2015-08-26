@@ -193,11 +193,11 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         # Delete File
         try:
             os.remove(self['path'])
-        except OSError:
+        except OSError as e:
             if force:
                 pass
             else:
-                raise
+                logger.warning("Could not remove '{:s}': '{:s}'".format(self['path'], str(e)))
 
         # Delete Self
         super(File, self).delete()
