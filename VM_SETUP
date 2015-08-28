@@ -1,0 +1,7 @@
+After cloning a COG API Production VM:
+
++ Edit /etc/hosts with new hostname
++ sudo btrfs filesystem label / <volume name>
++ sudo btrfs filesystem label /srv/ <volume name>
++ Update fstab
++ Reboot
