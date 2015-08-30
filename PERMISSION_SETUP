@@ -1,16 +1,33 @@
-To set permissions on a fresh server install:
+# To modify permissions:
 
-GET    /tokens/        ALLOW ALL
-GET    /assignments/   ALLOW ALL
-POST   /files/         ALLOW ALL
+# 1. From the API server, navigate to the cog-core src directory
+# 2. Open a python interactive shell and run:
+    import cogs.auth
+    a = cogs.auth.Auth
+# 3. Continue via steps below
 
-To set permissions for a new assignment:
+# To set permissions on a fresh server install:
 
-GET    /assignments/<asn_uuid>/               ALLOW ALL
-   a.add_allowed_groups("GET", "/assignments/<asn_uuid>/", [cogs.auth.SPECIAL_GROUP_ANY])
-GET    /assignments/<asn_uuid>/tests/         ALLOW ALL
-   a.add_allowed_groups("GET", "/assignments/<asn_uuid>/tests/", [cogs.auth.SPECIAL_GROUP_ANY])
-POST   /assignments/<asn_uuid>/submissions/   ALLOW ALL
-   a.add_allowed_groups("POST", "/assignments/<asn_uuid>/submissions/", [cogs.auth.SPECIAL_GROUP_ANY])
-GET    /tests/<tst_uuid>/                     ALLOW ALL
-   a.add_allowed_groups("GET", "/tests/<tst_uuid>/", [cogs.auth.SPECIAL_GROUP_ANY])
+# GET    /tokens/                               ALLOW ALL
+    a.add_allowed_groups("GET", "/tokens/", [cogs.auth.SPECIAL_GROUP_ANY])
+# GET    /assignments/                          ALLOW ALL
+    a.add_allowed_groups("GET", "/assignments/", [cogs.auth.SPECIAL_GROUP_ANY])
+# GET    /assignments/submitable/               ALLOW ALL
+    a.add_allowed_groups("GET", "/assignments/submitable/", [cogs.auth.SPECIAL_GROUP_ANY])
+# POST   /files/                                ALLOW ALL
+    a.add_allowed_groups("POST", "/files/", [cogs.auth.SPECIAL_GROUP_ANY])
+
+# Note: You may also want to setup an admin user:
+  
+    a.add_admins(["<usr_uuid>"])
+
+# To set permissions for a new assignment:
+
+# GET    /assignments/<asn_uuid>/               ALLOW ALL
+    a.add_allowed_groups("GET", "/assignments/<asn_uuid>/", [cogs.auth.SPECIAL_GROUP_ANY])
+# GET    /assignments/<asn_uuid>/tests/         ALLOW ALL
+    a.add_allowed_groups("GET", "/assignments/<asn_uuid>/tests/", [cogs.auth.SPECIAL_GROUP_ANY])
+# POST   /assignments/<asn_uuid>/submissions/   ALLOW ALL
+    a.add_allowed_groups("POST", "/assignments/<asn_uuid>/submissions/", [cogs.auth.SPECIAL_GROUP_ANY])
+# GET    /tests/<tst_uuid>/                     ALLOW ALL
+    a.add_allowed_groups("GET", "/tests/<tst_uuid>/", [cogs.auth.SPECIAL_GROUP_ANY])
