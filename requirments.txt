@@ -2,3 +2,7 @@ flask
 flask-httpauth
 flask-cors
 redis
+requests[security]
+pyopenssl
+ndg-httpsclient
+pyasn1
