@@ -9,7 +9,7 @@ import time
 KBYTE = 1024
 MBYTE = KBYTE * KBYTE
 
-_LIMIT_FSIZE = 1000000 #Blocks
+_LIMIT_FSIZE = MBYTE*100 #Bytes
 _LIMIT_NOFILE = 1000 #Files
 _LIMIT_NPROC = 100 #Processes (per user e.g. shared)
 _LIMIT_MEM = MBYTE*MBYTE #Bytes
