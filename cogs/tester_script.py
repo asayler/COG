@@ -77,7 +77,7 @@ class Tester(tester.Tester):
 
         # Setup Cmd
         tst_path = tst_fle['path']
-        tst_cmd = [tst_path, self.env.wd_sub, self.env.wd_tst]
+        tst_cmd = [tst_path, self.env.wd_sub, self.env.wd_tst, self.env.wd_wrk]
         os.chmod(tst_path, 0775)
         cmd = tst_cmd
 

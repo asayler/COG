@@ -19,6 +19,7 @@ import env
 
 _TST_DIR = "test"
 _SUB_DIR = "submission"
+_WRK_DIR = "scratch"
 _FILE_SANITIZERS = ["dos2unix", "mac2unix"]
 
 logger = logging.getLogger(__name__)
@@ -48,10 +49,12 @@ class Env(env.Env):
         self.wd = os.path.abspath(os.path.join(config.ENV_LOCAL_TMP_PATH, str(run).lower()))
         self.wd_tst = os.path.join(self.wd, _TST_DIR)
         self.wd_sub = os.path.join(self.wd, _SUB_DIR)
+        self.wd_wrk = os.path.join(self.wd, _WRK_DIR)
         os.makedirs(self.wd)
         os.makedirs(self.wd_tst)
         os.makedirs(self.wd_sub)
-        os.chmod(self.wd_sub, 0777)
+        os.makedirs(self.wd_wrk)
+        os.chmod(self.wd_wrk, 0777)
 
         # Copy Tester Files
         self.tst_files = []
@@ -95,6 +98,7 @@ class Env(env.Env):
             else:
                 self._env_vars[var] = os.environ[var]
         self._env_vars['LANG'] = "C.UTF-8"
+        self._env_vars['HOME'] = self.wd_wrk
         msg = "env_vars: {:s}".format(self._env_vars)
         logger.info(self._format_msg(msg))
 
@@ -121,6 +125,10 @@ class Env(env.Env):
         return new_fle
 
     def run_cmd(self, user_cmd, stdin=None, combine=False, cwd=None):
+
+        # Process Args
+        if not cwd:
+            cwd = self.wd_wrk
 
         # Setup Sandbox
         sandbox_exe = config.ENV_LOCAL_SANDBOX_SCRIPT

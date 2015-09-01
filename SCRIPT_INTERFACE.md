@@ -27,11 +27,13 @@ executable.
 
 ### Arguments
 
-COG will execute the provided grading script and pass it two arguments:
+COG will execute the provided grading script and pass it three arguments:
 
- 1. The path to the directory containing the student submission
+ 1. The path to the directory containing the student submission (read-only).
  2. The path to the directory containing the grading script and any
-    supporting files.
+    supporting files (read-only).
+ 3. The path to a working directory where you script has full access
+    (read/write/create).
 
 It is up to the grading script to process these arguments as necessary.
 
@@ -40,7 +42,7 @@ It is up to the grading script to process these arguments as necessary.
 Thus, the full COG call will look like:
 
  ```
- ./grading.script <student submission path> <grading script path>
+ ./grading.script <student submission path> <grading script path> <working path>
  ```
 
 Output Convention
@@ -93,16 +95,14 @@ environment that supports them.
 
 COG scripts can assume that they will execute within at least a
 `C.UTF8` locale. They will also have access to the standard `$PATH`
-and `$PWD` environment variables. The `$HOME` environmental variable,
-when present, may point to a non-standard location such as /tmp or
-/. Scripts should not assume that they will have either read or write
-access to `$HOME`.
+and `$PWD` environment variables. The `$HOME` environmental variable
+will point to the working directory. Scripts may assume that they have
+read and write access to `$HOME`.
 
 COG scripts should assume that multiple executions may occur in
 parallel. Thus, they should not depend on constant global directories
 (e.g. `/tmp/grading_output`) for storing temporary files, etc. The
-student submission path and grading script path passed to the script
-when it is executed will always point to copies of both the student
-submission and grading script submission unique to a given
-execution. Thus, it is safe to write to or manipulate files in these
-directories without effecting subsequent or concurrent runs.
+working directory path passed to the script when it is executed will
+always point to a unique location for a given execution. Thus, it is
+safe to write to or manipulate files in this directory without
+effecting subsequent or concurrent runs.
