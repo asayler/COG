@@ -54,6 +54,7 @@ class Env(env.Env):
         os.makedirs(self.wd_tst)
         os.makedirs(self.wd_sub)
         os.makedirs(self.wd_wrk)
+        os.chmod(self.wd_sub, 0777) # TODO: Remove this
         os.chmod(self.wd_wrk, 0777)
 
         # Copy Tester Files
