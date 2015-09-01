@@ -31,6 +31,7 @@ git:
 	$(GIT) submodule update
 
 reqs: $(REQUIRMENTS)
+	sudo apt-get install libffi-dev libssl-dev
 	$(PIP) install -r "$<" -U
 	$(MAKE) -C $(COGS) $@
 	$(MAKE) -C $(MOODLE) $@
