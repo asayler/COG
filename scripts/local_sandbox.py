@@ -9,9 +9,9 @@ import time
 KBYTE = 1024
 MBYTE = KBYTE * KBYTE
 
-_LIMIT_FSIZE = MBYTE*100 #Bytes
-_LIMIT_NOFILE = 1000 #Files
-_LIMIT_NPROC = 100 #Processes (per user e.g. shared)
+_LIMIT_FSIZE = 100*MBYTE #Bytes per created file
+_LIMIT_NOFILE = 1000 #Number of open files
+_LIMIT_NPROC = 1000 #Processes (per user e.g. shared)
 _LIMIT_MEM = MBYTE*MBYTE #Bytes
 _LIMIT_NICE = 10 #Niceness
 
@@ -46,4 +46,5 @@ def sandbox(args):
 
 if __name__ == "__main__":
 
+    # Usage: sandbox_local.py <CPU Time Limit (sec)> <Wall Time Limit (sec)>
     sys.exit(sandbox(sys.argv[1:]))
