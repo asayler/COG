@@ -238,6 +238,8 @@ class Auth(object):
                 allowed = False
                 auth_info = "{:s} for {:s} at {:s}".format(user['username'], method, path)
 
+                logger.debug("VERIFYING {:s}".format(auth_info))
+
                 # Check if owner
                 if owner_uuid:
                     if (user_uuid.lower() == owner_uuid.lower()):

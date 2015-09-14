@@ -61,7 +61,10 @@ if cogs.config.LOGGING_ENABLED:
     # Stream Handler
     handler_stream = logging.StreamHandler()
     handler_stream.setFormatter(formatter_line)
-    handler_stream.setLevel(logging.WARNING)
+    if app.debug:
+        handler_stream.setLevel(logging.DEBUG)
+    else:
+        handler_stream.setLevel(logging.WARNING)
 
     # File Handler
     if not os.path.exists(cogs.config.LOGGING_PATH):
@@ -69,9 +72,14 @@ if cogs.config.LOGGING_ENABLED:
     logfile_path = "{:s}/{:s}".format(cogs.config.LOGGING_PATH, "api.log")
     handler_file = logging.handlers.WatchedFileHandler(logfile_path)
     handler_file.setFormatter(formatter_line_time)
-    handler_file.setLevel(logging.INFO)
+    if app.debug:
+        handler_file.setLevel(logging.DEBUG)
+    else:
+        handler_file.setLevel(logging.INFO)
 
     for logger in loggers:
+        if app.debug:
+            logger.setLevel(logging.DEBUG)
         logger.addHandler(handler_stream)
         logger.addHandler(handler_file)
 
@@ -82,6 +90,8 @@ if cogs.config.LOGGING_ENABLED:
 
 @httpauth.verify_password
 def verify_login(username, password):
+
+    app.logger.debug("verify_login: username={}".format(username))
 
     flask.g.user = None
 
@@ -137,6 +147,7 @@ def get_owner(func_get):
 ## Helper Functions ##
 
 def save_upload(file_obj):
+
     upload_dir = os.path.abspath(cogs.config.UPLOAD_PATH)
     if not os.path.exists(upload_dir):
         os.makedirs(upload_dir)
@@ -348,6 +359,7 @@ def filter_asns_runable(asn_list):
 @app.route("/", methods=['GET'])
 def get_root():
 
+    app.logger.debug("GET ROOT")
     return app.send_static_file('index.html')
 
 ## Access Control Endpoints ##
@@ -372,12 +384,16 @@ def get_token():
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_files_get():
+
+    app.logger.debug("LIST FILES")
     return process_objects(srv.list_files, None, _FILES_KEY, create_stub=None)
 
 @app.route("/files/", methods=['POST'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_files_post():
+
+    app.logger.debug("POST FILES")
 
     files = flask.request.files
     files_extract = []
@@ -633,6 +649,15 @@ def bad_request(error=False):
     err = { 'status': 400,
             'message': "Malformed request" }
     app.logger.info("Client Error: 400: {:s}".format(err))
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
+
+@app.errorhandler(401)
+def not_authorized_401(error=False):
+    err = { 'status': 401,
+            'message': "Not Authorized" }
+    app.logger.info("Client Error: 401: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
