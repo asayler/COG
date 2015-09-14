@@ -106,3 +106,28 @@ working directory path passed to the script when it is executed will
 always point to a unique location for a given execution. Thus, it is
 safe to write to or manipulate files in this directory without
 effecting subsequent or concurrent runs.
+
+Testing
+-----------
+
+A good way to test your script locally to make sure it follows the
+above assumptions is as follows:
+
+```
+$ mkdir /tmp/test
+$ mkdir /tmp/test/grader
+$ mkdir /tmp/test/submission
+$ mkdir /tmp/test/scratch
+$ cp -r <grader code> /tmp/test/grader
+$ cp -r <reference submission> /tmp/test/submission
+$ chmod 777 /tmp/test/scratch
+$ cd /tmp/test/scratch
+$ sudo -u nobody -g nogroup /tmp/test/grader/<grader script> /tmp/test/submission/ /tmp/test/grader/ /tmp/test/scratch/
+```
+
+Note that this is not a perfect test - it doesn't do any real
+sandboxing, nor does it add, remove, or update any environmental
+variables (e.g. $HOME). It also shouldn't be assumed that the working
+directory will be set to `/tmp/test/scratch`. But the above will at
+least make sure you're using the cog calling convention and paths
+correctly.
