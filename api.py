@@ -6,7 +6,6 @@
 # Univerity of Colorado
 
 ### Imports ###
-
 import time
 import os
 import uuid
@@ -24,6 +23,7 @@ import cogs.config
 
 import cogs.auth
 import cogs.structs
+import cogs.util
 
 
 ### Constants ###
@@ -45,6 +45,7 @@ cors = flask.ext.cors.CORS(app, headers=["Content-Type", "Authorization"])
 httpauth = flask.ext.httpauth.HTTPBasicAuth()
 srv = cogs.structs.Server()
 auth = cogs.auth.Auth()
+
 
 ### Logging ###
 
@@ -432,7 +433,7 @@ def process_file_contents(obj_uuid):
     # Serve File Contents
     file_dict = process_object(srv.get_file, obj_uuid, update_stub=None, raw=True)
     file_path = file_dict['path']
-    file_name = os.path.basename(file_dict['name'])
+    file_name = cogs.util.clean_path(os.path.basename(file_dict['name']))
     return flask.send_file(file_path, as_attachment=True, attachment_filename=file_name)
 
 ## Reporter Endpoints ##
