@@ -22,6 +22,7 @@ import config
 import backend_redis as backend
 from backend_redis import BackendError, FactoryError, PersistentObjectError, ObjectDNE
 import testrun
+import util
 
 import repmod_moodle
 import tester_script
@@ -155,6 +156,8 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         name = data.get('name', None)
         if not name:
             name = os.path.basename(src_path)
+        name = util.clean_path(name)
+        name = util.secure_path(name)
         name = os.path.normpath(name)
         if not name:
             raise ValueError("Valid filename required")
@@ -172,7 +175,7 @@ class File(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         fle = super(File, cls).from_new(data, **kwargs)
 
         # Set Path
-        dst_path = os.path.abspath("{:s}/{:s}".format(config.FILESTORAGE_PATH, repr(fle)))
+        dst_path = os.path.abspath(os.path.join(config.FILESTORAGE_PATH, repr(fle)))
         fle['path'] = dst_path
 
         # Save File
