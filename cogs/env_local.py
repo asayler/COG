@@ -16,6 +16,7 @@ import config
 import backend_redis as backend
 import structs
 import env
+import util
 
 _TST_DIR = "test"
 _SUB_DIR = "submission"
@@ -107,11 +108,20 @@ class Env(env.Env):
 
         new_fle = copy.copy(fle)
 
+        # Clean Name
+        dst_name = fle['name']
+        dst_name = util.clean_path(dst_name)
+        dst_name = util.secure_path(dst_name)
+
+        # Clean Dir
+        dst_dir = util.clean_path(dst_dir)
+        dst_dir = util.secure_path(dst_dir)
+
         # Setup Paths
-        src = os.path.abspath("{:s}".format(new_fle['path']))
-        dst = os.path.abspath("{:s}/{:s}".format(dst_dir, fle['name']))
-        dst_dir = os.path.dirname(dst)
-        msg = "envmod_local: Copying '{:s}' to '{:s}'".format(src, dst)
+        src_path = os.path.abspath("{:s}".format(new_fle['path']))
+        dst_path = os.path.abspath(os.path.join(dst_dir, dst_name))
+        dst_dir = os.path.dirname(dst_path)
+        msg = "envmod_local: Copying '{:s}' to '{:s}'".format(src_path, dst_path)
         logger.info(self._format_msg(msg))
 
         # Setup Dst
@@ -119,8 +129,9 @@ class Env(env.Env):
             os.makedirs(dst_dir)
 
         # Copy
-        shutil.copy(src, dst)
-        new_fle['path'] = dst
+        shutil.copy(src_path, dst_path)
+        new_fle['name'] = dst_name
+        new_fle['path'] = dst_path
 
         # Return
         return new_fle
