@@ -1,6 +1,7 @@
 flask
 flask-httpauth
 flask-cors
+hiredis
 redis
 requests[security]
 pyopenssl
