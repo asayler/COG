@@ -46,13 +46,11 @@ $ sudo mkdir /var/log/cog
 $ sudo chown cog:cog /var/log/cog
 $ sudo chmod 2770 /var/log/cog 
 
-$ sudo chown cog:cog /var/log/redis
-$ sudo chmod 2770 /var/log/redis
-
-$ sudo chown cog:cog /var/log/redis
 $ sudo chmod 2770 /var/log/redis
 
 $ sudo chmod 2770 /var/log/apache2/
+
+$ sudo chmod 2770 /home/ubuntu
 
 $ sudo mkdir /srv/@data/files
 $ sudo chown cog:cog /srv/@data/files
