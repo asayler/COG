@@ -101,6 +101,8 @@ group: nogroup
 limit_time_cpu: 30
 limit_time_wall: 60
 
+$ chmod 640 /srv/@cog/COG/cog.conf
+
 # Setup Redis
 
 $ sudo chown -R redis:redis /etc/redis
