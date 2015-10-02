@@ -128,7 +128,7 @@ $ sudo a2enmod ssl
 $ sudo a2enmod wsgi
 $ sudo a2enmod headers
 
-$ sudo emacs /etc/apache/sites-available/000-cog-api.conf
+$ sudo emacs /etc/apache2/sites-available/000-api-cog.conf
 
 <VirtualHost _default_:80>
 
@@ -188,5 +188,5 @@ $ sudo emacs /etc/apache/sites-available/000-cog-api.conf
 </VirtualHost>
 
 $ sudo a2dissite 000-default.conf
-$ sudo a2ensite 000-cog-api.conf
-$ sudo service apach2 restart
+$ sudo a2ensite 000-api-cog.conf
+$ sudo service apache2 restart
