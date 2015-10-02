@@ -63,6 +63,7 @@ $ sudo reboot
 # Note: May need to add deploy key, etc to GitHub
 $ cd /srv/@cog
 $ git clone git@github.com:asayler/COG.git
+$ sudo chmod -R g-w /srv/@cog
 
 $ cd srv/@cog/COG
 $ make git
