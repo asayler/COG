@@ -107,7 +107,7 @@ $ chmod 640 /srv/@cog/COG/cog.conf
 
 $ sudo chown -R redis:redis /etc/redis
 $ sudo chmod 2770 /etc/redis
-$ sudo chmod 440 /etc/redis/*
+$ sudo chmod 640 /etc/redis/*
 
 $ sudo emacs /etc/redis/redis.conf
 
@@ -119,7 +119,7 @@ save 60 10000
 dir /srv/@redis
 requirepass <redis_password>
 
-$ echo "vm.overcommit_memory = 1" | sudo tail /etc/sysctl.conf
+$ echo "vm.overcommit_memory = 1" | sudo tee -a /etc/sysctl.conf
 $ sudo service redis-server restart
 
 # Setup Apache
