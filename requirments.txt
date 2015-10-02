@@ -1,9 +1,7 @@
-flask
-flask-httpauth
-flask-cors
-hiredis
-redis
-requests[security]
-pyopenssl
-ndg-httpsclient
-pyasn1
+flask>=0.10.0,<=0.10.99
+flask-httpauth>=2.7.0,<=2.7.99
+flask-cors>=2.1.0,<=2.1.99
+pyopenssl>=0.15.0,<=0.15.99
+ndg-httpsclient>=0.4.0,<=0.4.99
+pyasn1>=0.1.0,<=0.1.99
+markupsafe>=0.23,<=0.99
