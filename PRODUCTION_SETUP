@@ -17,7 +17,7 @@ $ sudo ufw enable
 
 # Install packages
 
-$ sudo apt-get install git python python-pip redis-server apache2 libapache2-mod-wsgi
+$ sudo apt-get install git python python-dev python-pip redis-server apache2 libapache2-mod-wsgi
 
 # Setup users and groups
 
@@ -39,22 +39,20 @@ $ sudo chown cog:cog /srv/@data
 $ sudo chmod 2770 /srv/@data
 
 $ sudo btrfs subvolume create /srv/@cog
-$ sudo chown cog:cog /srv/@cog
-$ sudo chmod 2770 /srv/@cog
+$ sudo chown ubuntu:cog /srv/@cog
+$ sudo chmod 2750 /srv/@cog
 
 $ sudo mkdir /var/log/cog
 $ sudo chown cog:cog /var/log/cog
 $ sudo chmod 2770 /var/log/cog 
 
-$ sudo chmod 2770 /var/log/redis
-
-$ sudo chmod 2770 /var/log/apache2/
-
-$ sudo chmod 2770 /home/ubuntu
-
 $ sudo mkdir /srv/@data/files
 $ sudo chown cog:cog /srv/@data/files
 $ sudo chmod 2770 /srv/@data/files
+
+$ sudo chmod 2770 /var/log/redis
+$ sudo chmod 2770 /var/log/apache2
+$ sudo chmod 2770 /home/ubuntu
 
 # Reboot
 
