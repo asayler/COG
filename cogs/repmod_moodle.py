@@ -5,7 +5,6 @@
 # Univerity of Colorado
 
 
-import string
 import time
 import logging
 
@@ -16,10 +15,11 @@ import config
 import repmod
 
 
-EXTRA_REPORTER_SCHEMA = ['moodle_asn_id', 'moodle_respect_duedate']
-EXTRA_REPORTER_DEFAULTS = {'moodle_respect_duedate': "1"}
+EXTRA_REPORTER_SCHEMA = ['moodle_asn_id', 'moodle_respect_duedate', 'moodle_only_higher']
+EXTRA_REPORTER_DEFAULTS = {'moodle_respect_duedate': "1", 'moodle_only_higher': "1"}
 
 _MAX_COMMENT_LEN = 2000
+_FLOAT_MARGIN = 0.01
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -82,7 +82,11 @@ class Reporter(repmod.Reporter):
             raise MoodleReporterError(msg)
 
         # Check Due Date
-        if int(self._rpt['moodle_respect_duedate']):
+        if 'moodle_respect_duedate' in self._rpt:
+            respect_duedate = bool(int(self._rpt['moodle_respect_duedate']))
+        else:
+            respect_duedate = bool(int(EXTRA_REPORTER_DEFAULTS['moodle_respect_duedate']))
+        if respect_duedate:
             time_due = None
             courses = self.ws.mod_assign_get_assignments([])["courses"]
             for course in courses:
@@ -110,6 +114,39 @@ class Reporter(repmod.Reporter):
                     logger.warning(self._format_msg(msg))
                     raise MoodleReporterError(msg)
 
+        # Check is grade is higher than current
+        asn_id = self.asn_id
+        usr_id = usr['moodle_id']
+
+        if 'moodle_only_higher' in self._rpt:
+            only_higher = bool(int(self._rpt['moodle_only_higher']))
+        else:
+            only_higher = bool(int(EXTRA_REPORTER_DEFAULTS['moodle_only_higher']))
+        if only_higher:
+            old_grades = self.ws.mod_assign_get_grades([asn_id])["assignments"][0]['grades']
+            old_grades_by_uid = {}
+            for old_grade in old_grades:
+                uid = old_grade["userid"]
+                if uid in old_grades_by_uid:
+                    old_grades_by_uid[uid].append(old_grade)
+                else:
+                    old_grades_by_uid[uid] = [old_grade]
+            if usr_id in old_grades_by_uid:
+                last_grade = None
+                last_num = None
+                for attempt in old_grades_by_uid[usr_id]:
+                    num = int(attempt['attemptnumber'])
+                    if num > last_num:
+                        last_num = num
+                        last_grade = float(attempt['grades'])
+                if grade < last_grade:
+                    msg = "repmod_moodle: "
+                    msg += "Previous grade ({:s}) ".format(last_grade)
+                    msg += "is greater than current grade ({:s}): ".format(grade)
+                    msg += "No grade written to Moodle"
+                    logger.warning(self._format_msg(msg))
+                    raise MoodleReporterError(msg)
+
         # Limit Output
         warning = "\nWARNING: Output Truncated"
         max_len = (_MAX_COMMENT_LEN - len(warning))
@@ -117,8 +154,7 @@ class Reporter(repmod.Reporter):
             comment = comment[:max_len]
             comment += warning
 
-        asn_id = self.asn_id
-        usr_id = usr['moodle_id']
+        # Log Grade
         try:
             self.ws.mod_assign_save_grade(asn_id, usr_id, grade, comment=comment)
         except Exception as e:
