@@ -49,7 +49,7 @@ auth = cogs.auth.Auth()
 
 ### Logging ###
 
-if cogs.config.LOGGING_ENABLED:
+if cogs.config.LOGGING_ENABLED and not app.testing:
 
     import logging
     import logging.handlers
@@ -92,7 +92,8 @@ if cogs.config.LOGGING_ENABLED:
 @httpauth.verify_password
 def verify_login(username, password):
 
-    app.logger.debug("verify_login: username={}".format(username))
+    if not app.testing:
+        app.logger.debug("verify_login: username={}".format(username))
 
     flask.g.user = None
 
@@ -331,8 +332,9 @@ def filter_asns_submitable(asn_list):
                     time_due = float(asn["duedate"])
                 else:
                     time_due = 0
-                    app.logger.warn("Assignment {:s} set to respect duedate, ".format(asn) +
-                                    "but no duedate provided")
+                    if not app.testing:
+                        app.logger.warn("Assignment {:s} set to respect duedate, ".format(asn) +
+                                        "but no duedate provided")
                 time_now = time.time()
                 if (time_now < time_due):
                     asns_submitable.append(asn_uuid)
@@ -360,7 +362,8 @@ def filter_asns_runable(asn_list):
 @app.route("/", methods=['GET'])
 def get_root():
 
-    app.logger.debug("GET ROOT")
+    if not app.testing:
+        app.logger.debug("GET ROOT")
     return app.send_static_file('index.html')
 
 ## Access Control Endpoints ##
@@ -386,7 +389,8 @@ def get_token():
 @auth.requires_auth_route()
 def process_files_get():
 
-    app.logger.debug("LIST FILES")
+    if not app.testing:
+        app.logger.debug("LIST FILES")
     return process_objects(srv.list_files, None, _FILES_KEY, create_stub=None)
 
 @app.route("/files/", methods=['POST'])
@@ -394,7 +398,8 @@ def process_files_get():
 @auth.requires_auth_route()
 def process_files_post():
 
-    app.logger.debug("POST FILES")
+    if not app.testing:
+        app.logger.debug("POST FILES")
 
     files = flask.request.files
     files_extract = []
@@ -604,7 +609,8 @@ def process_run(obj_uuid):
 def not_authorized(error):
     err = { 'status': 401,
             'message': str(error) }
-    app.logger.info("Client Error: UserNotAuthorized: {:s}".format(err))
+    if not app.testing:
+        app.logger.info("Client Error: UserNotAuthorized: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
@@ -613,7 +619,8 @@ def not_authorized(error):
 def not_found(error=False):
     err = { 'status': 404,
             'message': "Not Found: {:s}".format(flask.request.url) }
-    app.logger.info("Client Error: ObjectDNE: {:s}".format(err))
+    if not app.testing:
+        app.logger.info("Client Error: ObjectDNE: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
@@ -622,7 +629,8 @@ def not_found(error=False):
 def bad_key(error):
     err = { 'status': 400,
             'message': "{:s}".format(error) }
-    app.logger.info("Client Error: KeyError: {:s}".format(err))
+    if not app.testing:
+        app.logger.info("Client Error: KeyError: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
@@ -631,7 +639,8 @@ def bad_key(error):
 def bad_value(error):
     err = { 'status': 400,
             'message': "{:s}".format(error) }
-    app.logger.info("Client Error: ValueError: {:s}".format(err))
+    if not app.testing:
+        app.logger.info("Client Error: ValueError: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
@@ -640,7 +649,8 @@ def bad_value(error):
 def bad_type(error):
     err = { 'status': 400,
             'message': "{:s}".format(error) }
-    app.logger.info("Client Error: TypeError: {:s}".format(err))
+    if not app.testing:
+        app.logger.info("Client Error: TypeError: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
@@ -649,7 +659,8 @@ def bad_type(error):
 def bad_request(error=False):
     err = { 'status': 400,
             'message': "Malformed request" }
-    app.logger.info("Client Error: 400: {:s}".format(err))
+    if not app.testing:
+        app.logger.info("Client Error: 400: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
@@ -658,7 +669,8 @@ def bad_request(error=False):
 def not_authorized_401(error=False):
     err = { 'status': 401,
             'message': "Not Authorized" }
-    app.logger.info("Client Error: 401: {:s}".format(err))
+    if not app.testing:
+        app.logger.info("Client Error: 401: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
@@ -667,7 +679,8 @@ def not_authorized_401(error=False):
 def not_found(error=False):
     err = { 'status': 404,
             'message': "Not Found: {:s}".format(flask.request.url) }
-    app.logger.info("Client Error: 404: {:s}".format(err))
+    if not app.testing:
+        app.logger.info("Client Error: 404: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
@@ -676,7 +689,8 @@ def not_found(error=False):
 def bad_method(error=False):
     err = { 'status': 405,
             'message': "Bad Method: {:s} {:s}".format(flask.request.method, flask.request.url) }
-    app.logger.info("Client Error: 405: {:s}".format(err))
+    if not app.testing:
+        app.logger.info("Client Error: 405: {:s}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
