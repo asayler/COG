@@ -22,7 +22,8 @@ DUMMY_TESTDICT = {'key1': "val1",
 USER_TESTDICT = {}
 GROUP_TESTDICT = {'name': "testgroup"}
 FILE_TESTDICT  = {'key': "testfile"}
-REPORTER_TESTDICT  = {'mod': "moodle"}
+REPORTER_TESTDICT  = {'mod': "moodle", "moodle_asn_id": "0",
+                      "moodle_respect_duedate": "0", "moodle_only_higher": "0"}
 ASSIGNMENT_TESTDICT = {'name': "Test_Assignment", 'env': "local"}
 TEST_TESTDICT = {'name': "Test_Assignment",
                  'maxscore': "10",
@@ -34,7 +35,9 @@ RUN_TESTDICT = {}
 TEST_INPUT_PATH = os.path.realpath("{:s}/test_input".format(config.ROOT_PATH))
 TEST_AUTHMOD_MOODLE_STUDENT_USERNAME = None
 TEST_AUTHMOD_MOODLE_STUDENT_PASSWORD = None
-TEST_REPMOD_MOODLE_ASN = "1"
+TEST_REPMOD_MOODLE_ASN_NODUE = "1"
+TEST_REPMOD_MOODLE_ASN_PASTDUE = "2"
+TEST_REPMOD_MOODLE_ASN_HIGHER = "3"
 TEST_ADMIN_AUTHMOD = "test"
 TEST_ADMIN_USERNAME = "testadmin"
 TEST_ADMIN_PASSWORD = "testpassword"
@@ -55,7 +58,7 @@ TEST_REPMOD_MOODLE_SERVICE = TEST_MOODLE_SERVICE
 TEST_REPMOD_MOODLE_USERNAME = None
 TEST_REPMOD_MOODLE_PASSWORD = None
 TEST_ENV_LOCAL_LIMIT_TIME_CPU = "1"
-TEST_ENV_LOCAL_LIMIT_TIME_WALL = "3"
+TEST_ENV_LOCAL_LIMIT_TIME_WALL = "1"
 
 # Get Local Test Env Vars
 TEST_INPUT_PATH = os.environ.get('COGS_TEST_INPUT_PATH', TEST_INPUT_PATH)
@@ -72,7 +75,12 @@ else:
 ADMIN_AUTHMOD = os.environ.get('COGS_TEST_ADMIN_AUTHMOD', TEST_ADMIN_AUTHMOD)
 ADMIN_USERNAME = os.environ.get('COGS_TEST_ADMIN_USERNAME', TEST_ADMIN_USERNAME)
 ADMIN_PASSWORD = os.environ.get('COGS_TEST_ADMIN_PASSWORD', TEST_ADMIN_PASSWORD)
-REPMOD_MOODLE_ASN = os.environ.get('COGS_TEST_REPMOD_MOODLE_ASN', TEST_REPMOD_MOODLE_ASN)
+REPMOD_MOODLE_ASN_NODUE = os.environ.get('COGS_TEST_REPMOD_MOODLE_ASN_NODUE',
+                                         TEST_REPMOD_MOODLE_ASN_NODUE)
+REPMOD_MOODLE_ASN_PASTDUE = os.environ.get('COGS_TEST_REPMOD_MOODLE_ASN_PASTDUE',
+                                           TEST_REPMOD_MOODLE_ASN_PASTDUE)
+REPMOD_MOODLE_ASN_HIGHER = os.environ.get('COGS_TEST_REPMOD_MOODLE_ASN_HIGHER',
+                                          TEST_REPMOD_MOODLE_ASN_HIGHER)
 
 # Get Override Test Env Vars
 REDIS_DB = int(os.environ.get('COGS_TEST_REDIS_DB', TEST_REDIS_DB))

@@ -18,7 +18,7 @@ import test_common_backend
 
 import auth
 import structs
-
+import repmod_moodle
 
 class StructsTestCase(test_common.CogsTestCase):
 
@@ -84,8 +84,6 @@ class ServerTestCase(test_common_backend.SubMixin,
 
     def test_reporters(self):
         data = copy.copy(test_common.REPORTER_TESTDICT)
-        data['mod'] = "moodle"
-        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN
         self.subHashDirectHelper(self.srv.create_reporter,
                                  self.srv.get_reporter,
                                  self.srv.list_reporters,
@@ -237,13 +235,8 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
                        StructsTestCase):
 
     def setUp(self):
-
         super(ReporterTestCase, self).setUp()
-
         self.data = copy.copy(test_common.REPORTER_TESTDICT)
-        self.data['mod'] = "moodle"
-        self.data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN
-
         self.student = self.auth.create_user(test_common.USER_TESTDICT,
                                              username=test_common.AUTHMOD_MOODLE_STUDENT_USERNAME,
                                              password=test_common.AUTHMOD_MOODLE_STUDENT_PASSWORD,
@@ -274,14 +267,84 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
                               self.data,
                               extra_kwargs={'owner': self.testuser})
 
-    def test_file_report(self):
-        grade = (random.randint(0,1000) / 100.0)
-        comments = "Tested via test_file_report on {:s}.".format(time.asctime())
+    def test_file_report_moodle_nodue(self):
+        data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
+        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_NODUE
+        data['moodle_respect_duedate'] = "0"
+        data['moodle_only_higher'] = "0"
+        grade = (random.randint(0, 1000) / 100.0)
+        comments = "Tested via test_file_report_moodle_nodue on {:s}.".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(grade)
-        reporter = self.srv.create_reporter(self.data, owner=self.testuser)
+        reporter = self.srv.create_reporter(data, owner=self.testuser)
         reporter.file_report("FakeRun", self.student, grade, comments)
         reporter.delete()
 
+    def test_file_report_moodle_pastdue(self):
+        data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
+        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_PASTDUE
+        data['moodle_respect_duedate'] = "1"
+        data['moodle_only_higher'] = "0"
+        grade = 5.0
+        comments = "Tested via test_file_report_moodle_pastdue on {:s} (fail).".format(time.asctime())
+        comments += "\nGrade = {:.2f}".format(grade)
+        reporter = self.srv.create_reporter(data, owner=self.testuser)
+        self.assertRaises(repmod_moodle.MoodleReporterError,
+                          reporter.file_report, "FakeRun",
+                          self.student, grade, comments)
+        reporter.delete()
+
+    def test_file_report_moodle_pastdue_ignore(self):
+        data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
+        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_PASTDUE
+        data['moodle_respect_duedate'] = "0"
+        data['moodle_only_higher'] = "0"
+        grade = 5.0
+        comments = "Tested via test_file_report_moodle_pastdue on {:s} (fail).".format(time.asctime())
+        comments += "\nGrade = {:.2f}".format(grade)
+        reporter = self.srv.create_reporter(data, owner=self.testuser)
+        reporter.file_report("FakeRun", self.student, grade, comments)
+        reporter.delete()
+
+    def test_file_report_moodle_higher(self):
+        data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
+        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_HIGHER
+        data['moodle_respect_duedate'] = "0"
+        data['moodle_only_higher'] = "1"
+        grade = 10.0
+        comments = "Tested via test_file_report_moodle_higher on {:s} (pass).".format(time.asctime())
+        comments += "\nGrade = {:.2f}".format(grade)
+        reporter = self.srv.create_reporter(data, owner=self.testuser)
+        reporter.file_report("FakeRun", self.student, grade, comments)
+        grade = 5.0
+        comments = "Tested via test_file_report_moodle_higher on {:s} (fail).".format(time.asctime())
+        comments += "\nGrade = {:.2f}".format(grade)
+        reporter = self.srv.create_reporter(data, owner=self.testuser)
+        self.assertRaises(repmod_moodle.MoodleReporterError,
+                          reporter.file_report, "FakeRun",
+                          self.student, grade, comments)
+        reporter.delete()
+
+    def test_file_report_moodle_higher_ignore(self):
+        data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
+        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_HIGHER
+        data['moodle_respect_duedate'] = "0"
+        data['moodle_only_higher'] = "0"
+        grade = 10.0
+        comments = "Tested via test_file_report_moodle_higher on {:s} (pass).".format(time.asctime())
+        comments += "\nGrade = {:.2f}".format(grade)
+        reporter = self.srv.create_reporter(data, owner=self.testuser)
+        reporter.file_report("FakeRun", self.student, grade, comments)
+        grade = 5.0
+        comments = "Tested via test_file_report_moodle_higher on {:s} (fail).".format(time.asctime())
+        comments += "\nGrade = {:.2f}".format(grade)
+        reporter = self.srv.create_reporter(data, owner=self.testuser)
+        reporter.file_report("FakeRun", self.student, grade, comments)
+        reporter.delete()
 
 class AssignmentTestCase(test_common_backend.UUIDHashMixin,
                          StructsTestCase):
@@ -339,7 +402,7 @@ class TestTestCase(test_common_backend.SubMixin,
         # Create Reporters
         data = copy.copy(test_common.REPORTER_TESTDICT)
         data['mod'] = "moodle"
-        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN
+        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_NODUE
         self.reporters = set([])
         for i in range(10):
             self.reporters.add(str(self.srv.create_reporter(data, owner=self.testuser).uuid))
@@ -1070,7 +1133,7 @@ class RunTestCaseBase(StructsTestCase):
         # Setup Reporter
         data = copy.copy(test_common.REPORTER_TESTDICT)
         data['mod'] = "moodle"
-        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN
+        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_NODUE
         self.rpt_moodle = self.srv.create_reporter(data, owner=self.admin)
 
         # Create Submission User
