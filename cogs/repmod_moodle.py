@@ -81,6 +81,10 @@ class Reporter(repmod.Reporter):
             logger.error(self._format_msg(msg))
             raise MoodleReporterError(msg)
 
+        # Extract Vars
+        asn_id = int(self.asn_id)
+        usr_id = int(usr['moodle_id'])
+
         # Check Due Date
         if 'moodle_respect_duedate' in self._rpt:
             respect_duedate = bool(int(self._rpt['moodle_respect_duedate']))
@@ -92,14 +96,14 @@ class Reporter(repmod.Reporter):
             for course in courses:
                 assignments = course["assignments"]
                 for assignment in assignments:
-                    if (int(assignment["id"]) == int(self.asn_id)):
+                    if (int(assignment["id"]) == int(asn_id)):
                         time_due = float(assignment["duedate"])
                     if time_due is not None:
                         break
                 if time_due is not None:
                     break
             if time_due is None:
-                msg = "repmod_moodle: Could not find assignment {:s}".format(self.asn_id)
+                msg = "repmod_moodle: Could not find assignment {:d}".format(asn_id)
                 logger.error(self._format_msg(msg))
                 raise MoodleReporterError(msg)
             if time_due > 0:
@@ -115,37 +119,37 @@ class Reporter(repmod.Reporter):
                     raise MoodleReporterError(msg)
 
         # Check is grade is higher than current
-        asn_id = self.asn_id
-        usr_id = usr['moodle_id']
-
         if 'moodle_only_higher' in self._rpt:
             only_higher = bool(int(self._rpt['moodle_only_higher']))
         else:
             only_higher = bool(int(EXTRA_REPORTER_DEFAULTS['moodle_only_higher']))
         if only_higher:
-            old_grades = self.ws.mod_assign_get_grades([asn_id])["assignments"][0]['grades']
-            old_grades_by_uid = {}
-            for old_grade in old_grades:
-                uid = old_grade["userid"]
-                if uid in old_grades_by_uid:
-                    old_grades_by_uid[uid].append(old_grade)
-                else:
-                    old_grades_by_uid[uid] = [old_grade]
-            if usr_id in old_grades_by_uid:
-                last_grade = None
-                last_num = None
-                for attempt in old_grades_by_uid[usr_id]:
-                    num = int(attempt['attemptnumber'])
-                    if num > last_num:
-                        last_num = num
-                        last_grade = float(attempt['grades'])
-                if grade < last_grade:
-                    msg = "repmod_moodle: "
-                    msg += "Previous grade ({:s}) ".format(last_grade)
-                    msg += "is greater than current grade ({:s}): ".format(grade)
-                    msg += "No grade written to Moodle"
-                    logger.warning(self._format_msg(msg))
-                    raise MoodleReporterError(msg)
+            assignments = self.ws.mod_assign_get_grades([asn_id])["assignments"]
+            if len(assignments):
+                assignment = assignments.pop()
+                old_grades = assignment['grades']
+                old_grades_by_uid = {}
+                for old_grade in old_grades:
+                    uid = int(old_grade["userid"])
+                    if uid in old_grades_by_uid:
+                        old_grades_by_uid[uid].append(old_grade)
+                    else:
+                        old_grades_by_uid[uid] = [old_grade]
+                if usr_id in old_grades_by_uid:
+                    last_grade = None
+                    last_num = None
+                    for attempt in old_grades_by_uid[usr_id]:
+                        num = int(attempt['attemptnumber'])
+                        if num > last_num:
+                            last_num = num
+                            last_grade = float(attempt['grade'])
+                    if grade < last_grade:
+                        msg = "repmod_moodle: "
+                        msg += "Previous grade ({:.2f}) ".format(last_grade)
+                        msg += "is greater than current grade ({:.2f}): ".format(grade)
+                        msg += "No grade written to Moodle"
+                        logger.warning(self._format_msg(msg))
+                        raise MoodleReporterError(msg)
 
         # Limit Output
         warning = "\nWARNING: Output Truncated"
