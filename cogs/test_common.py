@@ -8,6 +8,8 @@
 
 import os
 import unittest
+import logging
+import logging.handlers
 
 import redis
 
@@ -120,12 +122,21 @@ os.environ['COGS_ENV_LOCAL_LIMIT_TIME_WALL'] = TEST_ENV_LOCAL_LIMIT_TIME_WALL
 
 reload(config)
 
+# Setup Logging
+loggers = [logging.getLogger('cogs')]
+formatter_line = logging.Formatter('\n%(levelname)s: %(module)s - %(message)s')
+handler_stream = logging.StreamHandler()
+handler_stream.setFormatter(formatter_line)
+handler_stream.setLevel(logging.WARNING)
+for logger in loggers:
+    logger.setLevel(logging.WARNING)
+    logger.addHandler(handler_stream)
+
 # Create DB
 db = redis.StrictRedis(host=config.REDIS_HOST,
                        port=config.REDIS_PORT,
                        db=config.REDIS_DB,
                        password=config.REDIS_PASSWORD)
-
 
 class CogsTestError(Exception):
     """Base class for Cogs Test Exceptions"""

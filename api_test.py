@@ -15,11 +15,29 @@ import os
 import time
 import zipfile
 import shutil
+import logging
+import logging.handlers
 
 import cogs.test_common
 
 import api
 
+
+def setUpModule():
+
+    # Set App to Testing Mode
+    api.app.testing = True
+    api.app.debug = True
+
+    # Logging
+    loggers = [api.app.logger]
+    formatter_line = logging.Formatter('\n%(levelname)s: %(module)s - %(message)s')
+    handler_stream = logging.StreamHandler()
+    handler_stream.setFormatter(formatter_line)
+    handler_stream.setLevel(logging.WARNING)
+    for logger in loggers:
+        logger.setLevel(logging.WARNING)
+        logger.addHandler(handler_stream)
 
 class CogsApiTestCase(cogs.test_common.CogsTestCase):
 
@@ -27,10 +45,6 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
 
         # Call Parent
         super(CogsApiTestCase, self).setUp()
-
-        # Set App to Testing Mode
-        api.app.testing = True
-        api.app.debug = True
 
         # Create Test Client
         self.app = api.app.test_client()
