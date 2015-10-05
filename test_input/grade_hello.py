@@ -3,6 +3,7 @@
 import sys
 import subprocess
 import os
+import shutil
 
 SUB_NAMES = ["hello.py", "hello"]
 
@@ -11,6 +12,7 @@ def grade(argv):
     # Extract Paths from Args
     sub_dir = os.path.abspath(argv[0])
     tst_dir = os.path.abspath(argv[1])
+    tmp_dir = os.path.abspath(argv[2])
 
     # Check Paths
     if not os.path.exists(sub_dir):
@@ -23,18 +25,20 @@ def grade(argv):
     # Find submission
     found = False
     for sub_name in SUB_NAMES:
-        sub_path = os.path.abspath("{:s}/{:s}".format(sub_dir, sub_name))
-        if os.path.exists(sub_path):
+        orig_sub_path = os.path.abspath("{:s}/{:s}".format(sub_dir, sub_name))
+        if os.path.exists(orig_sub_path):
             found = True
             break
     if not found:
         sys.stderr.write("Could not find submission: '{:s}'\n".format(SUB_NAMES))
-        sys.stderr.write("Does yoru program have a valid name?\n")
+        sys.stderr.write("Does your program have a valid name?\n")
         sys.stdout.write("{:2d}\n".format(0))
         return 0
 
     # Prep Submission
-    os.chmod(sub_path, 0775)
+    tmp_sub_path = os.path.abspath("{:s}/{:s}".format(tmp_dir, sub_name))
+    shutil.copy(orig_sub_path, tmp_sub_path)
+    os.chmod(tmp_sub_path, 0775)
 
     # Grade
     sys.stderr.write("Grading {:s}\n".format(sub_name))
@@ -42,7 +46,7 @@ def grade(argv):
 
     score = 0
     try:
-        p = subprocess.Popen([sub_path],
+        p = subprocess.Popen([tmp_sub_path],
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
         ret = p.returncode
@@ -73,7 +77,7 @@ def grade(argv):
 
     else:
 
-        # Submission Returend Error
+        # Submission Returned Error
         sys.stderr.write("{:s} returned error: {:d} +0\n".format(sub_name, ret))
         sys.stderr.write(str(stderr))
 
