@@ -86,7 +86,7 @@ class Reporter(repmod.Reporter):
         usr_id = int(usr['moodle_id'])
 
         # Check Due Date
-        if 'moodle_respect_duedate' in self._rpt:
+        if 'moodle_respect_duedate' in self._rpt and self._rpt['moodle_respect_duedate']:
             respect_duedate = bool(int(self._rpt['moodle_respect_duedate']))
         else:
             respect_duedate = bool(int(EXTRA_REPORTER_DEFAULTS['moodle_respect_duedate']))
@@ -119,7 +119,7 @@ class Reporter(repmod.Reporter):
                     raise MoodleReporterError(msg)
 
         # Check is grade is higher than current
-        if 'moodle_only_higher' in self._rpt:
+        if 'moodle_only_higher' in self._rpt and self._rpt['moodle_only_higher']:
             only_higher = bool(int(self._rpt['moodle_only_higher']))
         else:
             only_higher = bool(int(EXTRA_REPORTER_DEFAULTS['moodle_only_higher']))
