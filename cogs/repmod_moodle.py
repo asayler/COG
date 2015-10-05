@@ -84,6 +84,7 @@ class Reporter(repmod.Reporter):
         # Extract Vars
         asn_id = int(self.asn_id)
         usr_id = int(usr['moodle_id'])
+        grade = float(grade)
 
         # Check Due Date
         if 'moodle_respect_duedate' in self._rpt and self._rpt['moodle_respect_duedate']:
@@ -143,10 +144,10 @@ class Reporter(repmod.Reporter):
                         if num > last_num:
                             last_num = num
                             last_grade = float(attempt['grade'])
-                    if grade < last_grade:
+                    if float(grade) < float(last_grade):
                         msg = "repmod_moodle: "
-                        msg += "Previous grade ({:.2f}) ".format(last_grade)
-                        msg += "is greater than current grade ({:.2f}): ".format(grade)
+                        msg += "Previous grade ({:.2f}) ".format(float(last_grade))
+                        msg += "is greater than current grade ({:.2f}): ".format(float(grade))
                         msg += "No grade written to Moodle"
                         logger.warning(self._format_msg(msg))
                         raise MoodleReporterError(msg)
