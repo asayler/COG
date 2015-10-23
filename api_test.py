@@ -431,10 +431,12 @@ class CogsApiRootTestCase(CogsApiTestCase):
         self.assertTrue(res.data)
 
 ## Auth Tests ##
-class CogsApiAuthTestCase(CogsApiTestCase):
+class CogsApiAuthTestCase(CogsApiObjectHelpers, CogsApiTestCase):
 
     def setUp(self):
         super(CogsApiAuthTestCase, self).setUp()
+        self.user_url = "/users/"
+        self.user_key = "users"
 
     def tearDown(self):
         super(CogsApiAuthTestCase, self).tearDown()
@@ -448,6 +450,15 @@ class CogsApiAuthTestCase(CogsApiTestCase):
         self.assertEqual(len(res_keys), 1)
         token = res_obj['token']
         self.assertEqual(token, self.admin['token'])
+
+    def test_user_list(self):
+        usr_set = self.lst_objects(self.user_url, self.user_key, user=self.admin)
+        self.assertEqual(len(usr_set), 1)
+        self.assertTrue(self.admin_uuid in usr_set)
+
+    def test_user_get(self):
+        usr_obj = self.get_object(self.user_url, self.admin_uuid, user=self.admin)
+        self.assertEqual(usr_obj, self.admin.get_dict())
 
 ## File Tests ##
 class CogsApiFileTestCase(CogsApiObjectTests, CogsApiTestCase):

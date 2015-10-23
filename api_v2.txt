@@ -4,6 +4,9 @@ GET     /                                               Welcome Message
 
 GET     /tokens/                                        Get User Auth Token
 
+GET     /users/                                         List Users
+GET     /users/<ID>/                                    Show User
+
 GET     /files/                                         List All Files
 POST    /files/                                         Create New File
 GET     /files/<ID>/                                    Show File Info
@@ -60,9 +63,7 @@ GET     */allow/<method>/                               List Allowed Groups (Spe
 PUT     */allow/<method>/                               Add Allowed Groups (Specify Method)
 DELETE  */allow/<method>/                               Remove Allowed Groups (Specify Method)
 
-GET     /users/                                         List Users
 POST    /users/                                         Create New User
-GET     /users/<ID>/                                    Show User
 PUT     /users/<ID>/                                    Update User
 DELETE  /users/<ID>/                                    Delete User
 

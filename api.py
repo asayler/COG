@@ -28,6 +28,7 @@ import cogs.util
 
 ### Constants ###
 
+_USERS_KEY = "users"
 _FILES_KEY = "files"
 _REPORTERS_KEY = "reporters"
 _ASSIGNMENTS_KEY = "assignments"
@@ -377,7 +378,17 @@ def get_token():
     out = {str(_TOKEN_KEY): str(token)}
     return flask.jsonify(out)
 
-# ToDo: User and Group Control
+@app.route("/users/", methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def get_users():
+    return process_objects(auth.list_users, None, _USERS_KEY)
+
+@app.route("/users/<obj_uuid>/", methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_user(obj_uuid):
+    return process_object(auth.get_user, obj_uuid)
 
 ## File Endpoints ##
 
