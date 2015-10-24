@@ -208,7 +208,7 @@ class Env(env.Env):
                 logger.warning(self._format_msg(msg))
 
         # Delete User-Generated Files and Directories
-        self.run_cmd(['rm', '-rf',  self.wd])
+        self.run_cmd(['rm', '-rf',  self.wd_wrk])
 
         # Delete All Other Files and Directories
         try:
