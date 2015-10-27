@@ -382,7 +382,7 @@ def get_token():
 @app.route("/users/", methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
-def get_users():
+def list_users():
     return process_objects(auth.list_users, None, _USERS_KEY)
 
 @app.route("/users/<obj_uuid>/", methods=['GET'])
