@@ -6,6 +6,7 @@ GET     /tokens/                                        Get User Auth Token
 
 GET     /users/                                         List Users
 GET     /users/<ID>/                                    Show User
+GET     /admins/                                        List Admins
 
 GET     /files/                                         List All Files
 POST    /files/                                         Create New File
@@ -55,23 +56,3 @@ POST    /submissions/<ID>/runs/                         Execute New Test Run
 GET     /runs/                                          List All Test Runs
 GET     /runs/<ID>/                                     Show Test Run Results
 DELETE  /runs/<ID>/                                     Delete Test Run Results
-
-
-### In Progress ###
-
-GET     */allow/<method>/                               List Allowed Groups (Specify Method)
-PUT     */allow/<method>/                               Add Allowed Groups (Specify Method)
-DELETE  */allow/<method>/                               Remove Allowed Groups (Specify Method)
-
-POST    /users/                                         Create New User
-PUT     /users/<ID>/                                    Update User
-DELETE  /users/<ID>/                                    Delete User
-
-GET     /groups/                                        List Groups
-POST    /groups/                                        Create New Group
-GET     /groups/<ID>/                                   Show Group
-PUT     /groups/<ID>/                                   Update Group
-DELETE  /groups/<ID>/                                   Delete Group
-GET     /groups/<ID>/members/                           List Group Members
-PUT     /groups/<ID>/members/                           Add Group Members
-DELETE  /groups/<ID>/members/                           Remove Group Members

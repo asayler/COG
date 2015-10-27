@@ -29,6 +29,7 @@ import cogs.util
 ### Constants ###
 
 _USERS_KEY = "users"
+_ADMINS_KEY = "admins"
 _FILES_KEY = "files"
 _REPORTERS_KEY = "reporters"
 _ASSIGNMENTS_KEY = "assignments"
@@ -389,6 +390,12 @@ def get_users():
 @auth.requires_auth_route()
 def process_user(obj_uuid):
     return process_object(auth.get_user, obj_uuid)
+
+@app.route("/admins/", methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def process_admins():
+    return process_uuid_list(auth.list_admins, None, None, _ADMINS_KEY)
 
 ## File Endpoints ##
 
