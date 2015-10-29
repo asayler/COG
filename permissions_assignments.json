@@ -1,7 +1,7 @@
-{"groups":
- {"ANY": [
-     {"ep": "/",             "method": "GET" },
-     {"ep": "/tests/",       "method": "GET" },
-     {"ep": "/submissions/", "method": "POST"}
- ]}
-}
+{"groups": {
+    "ANY": [
+        {"ep": "/",             "method": "GET" },
+        {"ep": "/tests/",       "method": "GET" },
+        {"ep": "/submissions/", "method": "POST"}
+    ]
+}}

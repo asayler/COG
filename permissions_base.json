@@ -1,9 +1,9 @@
-{"groups":
- {"ANY": [
-     {"ep": "/tokens/",                 "method": "GET" },
-     {"ep": "/assignments/",            "method": "GET" },
-     {"ep": "/assignments/submitable/", "method": "GET" },
-     {"ep": "/assignments/runable/",    "method": "GET" },
-     {"ep": "/files/",                  "method": "POST"}
- ]}
-}
+{"groups": {
+    "ANY": [
+        {"ep": "/tokens/",                 "method": "GET" },
+        {"ep": "/assignments/",            "method": "GET" },
+        {"ep": "/assignments/submitable/", "method": "GET" },
+        {"ep": "/assignments/runable/",    "method": "GET" },
+        {"ep": "/files/",                  "method": "POST"}
+    ]
+}}
