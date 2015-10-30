@@ -84,12 +84,10 @@ if cogs.config.LOGGING_ENABLED and not app.testing:
     for logger in loggers:
         if app.debug:
             logger.setLevel(logging.DEBUG)
+        else:
+            logger.setLevel(logging.INFO)
         logger.addHandler(handler_stream)
         logger.addHandler(handler_file)
-
-
-### Startup ###
-app.logger.info("Starting COG API")
 
 ### Functions ###
 
