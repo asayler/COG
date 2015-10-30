@@ -25,7 +25,7 @@ import cogs.auth
 import cogs.structs
 import cogs.util
 
-import parse_perms
+import perms
 
 ### Constants ###
 
@@ -48,7 +48,6 @@ cors = flask.ext.cors.CORS(app, headers=["Content-Type", "Authorization"])
 httpauth = flask.ext.httpauth.HTTPBasicAuth()
 srv = cogs.structs.Server()
 auth = cogs.auth.Auth()
-
 
 ### Logging ###
 
@@ -473,11 +472,20 @@ def process_reporter(obj_uuid):
 
 ## Assignment Endpoints ##
 
-@app.route("/assignments/", methods=['GET', 'POST'])
+@app.route("/{}/".format(_ASSIGNMENTS_KEY), methods=['GET', 'POST'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_assignments():
-    return process_objects(srv.list_assignments, srv.create_assignment, _ASSIGNMENTS_KEY)
+    uid_lst = process_objects(srv.list_assignments, srv.create_assignment,
+                              _ASSIGNMENTS_KEY, raw=True)
+    if flask.request.method == 'POST':
+        perms_file_name = "{}.json".format(_ASSIGNMENTS_KEY)
+        perms_file_path = os.path.join(cogs.config.PERMS_PATH, perms_file_name)
+        for uid in uid_lst:
+            ep_base = perms.ep_join(flask.request.url_rule.rule, uid)
+            perms.set_perms_from_file(perms_file_path)
+    out = {_ASSIGNMENTS_KEY: uid_lst}
+    return flask.jsonify(out)
 
 @app.route("/assignments/submitable/", methods=['GET'])
 @httpauth.login_required
