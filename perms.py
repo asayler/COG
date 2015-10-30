@@ -61,7 +61,7 @@ def parse_file(path, ep_base=None):
     # Clean Args
     path = os.path.abspath(path)
     if ep_base:
-        ep_base = os.path.normpath(ep_base)
+        ep_base = ep_norm(ep_base)
 
     # Read file
     js = None
