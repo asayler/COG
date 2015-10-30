@@ -14,6 +14,8 @@ SEC_REDIS = "redis"
 config.add_section(SEC_REDIS)
 SEC_FILESTORAGE = "filestorage"
 config.add_section(SEC_FILESTORAGE)
+SEC_PERMS = "permissions"
+config.add_section(SEC_PERMS)
 SEC_LOGGING = "logging"
 config.add_section(SEC_LOGGING)
 SEC_REPMOD_MOODLE = "repmod_moodle"
@@ -35,6 +37,7 @@ config.set(SEC_REDIS, 'PORT', "6379")
 config.set(SEC_REDIS, 'DB', "4")
 config.set(SEC_REDIS, 'PASSWORD', None)
 config.set(SEC_FILESTORAGE, 'PATH', "{:s}/files".format(ROOT_PATH))
+config.set(SEC_PERMS, 'PATH', "{:s}/perms".format(ROOT_PATH))
 config.set(SEC_LOGGING, 'ENABLED', "True")
 config.set(SEC_LOGGING, 'PATH', "{:s}/logs".format(ROOT_PATH))
 config.set(SEC_AUTHMOD_MOODLE, 'HOST', None)
@@ -63,6 +66,8 @@ REDIS_DB = int(os.environ.get('COGS_REDIS_DB', config.get(SEC_REDIS, 'DB')))
 REDIS_PASSWORD = os.environ.get('COGS_REDIS_PASSWORD', config.get(SEC_REDIS, 'PASSWORD'))
 FILESTORAGE_PATH = os.environ.get('COGS_FILESTORAGE_PATH', config.get(SEC_FILESTORAGE, 'PATH'))
 FILESTORAGE_PATH = os.path.realpath(FILESTORAGE_PATH)
+PERMS_PATH = os.environ.get('COGS_PERMS_PATH', config.get(SEC_PERMS, 'PATH'))
+PERMS_PATH = os.path.realpath(PERMS_PATH)
 ARCHIVE_PATH = os.path.realpath(DEFAULT_ARCHIVE_PATH)
 UPLOAD_PATH = os.path.realpath(DEFAULT_UPLOAD_PATH)
 LOGGING_ENABLED = os.environ.get('COGS_LOGGING_ENABLED', config.get(SEC_LOGGING, 'ENABLED'))
