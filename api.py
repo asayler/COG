@@ -25,6 +25,7 @@ import cogs.auth
 import cogs.structs
 import cogs.util
 
+import parse_perms
 
 ### Constants ###
 
@@ -56,7 +57,7 @@ if cogs.config.LOGGING_ENABLED and not app.testing:
     import logging
     import logging.handlers
 
-    loggers = [app.logger, logging.getLogger('cogs')]
+    loggers = [app.logger, parse_perms.logger, logging.getLogger('cogs')]
 
     formatter_line = logging.Formatter('%(levelname)s: %(module)s - %(message)s')
     formatter_line_time = logging.Formatter('%(asctime)s %(levelname)s: %(module)s - %(message)s')
@@ -86,6 +87,9 @@ if cogs.config.LOGGING_ENABLED and not app.testing:
         logger.addHandler(handler_stream)
         logger.addHandler(handler_file)
 
+
+### Startup ###
+app.logger.info("Starting COG API")
 
 ### Functions ###
 
