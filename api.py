@@ -224,8 +224,8 @@ def update_stub_json(obj):
     obj_dict = obj.get_dict()
     return obj_dict
 
-def process_objects(func_list, func_create, key,
-                    func_filter=None, create_stub=create_stub_json, raw=False, **kwargs):
+def process_objects(func_list, func_create,
+                    func_filter=None, create_stub=create_stub_json, **kwargs):
 
     # List Objects
     if flask.request.method == 'GET':
@@ -244,11 +244,7 @@ def process_objects(func_list, func_create, key,
         obj_lst = func_filter(obj_lst)
 
     # Return Object List
-    if raw:
-        return obj_lst
-    else:
-        out = {key: obj_lst}
-        return flask.jsonify(out)
+    return obj_lst
 
 def process_object(func_get, obj_uuid, update_stub=update_stub_json, raw=False):
 
@@ -394,7 +390,9 @@ def get_token():
 @httpauth.login_required
 @auth.requires_auth_route()
 def list_users():
-    return process_objects(auth.list_users, None, _USERS_KEY)
+    uid_lst = process_objects(auth.list_users, None)
+    out = {_USERS_KEY: uid_lst}
+    return flask.jsonify(out)
 
 @app.route("/{}/<obj_uuid>/".format(_USERS_KEY), methods=['GET'])
 @httpauth.login_required
@@ -416,7 +414,9 @@ def process_admins():
 def process_files_get():
 
     app.logger.debug("LIST FILES")
-    return process_objects(srv.list_files, None, _FILES_KEY, create_stub=None)
+    uid_lst = process_objects(srv.list_files, None, create_stub=None)
+    out = {_FILES_KEY: uid_lst}
+    return flask.jsonify(out)
 
 @app.route("/{}/".format(_FILES_KEY), methods=['POST'])
 @httpauth.login_required
@@ -437,11 +437,11 @@ def process_files_post():
 
     uid_lst = []
     if files_extract:
-        uid_lst += process_objects(None, srv.create_files, _FILES_KEY,
-                                   create_stub=create_stub_files, raw=True, files=files_extract)
+        uid_lst += process_objects(None, srv.create_files,
+                                   create_stub=create_stub_files, files=files_extract)
     if files_direct:
-        uid_lst += process_objects(None, srv.create_file, _FILES_KEY,
-                                   create_stub=create_stub_file, raw=True, files=files_direct)
+        uid_lst += process_objects(None, srv.create_file,
+                                   create_stub=create_stub_file, files=files_direct)
 
     if flask.request.method == 'POST':
         create_perms(uid_lst, _FILES_KEY)
@@ -473,8 +473,7 @@ def process_file_contents(obj_uuid):
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_reporters():
-    uid_lst = process_objects(srv.list_reporters, srv.create_reporter,
-                              _REPORTERS_KEY, raw=True)
+    uid_lst = process_objects(srv.list_reporters, srv.create_reporter)
     if flask.request.method == 'POST':
         create_perms(uid_lst, _REPORTERS_KEY)
     out = {_REPORTERS_KEY: uid_lst}
@@ -493,8 +492,7 @@ def process_reporter(obj_uuid):
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_assignments():
-    uid_lst = process_objects(srv.list_assignments, srv.create_assignment,
-                              _ASSIGNMENTS_KEY, raw=True)
+    uid_lst = process_objects(srv.list_assignments, srv.create_assignment)
     if flask.request.method == 'POST':
         create_perms(uid_lst, _ASSIGNMENTS_KEY)
     out = {_ASSIGNMENTS_KEY: uid_lst}
@@ -504,15 +502,19 @@ def process_assignments():
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_assignments_submitable():
-    return process_objects(srv.list_assignments, None, _ASSIGNMENTS_KEY,
-                           func_filter=filter_asns_submitable, create_stub=None)
+    uid_lst = process_objects(srv.list_assignments, None,
+                              func_filter=filter_asns_submitable)
+    out = {_ASSIGNMENTS_KEY: uid_lst}
+    return flask.jsonify(out)
 
 @app.route("/{}/runable/".format(_ASSIGNMENTS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_assignments_runable():
-    return process_objects(srv.list_assignments, None, _ASSIGNMENTS_KEY,
-                           func_filter=filter_asns_runable, create_stub=None)
+    uid_lst = process_objects(srv.list_assignments, None,
+                              func_filter=filter_asns_runable)
+    out = {_ASSIGNMENTS_KEY: uid_lst}
+    return flask.jsonify(out)
 
 @app.route("/{}/<obj_uuid>/".format(_ASSIGNMENTS_KEY), methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
@@ -531,8 +533,7 @@ def process_assignment_tests(obj_uuid):
     asn = srv.get_assignment(obj_uuid)
 
     # Process Tests
-    uid_lst = process_objects(asn.list_tests, asn.create_test,
-                              _TESTS_KEY, raw=True)
+    uid_lst = process_objects(asn.list_tests, asn.create_test)
     if flask.request.method == 'POST':
         create_perms(uid_lst, _TESTS_KEY)
     out = {_TESTS_KEY: uid_lst}
@@ -548,8 +549,7 @@ def process_assignment_submissions(obj_uuid):
     asn = srv.get_assignment(obj_uuid)
 
     # Process Submissions
-    uid_lst = process_objects(asn.list_submissions, asn.create_submission,
-                              _SUBMISSIONS_KEY, raw=True)
+    uid_lst = process_objects(asn.list_submissions, asn.create_submission)
     if flask.request.method == 'POST':
         create_perms(uid_lst, _SUBMISSIONS_KEY)
     out = {_SUBMISSIONS_KEY: uid_lst}
@@ -561,7 +561,9 @@ def process_assignment_submissions(obj_uuid):
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_tests():
-    return process_objects(srv.list_tests, None, _TESTS_KEY)
+    uid_lst = process_objects(srv.list_tests, None)
+    out = {_TESTS_KEY: uid_lst}
+    return flask.jsonify(out)
 
 @app.route("/{}/<obj_uuid>/".format(_TESTS_KEY), methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
@@ -600,7 +602,9 @@ def process_test_reporters(obj_uuid):
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_submissions():
-    return process_objects(srv.list_submissions, None, _SUBMISSIONS_KEY)
+    uid_lst = process_objects(srv.list_submissions, None)
+    out = {_SUBMISSIONS_KEY: uid_lst}
+    return flask.jsonify(out)
 
 @app.route("/{}/<obj_uuid>/".format(_SUBMISSIONS_KEY), methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
@@ -631,7 +635,7 @@ def process_submission_runs(obj_uuid):
     sub = srv.get_submission(obj_uuid)
 
     # Process Runs
-    uid_lst = process_objects(sub.list_runs, sub.execute_run, _RUNS_KEY, raw=True)
+    uid_lst = process_objects(sub.list_runs, sub.execute_run)
     if flask.request.method == 'POST':
         create_perms(uid_lst, _RUNS_KEY)
     out = {_RUNS_KEY: uid_lst}
@@ -643,7 +647,9 @@ def process_submission_runs(obj_uuid):
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_runs():
-    return process_objects(srv.list_runs, None, _RUNS_KEY)
+    uid_lst = process_objects(srv.list_runs, None)
+    out = {_RUNS_KEY: uid_lst}
+    return flask.jsonify(out)
 
 @app.route("/{}/<obj_uuid>/".format(_RUNS_KEY), methods=['GET', 'DELETE'])
 @httpauth.login_required
