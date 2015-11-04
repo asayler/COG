@@ -488,28 +488,28 @@ def process_assignments():
     out = {_ASSIGNMENTS_KEY: uid_lst}
     return flask.jsonify(out)
 
-@app.route("/assignments/submitable/", methods=['GET'])
+@app.route("/{}/submitable/".format(_ASSIGNMENTS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_assignments_submitable():
     return process_objects(srv.list_assignments, None, _ASSIGNMENTS_KEY,
                            func_filter=filter_asns_submitable, create_stub=None)
 
-@app.route("/assignments/runable/", methods=['GET'])
+@app.route("/{}/runable/".format(_ASSIGNMENTS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_assignments_runable():
     return process_objects(srv.list_assignments, None, _ASSIGNMENTS_KEY,
                            func_filter=filter_asns_runable, create_stub=None)
 
-@app.route("/assignments/<obj_uuid>/", methods=['GET', 'PUT', 'DELETE'])
+@app.route("/{}/<obj_uuid>/".format(_ASSIGNMENTS_KEY), methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
 @get_owner(srv.get_assignment)
 @auth.requires_auth_route()
 def process_assignment(obj_uuid):
     return process_object(srv.get_assignment, obj_uuid)
 
-@app.route("/assignments/<obj_uuid>/tests/", methods=['GET', 'POST'])
+@app.route("/{}/<obj_uuid>/tests/".format(_ASSIGNMENTS_KEY), methods=['GET', 'POST'])
 @httpauth.login_required
 @get_owner(srv.get_assignment)
 @auth.requires_auth_route()
@@ -521,7 +521,7 @@ def process_assignment_tests(obj_uuid):
     # Process Tests
     return process_objects(asn.list_tests, asn.create_test, _TESTS_KEY)
 
-@app.route("/assignments/<obj_uuid>/submissions/", methods=['GET', 'POST'])
+@app.route("/{}/<obj_uuid>/submissions/".format(_ASSIGNMENTS_KEY), methods=['GET', 'POST'])
 @httpauth.login_required
 @get_owner(srv.get_assignment)
 @auth.requires_auth_route()
