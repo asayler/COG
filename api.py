@@ -355,6 +355,14 @@ def filter_asns_runable(asn_list):
 
     return asns_runable
 
+def create_perms(uid_lst, key):
+
+    perms_file_name = "{}.json".format(key)
+    perms_file_path = os.path.join(cogs.config.PERMS_PATH, perms_file_name)
+    if os.path.isfile(perms_filepath):
+        for uid in uid_lst:
+            ep_base = perms.ep_join(flask.request.url_rule.rule, uid)
+            perms.set_perms_from_file(perms_file_path)
 
 ### Endpoints ###
 
@@ -457,13 +465,18 @@ def process_file_contents(obj_uuid):
 
 ## Reporter Endpoints ##
 
-@app.route("/reporters/", methods=['GET', 'POST'])
+@app.route("/{}/".format(_REPORTERS_KEY), methods=['GET', 'POST'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_reporters():
-    return process_objects(srv.list_reporters, srv.create_reporter, _REPORTERS_KEY)
+    uid_lst = process_objects(srv.list_reporters, srv.create_reporter,
+                              _REPORTERS_KEY, raw=True)
+    if flask.request.method == 'POST':
+        create_perms(uid_lst, _REPORTERS_KEY)
+    out = {_REPORTERS_KEY: uid_lst}
+    return flask.jsonify(out)
 
-@app.route("/reporters/<obj_uuid>/", methods=['GET', 'PUT', 'DELETE'])
+@app.route("/{}/<obj_uuid>/".format(_REPORTERS_KEY), methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
 @get_owner(srv.get_reporter)
 @auth.requires_auth_route()
@@ -479,12 +492,7 @@ def process_assignments():
     uid_lst = process_objects(srv.list_assignments, srv.create_assignment,
                               _ASSIGNMENTS_KEY, raw=True)
     if flask.request.method == 'POST':
-        perms_file_name = "{}.json".format(_ASSIGNMENTS_KEY)
-        perms_file_path = os.path.join(cogs.config.PERMS_PATH, perms_file_name)
-        if os.path.isfile(perms_filepath):
-            for uid in uid_lst:
-                ep_base = perms.ep_join(flask.request.url_rule.rule, uid)
-                perms.set_perms_from_file(perms_file_path)
+        create_perms(uid_lst, _ASSIGNMENTS_KEY)
     out = {_ASSIGNMENTS_KEY: uid_lst}
     return flask.jsonify(out)
 
