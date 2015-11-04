@@ -631,7 +631,11 @@ def process_submission_runs(obj_uuid):
     sub = srv.get_submission(obj_uuid)
 
     # Process Runs
-    return process_objects(sub.list_runs, sub.execute_run, _RUNS_KEY)
+    uid_lst = process_objects(sub.list_runs, sub.execute_run, _RUNS_KEY, raw=True)
+    if flask.request.method == 'POST':
+        create_perms(uid_lst, _RUNS_KEY)
+    out = {_RUNS_KEY: uid_lst}
+    return flask.jsonify(out)
 
 ## Run Endpoints ##
 
