@@ -37,7 +37,7 @@ _ASSIGNMENTS_KEY = "assignments"
 _TESTS_KEY = "tests"
 _SUBMISSIONS_KEY = "submissions"
 _RUNS_KEY = "runs"
-_TOKEN_KEY = "token"
+_TOKENS_KEY = "tokens"
 _EXTRACT_KEY = "extract"
 
 ### Global Setup ###
@@ -359,7 +359,7 @@ def create_perms(uid_lst, key):
 
     perms_file_name = "{}.json".format(key)
     perms_file_path = os.path.join(cogs.config.PERMS_PATH, perms_file_name)
-    if os.path.isfile(perms_filepath):
+    if os.path.isfile(perms_file_path):
         for uid in uid_lst:
             ep_base = perms.ep_join(flask.request.url_rule.rule, uid)
             perms.set_perms_from_file(perms_file_path)
@@ -376,7 +376,7 @@ def get_root():
 
 ## Access Control Endpoints ##
 
-@app.route("/tokens/", methods=['GET'])
+@app.route("/{}/".format(_TOKENS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def get_token():
@@ -385,22 +385,22 @@ def get_token():
     token = flask.g.user['token']
 
     # Return Token
-    out = {str(_TOKEN_KEY): str(token)}
+    out = {"token": str(token)}
     return flask.jsonify(out)
 
-@app.route("/users/", methods=['GET'])
+@app.route("/{}/".format(_USERS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def list_users():
     return process_objects(auth.list_users, None, _USERS_KEY)
 
-@app.route("/users/<obj_uuid>/", methods=['GET'])
+@app.route("/{}/<obj_uuid>/".format(_USERS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_user(obj_uuid):
     return process_object(auth.get_user, obj_uuid)
 
-@app.route("/admins/", methods=['GET'])
+@app.route("/{}/".format(_ADMINS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_admins():
@@ -408,7 +408,7 @@ def process_admins():
 
 ## File Endpoints ##
 
-@app.route("/files/", methods=['GET'])
+@app.route("/{}/".format(_FILES_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_files_get():
@@ -416,7 +416,7 @@ def process_files_get():
     app.logger.debug("LIST FILES")
     return process_objects(srv.list_files, None, _FILES_KEY, create_stub=None)
 
-@app.route("/files/", methods=['POST'])
+@app.route("/{}/".format(_FILES_KEY), methods=['POST'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_files_post():
@@ -433,25 +433,27 @@ def process_files_post():
         else:
             files_direct += files.getlist(key)
 
-    obj_lst = []
+    uid_lst = []
     if files_extract:
-        obj_lst += process_objects(None, srv.create_files, _FILES_KEY,
+        uid_lst += process_objects(None, srv.create_files, _FILES_KEY,
                                    create_stub=create_stub_files, raw=True, files=files_extract)
     if files_direct:
-        obj_lst += process_objects(None, srv.create_file, _FILES_KEY,
+        uid_lst += process_objects(None, srv.create_file, _FILES_KEY,
                                    create_stub=create_stub_file, raw=True, files=files_direct)
 
-    out = {_FILES_KEY: obj_lst}
+    if flask.request.method == 'POST':
+        create_perms(uid_lst, _FILES_KEY)
+    out = {_FILES_KEY: uid_lst}
     return flask.jsonify(out)
 
-@app.route("/files/<obj_uuid>/", methods=['GET', 'DELETE'])
+@app.route("/{}/<obj_uuid>/".format(_FILES_KEY), methods=['GET', 'DELETE'])
 @httpauth.login_required
 @get_owner(srv.get_file)
 @auth.requires_auth_route()
 def process_file(obj_uuid):
     return process_object(srv.get_file, obj_uuid, update_stub=None)
 
-@app.route("/files/<obj_uuid>/contents/", methods=['GET'])
+@app.route("/{}/<obj_uuid>/contents/".format(_FILES_KEY), methods=['GET'])
 @httpauth.login_required
 @get_owner(srv.get_file)
 @auth.requires_auth_route()
