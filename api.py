@@ -481,9 +481,10 @@ def process_assignments():
     if flask.request.method == 'POST':
         perms_file_name = "{}.json".format(_ASSIGNMENTS_KEY)
         perms_file_path = os.path.join(cogs.config.PERMS_PATH, perms_file_name)
-        for uid in uid_lst:
-            ep_base = perms.ep_join(flask.request.url_rule.rule, uid)
-            perms.set_perms_from_file(perms_file_path)
+        if os.path.isfile(perms_filepath):
+            for uid in uid_lst:
+                ep_base = perms.ep_join(flask.request.url_rule.rule, uid)
+                perms.set_perms_from_file(perms_file_path)
     out = {_ASSIGNMENTS_KEY: uid_lst}
     return flask.jsonify(out)
 
