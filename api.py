@@ -355,14 +355,16 @@ def filter_asns_runable(asn_list):
 
     return asns_runable
 
-def create_perms(uid_lst, key):
+def create_perms(uid_lst, key, base_ep=None):
 
     perms_file_name = "{}.json".format(key)
     perms_file_path = os.path.join(cogs.config.PERMS_PATH, perms_file_name)
+    if base_ep is None:
+        base_ep = "/{}/".format(key)
     if os.path.isfile(perms_file_path):
         for uid in uid_lst:
-            ep_base = perms.ep_join(flask.request.url_rule.rule, uid)
-            perms.set_perms_from_file(perms_file_path)
+            ep_base = perms.ep_join(base_ep, uid)
+            perms.set_perms_from_file(perms_file_path, ep_base=ep_base)
 
 ### Endpoints ###
 
@@ -529,7 +531,12 @@ def process_assignment_tests(obj_uuid):
     asn = srv.get_assignment(obj_uuid)
 
     # Process Tests
-    return process_objects(asn.list_tests, asn.create_test, _TESTS_KEY)
+    uid_lst = process_objects(asn.list_tests, asn.create_test,
+                              _TESTS_KEY, raw=True)
+    if flask.request.method == 'POST':
+        create_perms(uid_lst, _TESTS_KEY)
+    out = {_TESTS_KEY: uid_lst}
+    return flask.jsonify(out)
 
 @app.route("/{}/<obj_uuid>/submissions/".format(_ASSIGNMENTS_KEY), methods=['GET', 'POST'])
 @httpauth.login_required
@@ -541,24 +548,29 @@ def process_assignment_submissions(obj_uuid):
     asn = srv.get_assignment(obj_uuid)
 
     # Process Submissions
-    return process_objects(asn.list_submissions, asn.create_submission, _SUBMISSIONS_KEY)
+    uid_lst = process_objects(asn.list_submissions, asn.create_submission,
+                              _SUBMISSIONS_KEY, raw=True)
+    if flask.request.method == 'POST':
+        create_perms(uid_lst, _SUBMISSIONS_KEY)
+    out = {_SUBMISSIONS_KEY: uid_lst}
+    return flask.jsonify(out)
 
 ## Test Endpoints ##
 
-@app.route("/tests/", methods=['GET'])
+@app.route("/{}/".format(_TESTS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_tests():
     return process_objects(srv.list_tests, None, _TESTS_KEY)
 
-@app.route("/tests/<obj_uuid>/", methods=['GET', 'PUT', 'DELETE'])
+@app.route("/{}/<obj_uuid>/".format(_TESTS_KEY), methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
 @get_owner(srv.get_test)
 @auth.requires_auth_route()
 def process_test(obj_uuid):
     return process_object(srv.get_test, obj_uuid)
 
-@app.route("/tests/<obj_uuid>/files/", methods=['GET', 'PUT', 'DELETE'])
+@app.route("/{}/<obj_uuid>/files/".format(_TESTS_KEY), methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
 @get_owner(srv.get_test)
 @auth.requires_auth_route()
@@ -570,7 +582,7 @@ def process_test_files(obj_uuid):
     # Process Files
     return process_uuid_list(tst.list_files, tst.add_files, tst.rem_files, _FILES_KEY)
 
-@app.route("/tests/<obj_uuid>/reporters/", methods=['GET', 'PUT', 'DELETE'])
+@app.route("/{}/<obj_uuid>/reporters/".format(_TESTS_KEY), methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
 @get_owner(srv.get_test)
 @auth.requires_auth_route()
@@ -584,20 +596,20 @@ def process_test_reporters(obj_uuid):
 
 ## Submission Endpoints ##
 
-@app.route("/submissions/", methods=['GET'])
+@app.route("/{}/".format(_SUBMISSIONS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_submissions():
     return process_objects(srv.list_submissions, None, _SUBMISSIONS_KEY)
 
-@app.route("/submissions/<obj_uuid>/", methods=['GET', 'PUT', 'DELETE'])
+@app.route("/{}/<obj_uuid>/".format(_SUBMISSIONS_KEY), methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
 @get_owner(srv.get_submission)
 @auth.requires_auth_route()
 def process_submission(obj_uuid):
     return process_object(srv.get_submission, obj_uuid)
 
-@app.route("/submissions/<obj_uuid>/files/", methods=['GET', 'PUT', 'DELETE'])
+@app.route("/{}/<obj_uuid>/files/".format(_SUBMISSIONS_KEY), methods=['GET', 'PUT', 'DELETE'])
 @httpauth.login_required
 @get_owner(srv.get_submission)
 @auth.requires_auth_route()
@@ -609,7 +621,7 @@ def process_submission_files(obj_uuid):
     # Process Files
     return process_uuid_list(sub.list_files, sub.add_files, sub.rem_files, _FILES_KEY)
 
-@app.route("/submissions/<obj_uuid>/runs/", methods=['GET', 'POST'])
+@app.route("/{}/<obj_uuid>/runs/".format(_SUBMISSIONS_KEY), methods=['GET', 'POST'])
 @httpauth.login_required
 @get_owner(srv.get_submission)
 @auth.requires_auth_route()
