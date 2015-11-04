@@ -635,13 +635,13 @@ def process_submission_runs(obj_uuid):
 
 ## Run Endpoints ##
 
-@app.route("/runs/", methods=['GET'])
+@app.route("/{}/".format(_RUNS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def process_runs():
     return process_objects(srv.list_runs, None, _RUNS_KEY)
 
-@app.route("/runs/<obj_uuid>/", methods=['GET', 'DELETE'])
+@app.route("/{}/<obj_uuid>/".format(_RUNS_KEY), methods=['GET', 'DELETE'])
 @httpauth.login_required
 @get_owner(srv.get_run)
 @auth.requires_auth_route()
