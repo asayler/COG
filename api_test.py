@@ -5,6 +5,7 @@
 # Summer 2014
 # Univerity of Colorado
 
+# pylint: disable=
 
 import base64
 import copy

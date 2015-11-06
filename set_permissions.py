@@ -7,7 +7,6 @@ import click
 import perms
 
 @click.command()
-
 @click.option('--file', '-f', 'path', default="./perms/base.json",
               type=click.Path(exists=True, readable=True, resolve_path=True),
               help='JSON Permission Spec')
@@ -17,4 +16,5 @@ def set_permissions(path, endpoint):
     click.echo("Set {} permissions".format(cnt))
 
 if __name__ == "__main__":
+    #pylint: disable=no-value-for-parameter
     sys.exit(set_permissions())

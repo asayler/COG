@@ -5,6 +5,8 @@
 # Summer 2014
 # Univerity of Colorado
 
+# pylint: disable=no-name-in-module
+
 ### Imports ###
 import time
 import os
@@ -56,7 +58,7 @@ if cogs.config.LOGGING_ENABLED and not app.testing:
     import logging
     import logging.handlers
 
-    loggers = [app.logger, parse_perms.logger, logging.getLogger('cogs')]
+    loggers = [app.logger, perms.logger, logging.getLogger('cogs')]
 
     formatter_line = logging.Formatter('%(levelname)s: %(module)s - %(message)s')
     formatter_line_time = logging.Formatter('%(asctime)s %(levelname)s: %(module)s - %(message)s')
@@ -671,7 +673,7 @@ def not_authorized(error):
     return res
 
 @app.errorhandler(cogs.structs.ObjectDNE)
-def not_found(error=False):
+def object_not_found(error=False):
     err = { 'status': 404,
             'message': "Not Found: {:s}".format(flask.request.url) }
     app.logger.info("Client Error: ObjectDNE: {:s}".format(err))

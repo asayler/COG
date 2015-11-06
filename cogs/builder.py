@@ -25,8 +25,7 @@ class Builder(object):
 
         # Set Vars
         ret = -1
-        score = "0"
-        stderr = "Dummy Builder build()"
+        out = "Dummy Builder build()"
 
         # Return
-        return ret_val, output
+        return ret, out

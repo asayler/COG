@@ -25,7 +25,7 @@ class Builder(builder.Builder):
 
     def build(self):
 
-        # Call Parent
+        # Log
         msg = "Running build"
         logger.info(self._format_msg(msg))
 

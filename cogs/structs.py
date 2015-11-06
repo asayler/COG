@@ -830,7 +830,7 @@ class Run(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Hash):
         run_uuid = str(run.uuid).lower()
 
         # Add Task to Pool
-        res = testrun.test(asn, sub, tst, run)
+        testrun.test(asn, sub, tst, run)
 
         # Return Run
         return run

@@ -246,6 +246,8 @@ class PersistentObject(object):
         """Test Equality"""
         return (repr(self) == repr(other))
 
+    #pylint: disable=no-self-argument,not-callable
+
     @abstractclassmethod
     def from_new(cls, *args, **kwargs):
         """New Constructor"""

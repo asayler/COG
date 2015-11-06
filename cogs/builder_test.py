@@ -8,6 +8,7 @@
 
 import copy
 import os
+import time
 
 import test_common
 

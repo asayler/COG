@@ -1100,6 +1100,7 @@ class RunTestCaseBadInputMixin(RunTestCaseBaseMixin):
 
     def test_execute_run_input_null(self):
 
+        #pylint: disable=access-member-before-definition
         file_name = self.fle_input1['name']
         file_key = self.fle_input1['key']
         self._del_test_files([self.fle_input1])

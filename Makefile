@@ -42,8 +42,8 @@ conf:
 	cp "./conf/logrotate.d/cog-api" "/etc/logrotate.d/"
 
 lint: $(PYLINT_CONF)
+	$(EXPORT_PATH) && $(PYLINT) --rcfile="$<" *.py
 	$(EXPORT_PATH) && $(PYLINT) --rcfile="$<" $(COGS)
-	$(EXPORT_PATH) && $(PYLINT) --rcfile="$<" $(MOODLE)
 
 test:
 	$(EXPORT_PATH) && $(PYTHON) -m unittest discover -v -p $(UNITTEST_PATTERN)
