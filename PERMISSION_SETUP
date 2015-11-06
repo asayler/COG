@@ -1,4 +1,4 @@
-# To modify permissions:
+### To modify permissions (manually): ###
 
 # 1. From the API server, navigate to the cog-core src directory
 # 2. Open a python interactive shell and run:
@@ -31,3 +31,8 @@
     a.add_allowed_groups("POST", "/assignments/<asn_uuid>/submissions/", [cogs.auth.SPECIAL_GROUP_ANY])
 # GET    /tests/<tst_uuid>/                     ALLOW ALL
     a.add_allowed_groups("GET", "/tests/<tst_uuid>/", [cogs.auth.SPECIAL_GROUP_ANY])
+
+### To modify permissions (automaticlly): ###
+
+# 1. Setup a permissions JSON file as shown in './perms'
+# 2. Run ./set_permissions.py <filename> <base endpoint>

@@ -2,35 +2,19 @@
 
 import sys
 
-import cogs.auth
+import click
 
-def set_default_permissions(asn_uuid, tst_uuid):
+import perms
 
-    action = "GET"
-    endpoint = "/assignments/{:s}/".format(asn_uuid)
-    set_endpoint_permissions(action, endpoint)
+@click.command()
 
-    action = "GET"
-    endpoint = "/assignments/{:s}/tests/".format(asn_uuid)
-    set_endpoint_permissions(action, endpoint)
-
-    action = "POST"
-    endpoint = "/assignments/{:s}/submissions/".format(asn_uuid)
-    set_endpoint_permissions(action, endpoint)
-
-    action = "GET"
-    endpoint = "/tests/{:s}/".format(tst_uuid)
-    set_endpoint_permissions(action, endpoint)
-
-def set_endpoint_permissions(action, endpoint):
-
-    a = cogs.auth.Auth()
-    ret = a.add_allowed_groups(action, endpoint, [cogs.auth.SPECIAL_GROUP_ANY])
-    if ret == 0:
-        print("'{:s}' already allows {:s}".format(endpoint, action))
-    elif ret > 1:
-        print("{:s} '{:s}' returned > 1".format(action, endpoint))
+@click.option('--file', '-f', 'path', default="./perms/base.json",
+              type=click.Path(exists=True, readable=True, resolve_path=True),
+              help='JSON Permission Spec')
+@click.option('--endpoint', '-e', default=None, help='Base Endpoint')
+def set_permissions(path, endpoint):
+    cnt = perms.set_perms_from_file(path, endpoint)
+    click.echo("Set {} permissions".format(cnt))
 
 if __name__ == "__main__":
-
-    sys.exit(set_default_permissions(*sys.argv[1:]))
+    sys.exit(set_permissions())
