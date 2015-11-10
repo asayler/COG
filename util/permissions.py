@@ -17,7 +17,7 @@ def cli(ctx):
     ctx.obj['auth'] = cogs.auth.Auth()
 
 @cli.command()
-@click.option('--file', '-f', 'path', default="./perms/base.json",
+@click.option('--file', '-f', 'path', default="../perms/base.json",
               type=click.Path(exists=True, readable=True, resolve_path=True),
               help='JSON Permission Spec File Path')
 @click.option('--endpoint', '-e', default=None, help='Base Endpoint')
