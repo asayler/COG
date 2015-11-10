@@ -10,7 +10,7 @@ import cogs.auth
 @click.group()
 @click.pass_context
 def cli(ctx):
-    """COG CLI"""
+    """COG Server Permissions CLI"""
 
     # Setup Context
     ctx.obj = {}
@@ -19,11 +19,11 @@ def cli(ctx):
 @cli.command()
 @click.option('--file', '-f', 'path', default="./perms/base.json",
               type=click.Path(exists=True, readable=True, resolve_path=True),
-              help='JSON Permission Spec')
+              help='JSON Permission Spec File Path')
 @click.option('--endpoint', '-e', default=None, help='Base Endpoint')
 @click.pass_obj
 def set_permissions(obj, path, endpoint):
-    """Set Permissions form Spec File"""
+    """Set permissions from json file"""
 
     cnt = perms.set_perms_from_file(path, endpoint)
     click.echo("Set {} permissions".format(cnt))
