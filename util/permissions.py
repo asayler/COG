@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import uuid
 
 import click
 
@@ -33,11 +34,33 @@ def set_permissions(obj, path, endpoint):
 def list_admins(obj):
     """List current admins"""
 
-    uid_lst = obj['auth'].list_admins()
+    admin_lst = obj['auth'].list_admins()
 
-    for uid in uid_lst:
+    click.echo("Admins:")
+    for uid in admin_lst:
         usr = obj['auth'].get_user(uid)
         click.echo(usr['username'])
+
+@cli.command()
+@click.argument('usernames', nargs=-1, required=True)
+@click.pass_obj
+def add_admins(obj, usernames):
+    """Add new admins"""
+
+    uid_lst = []
+    for username in usernames:
+        try:
+            usr_uid = uuid.UUID(username)
+        except ValueError:
+            uid_str = obj['auth'].username_map.lookup_username(username)
+            if uid_str:
+                usr_uid = uuid.UUID(uid_str)
+            else:
+                raise click.ClickException("Username '{}' not found".format(username))
+        uid_lst.append(usr_uid)
+
+    cnt = obj['auth'].add_admins(uid_lst)
+    click.echo("Added {} Admins".format(cnt))
 
 if __name__ == "__main__":
     #pylint: disable=no-value-for-parameter
