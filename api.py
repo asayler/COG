@@ -384,7 +384,7 @@ def get_root():
 @auth.requires_auth_route()
 def my_token():
     token = flask.g.user['token']
-    out = {_TOKEN_KEY: str(token)}
+    out = {_TOKEN_KEY: token}
     return flask.jsonify(out)
 
 @app.route("/my/{}/".format(_USERNAME_KEY), methods=['GET'])
@@ -417,12 +417,12 @@ def user_to_uuid(username):
     out = {"uuid": useruuid}
     return flask.jsonify(out)
 
-@app.route("/{}/username/<useruuid>/".format(_USERS_KEY), methods=['GET'])
+@app.route("/{}/{}/<useruuid>/".format(_USERS_KEY, _USERNAME_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def uuid_to_user(useruuid):
     username = auth.get_user(useruuid)['username']
-    out = {"username": username}
+    out = {_USERNAME_KEY: username}
     return flask.jsonify(out)
 
 @app.route("/{}/".format(_ADMINS_KEY), methods=['GET'])
