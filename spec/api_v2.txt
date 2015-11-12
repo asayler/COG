@@ -7,6 +7,8 @@ GET     /my/token/                                      Get User Auth Token
 
 GET     /users/                                         List Users
 GET     /users/<ID>/                                    Show User
+GET     /users/uuid/<username>                          Convert Username to UUID
+GET     /users/username/<uuid>                          Convert UUID to Username
 GET     /admins/                                        List Admins
 
 GET     /files/                                         List All Files

@@ -400,6 +400,22 @@ def list_users():
 def process_user(obj_uuid):
     return process_object(auth.get_user, obj_uuid)
 
+@app.route("/{}/uuid/<username>/".format(_USERS_KEY), methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def user_to_uuid(username):
+    useruuid = auth.username_map.lookup_username(username)
+    out = {"uuid": useruuid}
+    return flask.jsonify(out)
+
+@app.route("/{}/username/<useruuid>/".format(_USERS_KEY), methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def uuid_to_user(useruuid):
+    username = auth.get_user(useruuid)['username']
+    out = {"username": username}
+    return flask.jsonify(out)
+
 @app.route("/{}/".format(_ADMINS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
