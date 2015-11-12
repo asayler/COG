@@ -40,6 +40,7 @@ _TESTS_KEY = "tests"
 _SUBMISSIONS_KEY = "submissions"
 _RUNS_KEY = "runs"
 _TOKENS_KEY = "tokens"
+_TOKEN_KEY = "token"
 _EXTRACT_KEY = "extract"
 
 ### Global Setup ###
@@ -377,15 +378,12 @@ def get_root():
 ## Access Control Endpoints ##
 
 @app.route("/{}/".format(_TOKENS_KEY), methods=['GET'])
+@app.route("/my/{}/".format(_TOKEN_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
-def get_token():
-
-    # Get Token
+def my_token():
     token = flask.g.user['token']
-
-    # Return Token
-    out = {"token": str(token)}
+    out = {_TOKEN_KEY: str(token)}
     return flask.jsonify(out)
 
 @app.route("/{}/".format(_USERS_KEY), methods=['GET'])

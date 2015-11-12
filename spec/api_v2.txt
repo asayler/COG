@@ -3,6 +3,7 @@
 GET     /                                               Welcome Message
 
 GET     /tokens/                                        Get User Auth Token
+GET     /my/token/                                      Get User Auth Token
 
 GET     /users/                                         List Users
 GET     /users/<ID>/                                    Show User
