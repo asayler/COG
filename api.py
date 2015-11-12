@@ -33,6 +33,7 @@ import perms
 
 _USERS_KEY = "users"
 _USERNAME_KEY = "username"
+_USERUUID_KEY = "useruuid"
 _ADMINS_KEY = "admins"
 _FILES_KEY = "files"
 _REPORTERS_KEY = "reporters"
@@ -393,6 +394,14 @@ def my_token():
 def my_username():
     username = flask.g.user['username']
     out = {_USERNAME_KEY: username}
+    return flask.jsonify(out)
+
+@app.route("/my/{}/".format(_USERUUID_KEY), methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def my_useruuid():
+    useruuid = str(flask.g.user.uuid)
+    out = {_USERUUID_KEY: useruuid}
     return flask.jsonify(out)
 
 @app.route("/{}/".format(_USERS_KEY), methods=['GET'])
