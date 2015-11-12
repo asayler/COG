@@ -464,6 +464,16 @@ class CogsApiAuthTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         token = res_obj['token']
         self.assertEqual(token, self.admin['token'])
 
+    def test_my_username_get(self):
+        res = self.open_user('GET', '/my/username/', user=self.admin)
+        self.assertEqual(res.status_code, 200)
+        res_obj = json.loads(res.data)
+        self.assertTrue(res_obj)
+        res_keys = res_obj.keys()
+        self.assertEqual(len(res_keys), 1)
+        username = res_obj['username']
+        self.assertEqual(username, self.admin['username'])
+
     def test_user_list(self):
         usr_set = self.lst_objects(self.user_url, self.user_key, user=self.admin)
         self.assertEqual(len(usr_set), 1)

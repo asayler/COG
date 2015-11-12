@@ -32,6 +32,7 @@ import perms
 ### Constants ###
 
 _USERS_KEY = "users"
+_USERNAME_KEY = "username"
 _ADMINS_KEY = "admins"
 _FILES_KEY = "files"
 _REPORTERS_KEY = "reporters"
@@ -384,6 +385,14 @@ def get_root():
 def my_token():
     token = flask.g.user['token']
     out = {_TOKEN_KEY: str(token)}
+    return flask.jsonify(out)
+
+@app.route("/my/{}/".format(_USERNAME_KEY), methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def my_username():
+    username = flask.g.user['username']
+    out = {_USERNAME_KEY: username}
     return flask.jsonify(out)
 
 @app.route("/{}/".format(_USERS_KEY), methods=['GET'])
