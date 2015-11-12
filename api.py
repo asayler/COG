@@ -418,12 +418,12 @@ def list_users():
 def process_user(obj_uuid):
     return process_object(auth.get_user, obj_uuid)
 
-@app.route("/{}/uuid/<username>/".format(_USERS_KEY), methods=['GET'])
+@app.route("/{}/{}/<username>/".format(_USERS_KEY, _USERUUID_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
 def user_to_uuid(username):
     useruuid = auth.username_map.lookup_username(username)
-    out = {"uuid": useruuid}
+    out = {_USERUUID_KEY: useruuid}
     return flask.jsonify(out)
 
 @app.route("/{}/{}/<useruuid>/".format(_USERS_KEY, _USERNAME_KEY), methods=['GET'])
