@@ -19,7 +19,7 @@ def cli(ctx):
 
 @cli.command()
 @click.option('--file', '-f', 'path', default="../perms/base.json",
-              type=click.Path(exists=True, readable=True, resolve_path=True),
+              type=click.Path(exists=True, readable=True, resolve_path=True, dir_okay=False),
               help='JSON Permission Spec File Path')
 @click.option('--endpoint', '-e', default=None, help='Base Endpoint')
 @click.pass_obj
@@ -28,6 +28,15 @@ def set_permissions(obj, path, endpoint):
 
     cnt = perms.set_perms_from_file(path, endpoint)
     click.echo("Set {} permissions".format(cnt))
+
+@cli.command()
+@click.option('--dir', '-d', 'dir_path', default="../perms/",
+              type=click.Path(exists=True, readable=True, resolve_path=True, file_okay=False),
+              help='JSON Permission Spec Directory Path')
+@click.pass_obj
+def reset_defaults(dir_path):
+    """ Reset all permissions"""
+    pass
 
 @cli.command()
 @click.pass_obj
