@@ -4,6 +4,7 @@ import uuid
 import logging
 
 import cogs.auth
+import cogs.config
 
 # Constants
 
@@ -101,4 +102,17 @@ def set_perms_from_file(path, ep_base=None):
     perms = parse_file(path, ep_base)
     cnt = set_perms(perms)
     logger.info("Added {} permissions from {}".format(cnt, path))
+    return cnt
+
+def create_perms(uid_lst, key, base_ep=None):
+
+    cnt = 0
+    perms_file_name = "{}.json".format(key)
+    perms_file_path = os.path.join(cogs.config.PERMS_PATH, perms_file_name)
+    if base_ep is None:
+        base_ep = "/{}/".format(key)
+    if os.path.isfile(perms_file_path):
+        for uid in uid_lst:
+            ep_base = ep_join(base_ep, uid)
+            cnt += set_perms_from_file(perms_file_path, ep_base=ep_base)
     return cnt

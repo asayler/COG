@@ -356,17 +356,6 @@ def filter_asns_runable(asn_list):
 
     return asns_runable
 
-def create_perms(uid_lst, key, base_ep=None):
-
-    perms_file_name = "{}.json".format(key)
-    perms_file_path = os.path.join(cogs.config.PERMS_PATH, perms_file_name)
-    if base_ep is None:
-        base_ep = "/{}/".format(key)
-    if os.path.isfile(perms_file_path):
-        for uid in uid_lst:
-            ep_base = perms.ep_join(base_ep, uid)
-            perms.set_perms_from_file(perms_file_path, ep_base=ep_base)
-
 ### Endpoints ###
 
 ## Root Endpoints ##
@@ -478,7 +467,7 @@ def process_files_post():
                                    create_stub=create_stub_file, files=files_direct)
 
     if flask.request.method == 'POST':
-        create_perms(uid_lst, _FILES_KEY)
+        perms.create_perms(uid_lst, _FILES_KEY)
     out = {_FILES_KEY: uid_lst}
     return flask.jsonify(out)
 
@@ -509,7 +498,7 @@ def process_file_contents(obj_uuid):
 def process_reporters():
     uid_lst = process_objects(srv.list_reporters, srv.create_reporter)
     if flask.request.method == 'POST':
-        create_perms(uid_lst, _REPORTERS_KEY)
+        perms.create_perms(uid_lst, _REPORTERS_KEY)
     out = {_REPORTERS_KEY: uid_lst}
     return flask.jsonify(out)
 
@@ -528,7 +517,7 @@ def process_reporter(obj_uuid):
 def process_assignments():
     uid_lst = process_objects(srv.list_assignments, srv.create_assignment)
     if flask.request.method == 'POST':
-        create_perms(uid_lst, _ASSIGNMENTS_KEY)
+        perms.create_perms(uid_lst, _ASSIGNMENTS_KEY)
     out = {_ASSIGNMENTS_KEY: uid_lst}
     return flask.jsonify(out)
 
@@ -569,7 +558,7 @@ def process_assignment_tests(obj_uuid):
     # Process Tests
     uid_lst = process_objects(asn.list_tests, asn.create_test)
     if flask.request.method == 'POST':
-        create_perms(uid_lst, _TESTS_KEY)
+        perms.create_perms(uid_lst, _TESTS_KEY)
     out = {_TESTS_KEY: uid_lst}
     return flask.jsonify(out)
 
@@ -585,7 +574,7 @@ def process_assignment_submissions(obj_uuid):
     # Process Submissions
     uid_lst = process_objects(asn.list_submissions, asn.create_submission)
     if flask.request.method == 'POST':
-        create_perms(uid_lst, _SUBMISSIONS_KEY)
+        perms.create_perms(uid_lst, _SUBMISSIONS_KEY)
     out = {_SUBMISSIONS_KEY: uid_lst}
     return flask.jsonify(out)
 
@@ -671,7 +660,7 @@ def process_submission_runs(obj_uuid):
     # Process Runs
     uid_lst = process_objects(sub.list_runs, sub.execute_run)
     if flask.request.method == 'POST':
-        create_perms(uid_lst, _RUNS_KEY)
+        perms.create_perms(uid_lst, _RUNS_KEY)
     out = {_RUNS_KEY: uid_lst}
     return flask.jsonify(out)
 
