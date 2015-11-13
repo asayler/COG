@@ -40,6 +40,7 @@ conf:
 	cp "./conf/sudoers.d/nobody" "/etc/sudoers.d/"
 	chmod 440 "/etc/sudoers.d/nobody"
 	cp "./conf/logrotate.d/cog-api" "/etc/logrotate.d/"
+	cp "./conf/profile.d/Z95-cog.sh" "/etc/profile.d/"
 
 lint: $(PYLINT_CONF)
 	$(EXPORT_PATH) && $(PYLINT) --rcfile="$<" *.py
