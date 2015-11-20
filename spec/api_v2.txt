@@ -1,4 +1,4 @@
-### Implemented ###
+### Endpoints ###
 
 GET     /                                               Welcome Message
 
@@ -61,3 +61,20 @@ POST    /submissions/<ID>/runs/                         Execute New Test Run
 GET     /runs/                                          List All Test Runs
 GET     /runs/<ID>/                                     Show Test Run Results
 DELETE  /runs/<ID>/                                     Delete Test Run Results
+
+
+### Data Types ###
+
+Type (ID):
+    KEY                     VAL           TYPE             R/W
+
+Assignment (UUID):
+    created_time            <timestamp>   UNIX Timestamp   R
+    modified_time           <timestamp>   UNIX Timestamp   R
+    owner                   <UUID>        UUID             R
+    accepting_runs          <0 | 1>       int              R/W
+    accepting_submissions   <0 | 1>       int              R/W
+    duedate                 <timestamp>   UNIX Timestamp   R/W
+    respect_duedate         <0 | 1>       int              R/W
+    env                     <mod_env>     string           R/W
+    name                    <name>        string           R/W
