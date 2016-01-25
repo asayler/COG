@@ -68,6 +68,33 @@ class Reporter(repmod.Reporter):
             logger.error(self._format_msg(msg))
             raise
 
+    def get_grade(self, asn_id, usr_id):
+
+        assignments = self.ws.mod_assign_get_grades([asn_id])["assignments"]
+        if assignments:
+            assignment = assignments.pop()
+            grades = assignment['grades']
+            grades_by_uid = {}
+            for grade in grades:
+                uid = int(grade["userid"])
+                if uid in grades_by_uid:
+                    grades_by_uid[uid].append(grade)
+                else:
+                    grades_by_uid[uid] = [grade]
+            if usr_id in grades_by_uid:
+                last_grade = -1.0
+                last_num = None
+                for attempt in grades_by_uid[usr_id]:
+                    num = int(attempt['attemptnumber'])
+                    if num > last_num:
+                        last_num = num
+                        last_grade = float(attempt['grade'])
+                return last_grade
+            else:
+                return None
+        else:
+            raise ValueError("No assignment {} grades found".format(asn_id))
+
     def file_report(self, usr, grade, comment):
 
         # Call Parent
@@ -125,32 +152,16 @@ class Reporter(repmod.Reporter):
         else:
             only_higher = bool(int(EXTRA_REPORTER_DEFAULTS['moodle_only_higher']))
         if only_higher:
-            assignments = self.ws.mod_assign_get_grades([asn_id])["assignments"]
-            if len(assignments):
-                assignment = assignments.pop()
-                old_grades = assignment['grades']
-                old_grades_by_uid = {}
-                for old_grade in old_grades:
-                    uid = int(old_grade["userid"])
-                    if uid in old_grades_by_uid:
-                        old_grades_by_uid[uid].append(old_grade)
-                    else:
-                        old_grades_by_uid[uid] = [old_grade]
-                if usr_id in old_grades_by_uid:
-                    last_grade = None
-                    last_num = None
-                    for attempt in old_grades_by_uid[usr_id]:
-                        num = int(attempt['attemptnumber'])
-                        if num > last_num:
-                            last_num = num
-                            last_grade = float(attempt['grade'])
-                    if float(grade) < float(last_grade):
-                        msg = "repmod_moodle: "
-                        msg += "Previous grade ({:.2f}) ".format(float(last_grade))
-                        msg += "is greater than current grade ({:.2f}): ".format(float(grade))
-                        msg += "No grade written to Moodle"
-                        logger.warning(self._format_msg(msg))
-                        raise MoodleReporterError(msg)
+            prev_grade = self.get_grade(asn_id, usr_id)
+            if prev_grade is None:
+                pass
+            elif grade < prev_grade:
+                msg = "repmod_moodle: "
+                msg += "Previous grade ({:.2f}) ".format(float(last_grade))
+                msg += "is greater than current grade ({:.2f}): ".format(float(grade))
+                msg += "No grade written to Moodle"
+                logger.warning(self._format_msg(msg))
+                raise MoodleReporterError(msg)
 
         # Limit Output
         warning = "\nWARNING: Output Truncated"
