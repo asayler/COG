@@ -308,6 +308,56 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         reporter.file_report("FakeRun", self.student, grade, comments)
         reporter.delete()
 
+    def test_file_report_moodle_prereq(self):
+
+        prereq = copy.copy(test_common.REPORTER_TESTDICT)
+        prereq['mod'] = "moodle"
+        prereq['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_NODUE
+        prereq['moodle_respect_duedate'] = "0"
+        prereq['moodle_only_higher'] = "0"
+
+        newasn = copy.copy(test_common.REPORTER_TESTDICT)
+        newasn['mod'] = "moodle"
+        newasn['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_HIGHER
+        newasn['moodle_respect_duedate'] = "0"
+        newasn['moodle_only_higher'] = "0"
+        newasn['moodle_prereq_id'] = test_common.REPMOD_MOODLE_ASN_NODUE
+        newasn['moodle_prereq_min'] = "5"
+
+        # Setup Pass
+        prereq_grade = 7.0
+        comments = "Tested via test_file_report_moodle_prereq on {:s} (setpreq).".format(time.asctime())
+        comments += "\nGrade = {:.2f}".format(prereq_grade)
+        reporter = self.srv.create_reporter(prereq, owner=self.testuser)
+        reporter.file_report("FakeRun", self.student, prereq_grade, comments)
+        reporter.delete()
+
+        # Test Pass
+        new_grade = 10.0
+        comments = "Tested via test_file_report_moodle_prereq on {:s} (pass).".format(time.asctime())
+        comments += "\nGrade = {:.2f}".format(new_grade)
+        reporter = self.srv.create_reporter(newasn, owner=self.testuser)
+        reporter.file_report("FakeRun", self.student, new_grade, comments)
+        reporter.delete()
+
+        # Setup Fail
+        prereq_grade = 3.0
+        comments = "Tested via test_file_report_moodle_prereq on {:s} (setpreq).".format(time.asctime())
+        comments += "\nGrade = {:.2f}".format(prereq_grade)
+        reporter = self.srv.create_reporter(prereq, owner=self.testuser)
+        reporter.file_report("FakeRun", self.student, prereq_grade, comments)
+        reporter.delete()
+
+        # Test Fail
+        new_grade = 10.0
+        comments = "Tested via test_file_report_moodle_prereq on {:s} (fail).".format(time.asctime())
+        comments += "\nGrade = {:.2f}".format(new_grade)
+        reporter = self.srv.create_reporter(newasn, owner=self.testuser)
+        self.assertRaises(repmod_moodle.MoodleReporterError,
+                          reporter.file_report, "FakeRun",
+                          self.student, new_grade, comments)
+        reporter.delete()
+
     def test_file_report_moodle_higher(self):
         data = copy.copy(test_common.REPORTER_TESTDICT)
         data['mod'] = "moodle"

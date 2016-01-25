@@ -156,7 +156,7 @@ class Reporter(repmod.Reporter):
         if 'moodle_prereq_min' in self._rpt and self._rpt['moodle_prereq_min']:
             prereq_min = float(self._rpt['moodle_prereq_min'])
         else:
-            prereq_min = int(EXTRA_REPORTER_DEFAULTS['moodle_prereq_min'])
+            prereq_min = float(EXTRA_REPORTER_DEFAULTS['moodle_prereq_min'])
         if prereq_id and prereq_min:
             try:
                 prereq_grade = self.get_grade(prereq_id, usr_id)
@@ -173,7 +173,7 @@ class Reporter(repmod.Reporter):
                 raise MoodleReporterError(msg)
             elif prereq_grade < prereq_min:
                 msg = "repmod_moodle: "
-                msg += "Assignment {} grade ({:.2f}) ".format(prereq_id, last_grade)
+                msg += "Assignment {} grade ({:.2f}) ".format(prereq_id, prereq_grade)
                 msg += "is lower than required grade ({:.2f}): ".format(prereq_min)
                 msg += "No grade written to Moodle"
                 logger.warning(self._format_msg(msg))
@@ -190,8 +190,8 @@ class Reporter(repmod.Reporter):
                 pass
             elif grade < prev_grade:
                 msg = "repmod_moodle: "
-                msg += "Previous grade ({:.2f}) ".format(float(last_grade))
-                msg += "is greater than current grade ({:.2f}): ".format(float(grade))
+                msg += "Previous grade ({:.2f}) ".format(prev_grade)
+                msg += "is greater than current grade ({:.2f}): ".format(grade)
                 msg += "No grade written to Moodle"
                 logger.warning(self._format_msg(msg))
                 raise MoodleReporterError(msg)
