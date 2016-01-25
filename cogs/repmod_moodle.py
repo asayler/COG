@@ -15,8 +15,10 @@ import config
 import repmod
 
 
-EXTRA_REPORTER_SCHEMA = ['moodle_asn_id', 'moodle_respect_duedate', 'moodle_only_higher']
-EXTRA_REPORTER_DEFAULTS = {'moodle_respect_duedate': "1", 'moodle_only_higher': "1"}
+EXTRA_REPORTER_SCHEMA = ['moodle_asn_id', 'moodle_respect_duedate', 'moodle_only_higher',
+                         'moodle_prereq_id', 'moodle_prereq_min']
+EXTRA_REPORTER_DEFAULTS = {'moodle_respect_duedate': "1", 'moodle_only_higher': "1",
+                           'moodle_prereq_id': "0", 'moodle_prereq_min': "0"}
 
 _MAX_COMMENT_LEN = 2000
 _FLOAT_MARGIN = 0.01
@@ -145,6 +147,37 @@ class Reporter(repmod.Reporter):
                     msg += "No grade written to Moodle"
                     logger.warning(self._format_msg(msg))
                     raise MoodleReporterError(msg)
+
+        # Check if grade is higher than prereq min
+        if 'moodle_prereq_id' in self._rpt and self._rpt['moodle_prereq_id']:
+            prereq_id = int(self._rpt['moodle_prereq_id'])
+        else:
+            prereq_id = int(EXTRA_REPORTER_DEFAULTS['moodle_prereq_id'])
+        if 'moodle_prereq_min' in self._rpt and self._rpt['moodle_prereq_min']:
+            prereq_min = float(self._rpt['moodle_prereq_min'])
+        else:
+            prereq_min = int(EXTRA_REPORTER_DEFAULTS['moodle_prereq_min'])
+        if prereq_id and prereq_min:
+            try:
+                prereq_grade = self.get_grade(prereq_id, usr_id)
+            except ValueError as err:
+                msg = "repmod_moodle: Could not find prereq assignment {:d}".format(prereq_id)
+                logger.error(self._format_msg(msg))
+                raise MoodleReporterError(msg)
+            if prereq_grade is None:
+                msg = "repmod_moodle: "
+                msg += "No Assignment {} grade found.".format(prereq_id)
+                msg += "You must complete that asssgnment before being graded on this one: "
+                msg += "No grade written to Moodle"
+                logger.warning(self._format_msg(msg))
+                raise MoodleReporterError(msg)
+            elif prereq_grade < prereq_min:
+                msg = "repmod_moodle: "
+                msg += "Assignment {} grade ({:.2f}) ".format(prereq_id, last_grade)
+                msg += "is lower than required grade ({:.2f}): ".format(prereq_min)
+                msg += "No grade written to Moodle"
+                logger.warning(self._format_msg(msg))
+                raise MoodleReporterError(msg)
 
         # Check is grade is higher than current
         if 'moodle_only_higher' in self._rpt and self._rpt['moodle_only_higher']:
