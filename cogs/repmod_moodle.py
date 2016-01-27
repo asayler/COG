@@ -95,7 +95,7 @@ class Reporter(repmod.Reporter):
             else:
                 return None
         else:
-            raise ValueError("No assignment {} grades found".format(asn_id))
+            return None
 
     def file_report(self, usr, grade, comment):
 
@@ -166,8 +166,8 @@ class Reporter(repmod.Reporter):
                 raise MoodleReporterError(msg)
             if prereq_grade is None:
                 msg = "repmod_moodle: "
-                msg += "No Assignment {} grade found.".format(prereq_id)
-                msg += "You must complete that asssgnment before being graded on this one: "
+                msg += "No Assignment {} grade found. ".format(prereq_id)
+                msg += "You must complete that assignment before being graded on this one: "
                 msg += "No grade written to Moodle"
                 logger.warning(self._format_msg(msg))
                 raise MoodleReporterError(msg)
