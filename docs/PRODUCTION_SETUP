@@ -4,9 +4,9 @@ Starting from Ubuntu 14.04.3 Server:
 
 # Setup /etc/fstab for dedicated /srv, tmpfs /tmp, etc
 
-/dev/vda   /      ext4    defaults,noatime,discard                                       0   0
-/dev/vdb   /srv   btrfs   defaults,noatime,discard,compress=lzo,space_cache,autodefrag   0   0
-tmpfs      /tmp   tmpfs   defaults,noatime,nosuid,nodev,mode=1777,size=1024M             0   0
+LABEL=cog-api       /      ext4    defaults,noatime,discard                                       0   0
+LABEL=cog-api-srv   /srv   btrfs   defaults,noatime,discard,compress=lzo,space_cache,autodefrag   0   0
+tmpfs               /tmp   tmpfs   defaults,noatime,nosuid,nodev,mode=1777,size=25%               0   0
 
 # Setup Firewall
 
@@ -17,7 +17,8 @@ $ sudo ufw enable
 
 # Install packages
 
-$ sudo apt-get install git python python-dev python-pip redis-server apache2 libapache2-mod-wsgi
+$ sudo apt-get install git python python-dev python-setuptools redis-server apache2 libapache2-mod-wsgi
+$ sudo easy_install pip
 
 # Setup users and groups
 
@@ -60,14 +61,13 @@ $ sudo reboot
 
 # Setup COG
 
-# Note: May need to add deploy key, etc to GitHub
 $ cd /srv/@cog
-$ git clone git@github.com:asayler/COG.git
+$ git clone https://github.com/asayler/COG.git
 $ sudo chmod -R g-w /srv/@cog
 
 $ cd srv/@cog/COG
 $ make git
-$ sudo make reqs
+$ sudo -H make reqs
 $ sudo make conf
 
 $ emacs /srv/@cog/COG/cog.conf
@@ -156,8 +156,8 @@ $ sudo emacs /etc/apache2/sites-available/000-api-cog.conf
 
     # Logging Setup
     LogLevel warn
-    ErrorLog ${APACHE_LOG_DIR}/api-cog_ssl_error.log
-    CustomLog ${APACHE_LOG_DIR}/api-cog_ssl_access.log combined
+    ErrorLog ${APACHE_LOG_DIR}/api-cog_error.log
+    CustomLog ${APACHE_LOG_DIR}/api-cog_access.log combined
 
     # SSL Setup
     SSLEngine on
@@ -168,9 +168,13 @@ $ sudo emacs /etc/apache2/sites-available/000-api-cog.conf
     #Header add Strict-Transport-Security "max-age=15768000"
 
     # WSGI Setup
-    WSGIDaemonProcess application user=cog group=cog home=/tmp \
-                                  processes=10 threads=10 maximum-requests=100 \
-                                  inactivity-timeout=600 display-name=cogapi
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIScriptReloading On
+    WSGIPassAuthorization On
+    WSGIDaemonProcess cog-api-v1 user=cog group=cog home=/tmp \
+                                 processes=10 threads=10 \
+                                 display-name=%{GROUP} \
+                                 python-path="/srv/@cog/COG"
     WSGIScriptAlias / /srv/@cog/COG/api.wsgi
 
     # Directory Setup
@@ -179,10 +183,7 @@ $ sudo emacs /etc/apache2/sites-available/000-api-cog.conf
         Options FollowSymLinks
         AllowOverride None
         Require all granted
-        WSGIProcessGroup application
-        WSGIApplicationGroup %{GLOBAL}
-        WSGIScriptReloading On
-        WSGIPassAuthorization On
+        WSGIProcessGroup cog-api-v1
     </Directory>
 
 </VirtualHost>
