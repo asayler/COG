@@ -97,17 +97,16 @@ class Tester(tester.Tester):
             stdout_clean = stdout.rstrip().lstrip()
             try:
                 score = float(stdout_clean)
-            except Exception as e:
+            except Exception as err:
                 msg = "testmod_script: Could not convert score "
-                msg += "'{:s}' to float: {:s}".format(stdout_clean, e)
+                msg += "'{:s}' to float: {:s}".format(stdout_clean, str(err))
                 logger.error(self._format_msg(msg))
-                stderr = msg
+                stderr = stderr + "\n\n" + msg
                 ret = 1
         else:
             msg = "testmod_script: Script returned non-zero value: {:d}".format(ret)
             logger.warning(self._format_msg(msg))
-            if not stderr:
-                stderr = msg
+            stderr = stderr + "\n\n" + msg
 
         # Log Results
         msg = "testmod_script: retval='{:d}', score='{:.2f}'".format(ret, score)
