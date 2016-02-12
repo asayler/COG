@@ -6,8 +6,8 @@ ECHO = @echo
 
 GIT = git
 
-PYTHON = python
-PIP = pip
+PYTHON = python2
+PIP = pip2
 PYLINT = pylint
 
 REQUIRMENTS = requirments.txt
