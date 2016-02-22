@@ -21,13 +21,15 @@ import flask.ext.cors
 
 import redis
 
-import cogs.config
+import git
 
+import cogs.config
 import cogs.auth
 import cogs.structs
 import cogs.util
 
 import perms
+
 
 ### Constants ###
 
@@ -45,6 +47,7 @@ _TOKENS_KEY = "tokens"
 _TOKEN_KEY = "token"
 _EXTRACT_KEY = "extract"
 
+
 ### Global Setup ###
 
 app = flask.Flask(__name__)
@@ -53,6 +56,8 @@ cors = flask.ext.cors.CORS(app, headers=["Content-Type", "Authorization"])
 httpauth = flask.ext.httpauth.HTTPBasicAuth()
 srv = cogs.structs.Server()
 auth = cogs.auth.Auth()
+repo = git.Repo(cogs.config.ROOT_PATH)
+
 
 ### Logging ###
 
@@ -92,6 +97,7 @@ if cogs.config.LOGGING_ENABLED and not app.testing:
             logger.setLevel(logging.INFO)
         logger.addHandler(handler_stream)
         logger.addHandler(handler_file)
+
 
 ### Functions ###
 
@@ -356,6 +362,7 @@ def filter_asns_runable(asn_list):
 
     return asns_runable
 
+
 ### Endpoints ###
 
 ## Root Endpoints ##
@@ -364,7 +371,11 @@ def filter_asns_runable(asn_list):
 def get_root():
 
     app.logger.debug("GET ROOT")
-    return app.send_static_file('index.html')
+    branch = str(repo.active_branch)
+    longhash = str(repo.head.commit)
+    shorthash = longhash[0:7]
+    return flask.render_template('index.html', branch=branch,
+                                 shorthash=shorthash, longhash=longhash)
 
 ## Access Control Endpoints ##
 
