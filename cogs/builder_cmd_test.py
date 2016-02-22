@@ -110,7 +110,7 @@ class BuilderRunTestCase(builder_test.BuilderRunTestCase):
         # Check Output
         try:
             self.assertEqual(out['status'], "complete-error-builder_build")
-            self.assertEqual(int(out['retcode']), 4)
+            self.assertGreater(int(out['retcode']), 0)
             self.assertTrue(out['output'])
             self.assertIn("hello.c: No such file or directory" ,out['output'])
             self.assertEqual(float(out['score']), 0)
