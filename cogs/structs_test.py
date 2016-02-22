@@ -267,14 +267,25 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
                               self.data,
                               extra_kwargs={'owner': self.testuser})
 
-    def test_file_report_moodle_nodue(self):
+    def test_file_report_moodle_nodue_asnid(self):
         data = copy.copy(test_common.REPORTER_TESTDICT)
         data['mod'] = "moodle"
         data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_NODUE
-        data['moodle_respect_duedate'] = "0"
         data['moodle_only_higher'] = "0"
         grade = (random.randint(0, 1000) / 100.0)
-        comments = "Tested via test_file_report_moodle_nodue on {:s}.".format(time.asctime())
+        comments = "Tested via test_file_report_moodle_nodue_asnid on {:s}.".format(time.asctime())
+        comments += "\nGrade = {:.2f}".format(grade)
+        reporter = self.srv.create_reporter(data, owner=self.testuser)
+        reporter.file_report("FakeRun", self.student, grade, comments)
+        reporter.delete()
+
+    def test_file_report_moodle_nodue_cmid(self):
+        data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
+        data['moodle_cm_id'] = test_common.REPMOD_MOODLE_CM_NODUE
+        data['moodle_only_higher'] = "0"
+        grade = (random.randint(0, 1000) / 100.0)
+        comments = "Tested via test_file_report_moodle_nodue_cmid on {:s}.".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(grade)
         reporter = self.srv.create_reporter(data, owner=self.testuser)
         reporter.file_report("FakeRun", self.student, grade, comments)
@@ -321,7 +332,7 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         newasn['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_HIGHER
         newasn['moodle_respect_duedate'] = "0"
         newasn['moodle_only_higher'] = "0"
-        newasn['moodle_prereq_id'] = test_common.REPMOD_MOODLE_ASN_NODUE
+        newasn['moodle_prereq_asn_id'] = test_common.REPMOD_MOODLE_ASN_NODUE
         newasn['moodle_prereq_min'] = "5"
 
         # Setup Pass

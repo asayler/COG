@@ -15,10 +15,17 @@ import config
 import repmod
 
 
-EXTRA_REPORTER_SCHEMA = ['moodle_asn_id', 'moodle_respect_duedate', 'moodle_only_higher',
-                         'moodle_prereq_id', 'moodle_prereq_min']
-EXTRA_REPORTER_DEFAULTS = {'moodle_respect_duedate': "1", 'moodle_only_higher': "1",
-                           'moodle_prereq_id': "0", 'moodle_prereq_min': "0"}
+EXTRA_REPORTER_SCHEMA = ['moodle_asn_id', 'moodle_cm_id',
+                         'moodle_respect_duedate', 'moodle_only_higher',
+                         'moodle_prereq_asn_id', 'moodle_prereq_cm_id',
+                         'moodle_prereq_min']
+EXTRA_REPORTER_DEFAULTS = {'moodle_asn_id': "0", 'moodle_cm_id': "0",
+                           'moodle_respect_duedate': "1", 'moodle_only_higher': "1",
+                           'moodle_prereq_asn_id': "0", 'moodle_prereq_cm_id': "0",
+                           'moodle_prereq_min': "0"}
+
+ERS = EXTRA_REPORTER_SCHEMA
+ERD = EXTRA_REPORTER_DEFAULTS
 
 _MAX_COMMENT_LEN = 2000
 _FLOAT_MARGIN = 0.01
@@ -52,13 +59,8 @@ class Reporter(repmod.Reporter):
             logger.error(self._format_msg(msg))
             raise MoodleReporterError(msg)
 
-        # Save vars
-        self.asn_id = rpt['moodle_asn_id']
-
-        # Setup Vars
-        self.host = config.REPMOD_MOODLE_HOST
-
         # Setup WS
+        self.host = config.REPMOD_MOODLE_HOST
         self.ws = moodle.ws.WS(self.host)
         try:
             self.ws.authenticate(config.REPMOD_MOODLE_USERNAME,
@@ -70,7 +72,72 @@ class Reporter(repmod.Reporter):
             logger.error(self._format_msg(msg))
             raise
 
-    def get_grade(self, asn_id, usr_id):
+        # Setup Defaults
+        asn_id = int(rpt.get('moodle_asn_id',
+                             ERD['moodle_asn_id']))
+        cm_id = int(rpt.get('moodle_cm_id',
+                            ERD['moodle_cm_id']))
+        self.respect_duedate = bool(int(rpt.get('moodle_respect_duedate',
+                                                ERD['moodle_respect_duedate'])))
+        self.only_higher = bool(int(rpt.get('moodle_only_higher',
+                                            ERD['moodle_only_higher'])))
+        prereq_asn_id = int(rpt.get('moodle_prereq_asn_id',
+                                    ERD['moodle_prereq_asn_id']))
+        prereq_cm_id = int(rpt.get('moodle_prereq_cm_id',
+                                   ERD['moodle_prereq_cm_id']))
+        self.prereq_min = float(rpt.get('moodle_prereq_min',
+                                        ERD['moodle_prereq_min']))
+
+        # Get Asn
+        self.asn = self._get_asn(asn_id, cm_id)
+
+        # Get Prereq
+        if prereq_asn_id or prereq_cm_id:
+            self.prereq_asn = self._get_asn(prereq_asn_id, prereq_cm_id)
+        else:
+            self.prereq_asn = None
+
+    def _get_asn(self, asn_id=None, cm_id=None):
+
+        res = self.ws.mod_assign_get_assignments([])
+        asn = None
+        if asn_id:
+            courses = res['courses']
+            for course in courses:
+                assignments = course['assignments']
+                for assignment in assignments:
+                    if (assignment['id'] == asn_id):
+                        asn = assignment
+                    if asn:
+                        break
+                if asn:
+                    break
+            else:
+                msg = "repmod_moodle: asn_id '{}' not found".format(asn_id)
+                logger.error(self._format_msg(msg))
+                raise MoodleReporterError(msg)
+        elif cm_id:
+            courses = res['courses']
+            for course in courses:
+                assignments = course['assignments']
+                for assignment in assignments:
+                    if (assignment['cmid'] == cm_id):
+                        asn = assignment
+                    if asn:
+                        break
+                if asn:
+                    break
+            else:
+                msg = "repmod_moodle: cm_id '{}' not found".format(cmid)
+                logger.error(self._format_msg(msg))
+                raise MoodleReporterError(msg)
+        else:
+            msg = "repmod_moodle: Requires either an asn_id or a cm_id"
+            logger.error(self._format_msg(msg))
+            raise MoodleReporterError(msg)
+        return asn
+
+    def _get_grade(self, asn_id, usr_id):
 
         assignments = self.ws.mod_assign_get_grades([asn_id])["assignments"]
         if assignments:
@@ -111,36 +178,19 @@ class Reporter(repmod.Reporter):
             raise MoodleReporterError(msg)
 
         # Extract Vars
-        asn_id = int(self.asn_id)
         usr_id = int(usr['moodle_id'])
         grade = float(grade)
 
         # Check Due Date
-        if 'moodle_respect_duedate' in self._rpt and self._rpt['moodle_respect_duedate']:
-            respect_duedate = bool(int(self._rpt['moodle_respect_duedate']))
-        else:
-            respect_duedate = bool(int(EXTRA_REPORTER_DEFAULTS['moodle_respect_duedate']))
-        if respect_duedate:
-            time_due = None
-            courses = self.ws.mod_assign_get_assignments([])["courses"]
-            for course in courses:
-                assignments = course["assignments"]
-                for assignment in assignments:
-                    if (int(assignment["id"]) == int(asn_id)):
-                        time_due = float(assignment["duedate"])
-                    if time_due is not None:
-                        break
-                if time_due is not None:
-                    break
-            if time_due is None:
-                msg = "repmod_moodle: Could not find assignment {:d}".format(asn_id)
-                logger.error(self._format_msg(msg))
-                raise MoodleReporterError(msg)
+        if self.respect_duedate:
+            time_due = self.asn['duedate']
             if time_due > 0:
                 time_now = time.time()
                 if (time_now > time_due):
-                    time_now_str = time.strftime("%d/%m/%y %H:%M:%S %Z", time.localtime(time_now))
-                    time_due_str = time.strftime("%d/%m/%y %H:%M:%S %Z", time.localtime(time_due))
+                    time_now_str = time.strftime("%d/%m/%y %H:%M:%S %Z",
+                                                 time.localtime(time_now))
+                    time_due_str = time.strftime("%d/%m/%y %H:%M:%S %Z",
+                                                 time.localtime(time_due))
                     msg = "repmod_moodle: "
                     msg += "Current time ({:s}) ".format(time_now_str)
                     msg += "is past due date ({:s}): ".format(time_due_str)
@@ -149,43 +199,31 @@ class Reporter(repmod.Reporter):
                     raise MoodleReporterError(msg)
 
         # Check if grade is higher than prereq min
-        if 'moodle_prereq_id' in self._rpt and self._rpt['moodle_prereq_id']:
-            prereq_id = int(self._rpt['moodle_prereq_id'])
-        else:
-            prereq_id = int(EXTRA_REPORTER_DEFAULTS['moodle_prereq_id'])
-        if 'moodle_prereq_min' in self._rpt and self._rpt['moodle_prereq_min']:
-            prereq_min = float(self._rpt['moodle_prereq_min'])
-        else:
-            prereq_min = float(EXTRA_REPORTER_DEFAULTS['moodle_prereq_min'])
-        if prereq_id and prereq_min:
+        if self.prereq_asn:
             try:
-                prereq_grade = self.get_grade(prereq_id, usr_id)
+                prereq_grade = self._get_grade(self.prereq_asn['id'], usr_id)
             except ValueError as err:
-                msg = "repmod_moodle: Could not find prereq assignment {:d}".format(prereq_id)
+                msg = "repmod_moodle: Could not find prereq assignment {:d}".format(self.prereq_asn['id'])
                 logger.error(self._format_msg(msg))
                 raise MoodleReporterError(msg)
             if prereq_grade is None:
                 msg = "repmod_moodle: "
-                msg += "No Assignment {} grade found. ".format(prereq_id)
+                msg += "No Assignment {} grade found. ".format(self.prereq_asn['id'])
                 msg += "You must complete that assignment before being graded on this one: "
                 msg += "No grade written to Moodle"
                 logger.warning(self._format_msg(msg))
                 raise MoodleReporterError(msg)
-            elif prereq_grade < prereq_min:
+            elif prereq_grade < self.prereq_min:
                 msg = "repmod_moodle: "
-                msg += "Assignment {} grade ({:.2f}) ".format(prereq_id, prereq_grade)
-                msg += "is lower than required grade ({:.2f}): ".format(prereq_min)
+                msg += "Assignment {} grade ({:.2f}) ".format(self.prereq_asn['id'], prereq_grade)
+                msg += "is lower than required grade ({:.2f}): ".format(self.prereq_min)
                 msg += "No grade written to Moodle"
                 logger.warning(self._format_msg(msg))
                 raise MoodleReporterError(msg)
 
         # Check is grade is higher than current
-        if 'moodle_only_higher' in self._rpt and self._rpt['moodle_only_higher']:
-            only_higher = bool(int(self._rpt['moodle_only_higher']))
-        else:
-            only_higher = bool(int(EXTRA_REPORTER_DEFAULTS['moodle_only_higher']))
-        if only_higher:
-            prev_grade = self.get_grade(asn_id, usr_id)
+        if self.only_higher:
+            prev_grade = self._get_grade(self.asn['id'], usr_id)
             if prev_grade is None:
                 pass
             elif grade < prev_grade:
@@ -205,7 +243,7 @@ class Reporter(repmod.Reporter):
 
         # Log Grade
         try:
-            self.ws.mod_assign_save_grade(asn_id, usr_id, grade, comment=comment)
+            self.ws.mod_assign_save_grade(self.asn['id'], usr_id, grade, comment=comment)
         except Exception as e:
             msg = "repmod_moodle: mod_assign_save_grade failed: {:s}".format(e)
             logger.error(self._format_msg(msg))
