@@ -6,14 +6,21 @@
 
 import traceback
 import time
+import logging
 
 import env_local
 import builder_make
 import builder_cmd
 import tester_script
 import tester_io
+import repmod
 
 import auth
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.NullHandler())
 
 
 def test(asn, sub, tst, run):
@@ -38,6 +45,8 @@ def test(asn, sub, tst, run):
             score = 0
             output = traceback.format_exc()
             status = "complete-exception-env"
+            msg = "{}:\n{}".format(status, output)
+            logger.error(msg)
 
     # Setup Builder
     if (retcode == 0):
@@ -57,6 +66,8 @@ def test(asn, sub, tst, run):
             score = 0
             output = traceback.format_exc()
             status = "complete-exception-builder_setup"
+            msg = "{}:\n{}".format(status, output)
+            logger.warning(msg)
 
     # Run Build (If Necessary)
     if (retcode == 0) and builder:
@@ -68,10 +79,14 @@ def test(asn, sub, tst, run):
             score = 0
             output = traceback.format_exc()
             status = 'complete-exception-builder_build'
+            msg = "{}:\n{}".format(status, output)
+            logger.warning(msg)
         else:
             if (retcode != 0):
                 score = 0
                 status = 'complete-error-builder_build'
+                msg = "{}".format(status)
+                logger.warning(msg)
 
     # Setup Tester
     if (retcode == 0):
@@ -89,6 +104,8 @@ def test(asn, sub, tst, run):
             score = 0
             output = traceback.format_exc()
             status = "complete-exception-tester_setup"
+            msg = "{}:\n{}".format(status, output)
+            logger.warning(msg)
 
     # Run Test
     if (retcode == 0) and tester:
@@ -100,10 +117,14 @@ def test(asn, sub, tst, run):
             score = 0
             output = traceback.format_exc()
             status = 'complete-exception-tester_run'
+            msg = "{}:\n{}".format(status, output)
+            logger.warning(msg)
         else:
             if (retcode != 0):
                 score = 0
                 status = 'complete-error-tester_run'
+                msg = "{}".format(status)
+                logger.warning(msg)
 
     # Normalize Results
     if retcode == 0:
