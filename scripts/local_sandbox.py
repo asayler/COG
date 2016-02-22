@@ -18,8 +18,8 @@ _LIMIT_NICE = 10 #Niceness
 def sandbox(args):
 
     # TODO Add proper argument extraction
-    limit_time_cpu = int(args[0])
-    limit_time_wall = int(args[1])
+    limit_time_cpu = float(args[0])
+    limit_time_wall = float(args[1])
     cmd = args[2:]
     if not len(cmd):
         raise TypeError("User must supply cmd")
