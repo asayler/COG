@@ -73,20 +73,21 @@ class Reporter(repmod.Reporter):
             raise
 
         # Setup Defaults
-        asn_id = int(rpt.get('moodle_asn_id',
-                             ERD['moodle_asn_id']))
-        cm_id = int(rpt.get('moodle_cm_id',
-                            ERD['moodle_cm_id']))
-        self.respect_duedate = bool(int(rpt.get('moodle_respect_duedate',
-                                                ERD['moodle_respect_duedate'])))
-        self.only_higher = bool(int(rpt.get('moodle_only_higher',
-                                            ERD['moodle_only_higher'])))
-        prereq_asn_id = int(rpt.get('moodle_prereq_asn_id',
-                                    ERD['moodle_prereq_asn_id']))
-        prereq_cm_id = int(rpt.get('moodle_prereq_cm_id',
-                                   ERD['moodle_prereq_cm_id']))
-        self.prereq_min = float(rpt.get('moodle_prereq_min',
-                                        ERD['moodle_prereq_min']))
+        d = rpt.get_dict()
+        asn_id = int(d.get('moodle_asn_id',
+                           ERD['moodle_asn_id']))
+        cm_id = int(d.get('moodle_cm_id',
+                          ERD['moodle_cm_id']))
+        self.respect_duedate = bool(int(d.get('moodle_respect_duedate',
+                                              ERD['moodle_respect_duedate'])))
+        self.only_higher = bool(int(d.get('moodle_only_higher',
+                                          ERD['moodle_only_higher'])))
+        prereq_asn_id = int(d.get('moodle_prereq_asn_id',
+                                  ERD['moodle_prereq_asn_id']))
+        prereq_cm_id = int(d.get('moodle_prereq_cm_id',
+                                 ERD['moodle_prereq_cm_id']))
+        self.prereq_min = float(d.get('moodle_prereq_min',
+                                      ERD['moodle_prereq_min']))
 
         # Get Asn
         self.asn = self._get_asn(asn_id, cm_id)
