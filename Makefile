@@ -1,13 +1,25 @@
 # Andy Sayler
-# Summer 2014
+# Compyright 2014, 2015, 2016
 # Univerity of Colorado
 
 ECHO = @echo
 
 GIT = git
 
-PYTHON = python2
-PIP = pip2
+PYTHON := $(shell command -v python2 2> /dev/null)
+ifndef PYTHON
+	PIP := $(shell command -v python 2> /dev/null)
+endif
+ifndef PYTHON
+	$(error Python not found)
+endif
+PIP := $(shell command -v pip2 2> /dev/null)
+ifndef PIP
+	PIP := $(shell command -v pip 2> /dev/null)
+endif
+ifndef PIP
+	$(error Pip not found)
+endif
 PYLINT = pylint
 
 REQUIRMENTS = requirments.txt
