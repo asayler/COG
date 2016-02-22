@@ -154,9 +154,16 @@ def test(asn, sub, tst, run):
         for rpt in tst.get_reporters():
             try:
                 rpt.file_report(run, user, grade, comments)
-            except Exception as e:
+            except repmod.ReporterError as e:
                 output += "\nWARNING: Reporting Failed: {:s}".format(e)
                 status = "complete-exception-reporter"
+                msg = "{}".format(status)
+                logger.info(msg)
+            except Exception as e:
+                output += "\nWARNING: Reporter Error: {:s}".format(e)
+                status = "complete-error-reporter"
+                msg = "{}:\n{}".format(status, traceback.format_exc())
+                logger.error(msg)
 
     # Cleanup
     run['status'] = 'cleaning_up'
