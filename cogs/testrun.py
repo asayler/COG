@@ -139,7 +139,6 @@ def test(asn, sub, tst, run):
         run['status'] = 'reporting'
         a = auth.Auth()
         user = a.get_user(sub['owner'])
-        grade = score
         comments = "COG Grading Report\n"
         comments += "{:s}\n".format(time.strftime("%a %d %b %Y %H:%M:%S %Z"))
         comments += "Assignment: {:s}\n".format(repr(asn))
@@ -153,17 +152,19 @@ def test(asn, sub, tst, run):
         comments += output
         for rpt in tst.get_reporters():
             try:
-                rpt.file_report(run, user, grade, comments)
-            except repmod.ReporterError as e:
-                output += "\nWARNING: Reporting Failed: {:s}".format(e)
-                status = "complete-exception-reporter"
-                msg = "{}".format(status)
-                logger.info(msg)
+                score_out, extra_output = rpt.file_report(run, user, score, comments)
+                if extra_output:
+                    output += "\n" + extra_output
             except Exception as e:
                 output += "\nWARNING: Reporter Error: {:s}".format(e)
                 status = "complete-error-reporter"
                 msg = "{}:\n{}".format(status, traceback.format_exc())
                 logger.error(msg)
+            if score_out != score:
+                msg = "\nWARNING: "
+                msg += "Grader lowered score from {:.2f} to {:.2f}".format(score, score_out)
+                status = "complete-warning-reporter"
+                logger.info(msg)
 
     # Cleanup
     run['status'] = 'cleaning_up'

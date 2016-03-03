@@ -330,7 +330,7 @@ class Reporter(backend.SchemaHash, backend.OwnedHash, backend.TSHash, backend.Ha
             raise Exception("Unknown repmod: {:s}".format(mod))
 
         repmod = repmod.Reporter(self, run)
-        repmod.file_report(user, grade, comments)
+        return repmod.file_report(user, grade, comments)
 
 
 ## Reporter List Object ##
