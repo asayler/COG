@@ -58,7 +58,7 @@ lint: $(PYLINT_CONF)
 	$(EXPORT_PATH) && $(PYLINT) --rcfile="$<" *.py
 	$(EXPORT_PATH) && $(PYLINT) --rcfile="$<" $(COGS)
 
-test:
+tests:
 	$(EXPORT_PATH) && $(PYTHON) -m unittest discover -v -p $(UNITTEST_PATTERN)
 
 clean:
