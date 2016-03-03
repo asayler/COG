@@ -276,7 +276,8 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         comments = "Tested via test_file_report_moodle_nodue_asnid on {:s}.".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(grade)
         reporter = self.srv.create_reporter(data, owner=self.testuser)
-        reporter.file_report("FakeRun", self.student, grade, comments)
+        grade_out, extra_out = reporter.file_report("FAKE_RUN", self.student, grade, comments)
+        self.assertEqual(grade, grade_out)
         reporter.delete()
 
     def test_file_report_moodle_nodue_cmid(self):
@@ -288,22 +289,59 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         comments = "Tested via test_file_report_moodle_nodue_cmid on {:s}.".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(grade)
         reporter = self.srv.create_reporter(data, owner=self.testuser)
-        reporter.file_report("FakeRun", self.student, grade, comments)
+        grade_out, extra_out = reporter.file_report("FAKE_RUN", self.student, grade, comments)
+        self.assertEqual(grade, grade_out)
         reporter.delete()
 
-    def test_file_report_moodle_pastdue(self):
+    def test_file_report_moodle_pastdue_nocut(self):
         data = copy.copy(test_common.REPORTER_TESTDICT)
         data['mod'] = "moodle"
         data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_PASTDUE
         data['moodle_respect_duedate'] = "1"
+        data['moodle_late_penalty'] = "0"
+        data['moodle_late_period'] = "0"
         data['moodle_only_higher'] = "0"
         grade = 5.0
-        comments = "Tested via test_file_report_moodle_pastdue on {:s} (fail).".format(time.asctime())
+        comments = "Tested via test_file_report_moodle_pastdue_nocut "
+        comments += "on {:s} (fail).".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(grade)
         reporter = self.srv.create_reporter(data, owner=self.testuser)
-        self.assertRaises(repmod_moodle.MoodleReporterError,
-                          reporter.file_report, "FakeRun",
-                          self.student, grade, comments)
+        grade_out, extra_out = reporter.file_report("FAKE_RUN", self.student, grade, comments)
+        self.assertEqual(0, grade_out)
+        reporter.delete()
+
+    def test_file_report_moodle_pastcut(self):
+        data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
+        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_PASTCUT
+        data['moodle_respect_duedate'] = "1"
+        data['moodle_late_penalty'] = "0"
+        data['moodle_late_period'] = "0"
+        data['moodle_only_higher'] = "0"
+        grade = 5.0
+        comments = "Tested via test_file_report_moodle_pastcut "
+        comments += "on {:s} (fail).".format(time.asctime())
+        comments += "\nGrade = {:.2f}".format(grade)
+        reporter = self.srv.create_reporter(data, owner=self.testuser)
+        grade_out, extra_out = reporter.file_report("FAKE_RUN", self.student, grade, comments)
+        self.assertEqual(0, grade_out)
+        reporter.delete()
+
+    def test_file_report_moodle_late(self):
+        data = copy.copy(test_common.REPORTER_TESTDICT)
+        data['mod'] = "moodle"
+        data['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_LATE
+        data['moodle_respect_duedate'] = "1"
+        data['moodle_late_penalty'] = "5"
+        data['moodle_late_period'] = "548640000" # 10 years - good through 2025
+        data['moodle_only_higher'] = "0"
+        grade = 10.0
+        comments = "Tested via test_file_report_moodle_late "
+        comments += "on {:s} (fail).".format(time.asctime())
+        comments += "\nGrade = {:.2f}".format(grade)
+        reporter = self.srv.create_reporter(data, owner=self.testuser)
+        grade_out, extra_out = reporter.file_report("FAKE_RUN", self.student, grade, comments)
+        self.assertEqual(5, grade_out)
         reporter.delete()
 
     def test_file_report_moodle_pastdue_ignore(self):
@@ -316,7 +354,8 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         comments = "Tested via test_file_report_moodle_pastdue on {:s} (fail).".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(grade)
         reporter = self.srv.create_reporter(data, owner=self.testuser)
-        reporter.file_report("FakeRun", self.student, grade, comments)
+        grade_out, extra_out = reporter.file_report("FAKE_RUN", self.student, grade, comments)
+        self.assertEqual(grade, grade_out)
         reporter.delete()
 
     def test_file_report_moodle_prereq(self):
@@ -340,7 +379,8 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         comments = "Tested via test_file_report_moodle_prereq on {:s} (setpreq).".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(prereq_grade)
         reporter = self.srv.create_reporter(prereq, owner=self.testuser)
-        reporter.file_report("FakeRun", self.student, prereq_grade, comments)
+        grade_out, extra_out = reporter.file_report("FAKE_RUN", self.student, prereq_grade, comments)
+        self.assertEqual(prereq_grade, grade_out)
         reporter.delete()
 
         # Test Pass
@@ -348,7 +388,8 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         comments = "Tested via test_file_report_moodle_prereq on {:s} (pass).".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(new_grade)
         reporter = self.srv.create_reporter(newasn, owner=self.testuser)
-        reporter.file_report("FakeRun", self.student, new_grade, comments)
+        grade_out, extra_out = reporter.file_report("FAKE_RUN", self.student, new_grade, comments)
+        self.assertEqual(new_grade, grade_out)
         reporter.delete()
 
         # Setup Fail
@@ -356,7 +397,8 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         comments = "Tested via test_file_report_moodle_prereq on {:s} (setpreq).".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(prereq_grade)
         reporter = self.srv.create_reporter(prereq, owner=self.testuser)
-        reporter.file_report("FakeRun", self.student, prereq_grade, comments)
+        grade_out, extra_out = reporter.file_report("FAKE_RUN", self.student, prereq_grade, comments)
+        self.assertEqual(prereq_grade, grade_out)
         reporter.delete()
 
         # Test Fail
@@ -364,9 +406,8 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         comments = "Tested via test_file_report_moodle_prereq on {:s} (fail).".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(new_grade)
         reporter = self.srv.create_reporter(newasn, owner=self.testuser)
-        self.assertRaises(repmod_moodle.MoodleReporterError,
-                          reporter.file_report, "FakeRun",
-                          self.student, new_grade, comments)
+        grade_out, extra_out = reporter.file_report("FAKE_RUN", self.student, new_grade, comments)
+        self.assertEqual(0, grade_out)
         reporter.delete()
 
     def test_file_report_moodle_higher(self):
@@ -379,14 +420,14 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         comments = "Tested via test_file_report_moodle_higher on {:s} (pass).".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(grade)
         reporter = self.srv.create_reporter(data, owner=self.testuser)
-        reporter.file_report("FakeRun", self.student, grade, comments)
+        grade_out, extra_out = reporter.file_report("FAKE_RUN",self.student, grade, comments)
+        self.assertEqual(grade, grade_out)
         grade = 5.0
         comments = "Tested via test_file_report_moodle_higher on {:s} (fail).".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(grade)
         reporter = self.srv.create_reporter(data, owner=self.testuser)
-        self.assertRaises(repmod_moodle.MoodleReporterError,
-                          reporter.file_report, "FakeRun",
-                          self.student, grade, comments)
+        grade_out, extra_out = reporter.file_report("FAKE_RUN",self.student, grade, comments)
+        self.assertEqual(grade, grade_out)
         reporter.delete()
 
     def test_file_report_moodle_higher_ignore(self):
@@ -399,12 +440,14 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         comments = "Tested via test_file_report_moodle_higher on {:s} (pass).".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(grade)
         reporter = self.srv.create_reporter(data, owner=self.testuser)
-        reporter.file_report("FakeRun", self.student, grade, comments)
+        grade_out, extra_out = reporter.file_report("FAKE_RUN",self.student, grade, comments)
+        self.assertEqual(grade, grade_out)
         grade = 5.0
         comments = "Tested via test_file_report_moodle_higher on {:s} (fail).".format(time.asctime())
         comments += "\nGrade = {:.2f}".format(grade)
         reporter = self.srv.create_reporter(data, owner=self.testuser)
-        reporter.file_report("FakeRun", self.student, grade, comments)
+        grade_out, extra_out = reporter.file_report("FAKE_RUN",self.student, grade, comments)
+        self.assertEqual(grade, grade_out)
         reporter.delete()
 
 class AssignmentTestCase(test_common_backend.UUIDHashMixin,
