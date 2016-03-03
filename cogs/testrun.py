@@ -156,13 +156,15 @@ def test(asn, sub, tst, run):
                 if extra_output:
                     output += "\n" + extra_output
             except Exception as e:
-                output += "\nWARNING: Reporter Error: {:s}".format(e)
+                msg = "WARNING: Reporter Error: {:s}".format(e)
+                msg += "\n{}".format(status, traceback.format_exc())
+                output += "\n" + msg
                 status = "complete-error-reporter"
-                msg = "{}:\n{}".format(status, traceback.format_exc())
                 logger.error(msg)
             if score_out != score:
-                msg = "\nWARNING: "
+                msg = "WARNING: "
                 msg += "Grader lowered score from {:.2f} to {:.2f}".format(score, score_out)
+                output += "\n" + msg
                 status = "complete-warning-reporter"
                 logger.info(msg)
                 score = score_out
