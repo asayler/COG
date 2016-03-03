@@ -1,0 +1,17 @@
+sudo: required
+language: python
+python:
+  - "2.7"
+branches:
+  only:
+    - master
+services:
+  - redis-server
+before_install:
+  - make git
+install:
+  - make reqs
+before_script:
+  - sudo make conf
+script:
+  - make tests
