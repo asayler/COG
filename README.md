@@ -22,7 +22,7 @@ Status
 COG is currently running in Beta in production using v2 of the
 API. Bug reports, patches, and comments welcome.
 
-[![Build Status](https://drone.io/github.com/asayler/CU-Online-Grading/status.png)](https://drone.io/github.com/asayler/CU-Online-Grading/latest)
+[![Build Status](https://travis-ci.org/asayler/COG.svg?branch=master)](https://travis-ci.org/asayler/COG)
 
 Related
 -------
