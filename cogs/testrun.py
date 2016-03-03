@@ -28,7 +28,7 @@ def test(asn, sub, tst, run):
     # Init
     run['status'] = 'initializing_test'
     retcode = 0
-    score = 0
+    score = 0.0
     env = None
 
     # Setup Env
@@ -42,7 +42,7 @@ def test(asn, sub, tst, run):
                 raise Exception("Unknown env type {:s}".format(env_type))
         except Exception as e:
             retcode = -1
-            score = 0
+            score = 0.0
             output = traceback.format_exc()
             status = "complete-exception-env"
             msg = "{}:\n{}".format(status, output)
@@ -63,7 +63,7 @@ def test(asn, sub, tst, run):
                 raise Exception("Unknown builder type {:s}".format(builder_type))
         except Exception as e:
             retcode = -1
-            score = 0
+            score = 0.0
             output = traceback.format_exc()
             status = "complete-exception-builder_setup"
             msg = "{}:\n{}".format(status, output)
@@ -76,14 +76,14 @@ def test(asn, sub, tst, run):
             retcode, output = builder.build()
         except Exception as e:
             retcode = -1
-            score = 0
+            score = 0.0
             output = traceback.format_exc()
             status = 'complete-exception-builder_build'
             msg = "{}:\n{}".format(status, output)
             logger.warning(msg)
         else:
             if (retcode != 0):
-                score = 0
+                score = 0.0
                 status = 'complete-error-builder_build'
                 msg = "{}".format(status)
                 logger.warning(msg)
@@ -101,7 +101,7 @@ def test(asn, sub, tst, run):
                 raise Exception("Unknown tester type {:s}".format(tester_type))
         except Exception as e:
             retcode = -1
-            score = 0
+            score = 0.0
             output = traceback.format_exc()
             status = "complete-exception-tester_setup"
             msg = "{}:\n{}".format(status, output)
@@ -114,7 +114,7 @@ def test(asn, sub, tst, run):
             retcode, score, output = tester.test()
         except Exception as e:
             retcode = -1
-            score = 0
+            score = 0.0
             output = traceback.format_exc()
             status = 'complete-exception-tester_run'
             msg = "{}:\n{}".format(status, output)
@@ -129,8 +129,8 @@ def test(asn, sub, tst, run):
     # Normalize Results
     if retcode == 0:
         status = 'complete'
-    retcode = str(retcode)
-    score = str(score)
+    retcode = int(retcode)
+    score = float(score)
     output = str(output)
 
     # Report Results
@@ -146,8 +146,8 @@ def test(asn, sub, tst, run):
         comments += "Test: {:s}\n".format(repr(tst))
         comments += "Submission: {:s}\n".format(repr(sub))
         comments += "Run: {:s}\n".format(repr(run))
-        comments += "Run Score: {:s} of {:s}\n".format(score, tst['maxscore'])
-        comments += "Run Return: {:s}\n".format(retcode)
+        comments += "Run Score: {:.2f} of {:.2f}\n".format(score, float(tst['maxscore']))
+        comments += "Run Return: {:d}\n".format(retcode)
         comments += "Run Status: {:s}\n".format(status)
         comments += "Run Output:\n"
         comments += output
