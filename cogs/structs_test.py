@@ -380,7 +380,10 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         comments += "\nGrade = {:.2f}".format(prereq_grade)
         reporter = self.srv.create_reporter(prereq, owner=self.testuser)
         grade_out, extra_out = reporter.file_report("FAKE_RUN", self.student, prereq_grade, comments)
-        self.assertEqual(prereq_grade, grade_out)
+        try:
+            self.assertEqual(prereq_grade, grade_out)
+        except AssertionError as e:
+            print(extra_out)
         reporter.delete()
 
         # Test Pass
@@ -389,7 +392,10 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         comments += "\nGrade = {:.2f}".format(new_grade)
         reporter = self.srv.create_reporter(newasn, owner=self.testuser)
         grade_out, extra_out = reporter.file_report("FAKE_RUN", self.student, new_grade, comments)
-        self.assertEqual(new_grade, grade_out)
+        try:
+            self.assertEqual(new_grade, grade_out)
+        except AssertionError as e:
+            print(extra_out)
         reporter.delete()
 
         # Setup Fail
@@ -398,7 +404,10 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         comments += "\nGrade = {:.2f}".format(prereq_grade)
         reporter = self.srv.create_reporter(prereq, owner=self.testuser)
         grade_out, extra_out = reporter.file_report("FAKE_RUN", self.student, prereq_grade, comments)
-        self.assertEqual(prereq_grade, grade_out)
+        try:
+            self.assertEqual(prereq_grade, grade_out)
+        except AssertionError as e:
+            print(extra_out)
         reporter.delete()
 
         # Test Fail
@@ -407,7 +416,10 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         comments += "\nGrade = {:.2f}".format(new_grade)
         reporter = self.srv.create_reporter(newasn, owner=self.testuser)
         grade_out, extra_out = reporter.file_report("FAKE_RUN", self.student, new_grade, comments)
-        self.assertEqual(0, grade_out)
+        try:
+            self.assertEqual(0, grade_out)
+        except AssertionError as e:
+            print(extra_out)
         reporter.delete()
 
     def test_file_report_moodle_higher(self):

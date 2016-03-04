@@ -47,6 +47,9 @@ class CogsApiTestCase(cogs.test_common.CogsTestCase):
         # Call Parent
         super(CogsApiTestCase, self).setUp()
 
+        # Setup testing
+        api.app.config['TESTING'] = True
+
         # Create Test Client
         self.app = api.app.test_client()
 
@@ -427,8 +430,12 @@ class CogsApiRootTestCase(CogsApiTestCase):
         super(CogsApiRootTestCase, self).tearDown()
 
     def test_root_get(self):
+
         res = self.open_user('GET', '/', user=self.admin)
-        self.assertEqual(res.status_code, 200)
+        try:
+            self.assertEqual(res.status_code, 200)
+        except AssertionError as e:
+            print(res.data)
         self.assertTrue(res.data)
 
 ## Auth Tests ##
