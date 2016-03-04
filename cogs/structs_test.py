@@ -383,6 +383,7 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         try:
             self.assertEqual(prereq_grade, grade_out)
         except AssertionError as e:
+            print()
             print(extra_out)
             raise
         reporter.delete()
@@ -396,6 +397,7 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         try:
             self.assertEqual(new_grade, grade_out)
         except AssertionError as e:
+            print()
             print(extra_out)
             raise
         reporter.delete()
@@ -409,6 +411,7 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         try:
             self.assertEqual(prereq_grade, grade_out)
         except AssertionError as e:
+            print()
             print(extra_out)
             raise
         reporter.delete()
@@ -422,6 +425,7 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
         try:
             self.assertEqual(0, grade_out)
         except AssertionError as e:
+            print()
             print(extra_out)
             raise
         reporter.delete()
