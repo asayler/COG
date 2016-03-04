@@ -362,16 +362,16 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
 
         prereq = copy.copy(test_common.REPORTER_TESTDICT)
         prereq['mod'] = "moodle"
-        prereq['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_NODUE
+        prereq['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_PREREQ
         prereq['moodle_respect_duedate'] = "0"
         prereq['moodle_only_higher'] = "0"
 
         newasn = copy.copy(test_common.REPORTER_TESTDICT)
         newasn['mod'] = "moodle"
-        newasn['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_HIGHER
+        newasn['moodle_asn_id'] = test_common.REPMOD_MOODLE_ASN_POSTPRE
         newasn['moodle_respect_duedate'] = "0"
         newasn['moodle_only_higher'] = "0"
-        newasn['moodle_prereq_asn_id'] = test_common.REPMOD_MOODLE_ASN_NODUE
+        newasn['moodle_prereq_asn_id'] = test_common.REPMOD_MOODLE_ASN_PREREQ
         newasn['moodle_prereq_min'] = "5"
 
         # Setup Pass
