@@ -56,7 +56,6 @@ cors = flask.ext.cors.CORS(app, headers=["Content-Type", "Authorization"])
 httpauth = flask.ext.httpauth.HTTPBasicAuth()
 srv = cogs.structs.Server()
 auth = cogs.auth.Auth()
-repo = git.Repo(cogs.config.ROOT_PATH)
 
 
 ### Logging ###
@@ -371,10 +370,12 @@ def filter_asns_runable(asn_list):
 def get_root():
 
     app.logger.debug("GET ROOT")
-    branch = str(repo.active_branch)
-    longhash = str(repo.head.commit)
+    repo = git.Repo(cogs.config.ROOT_PATH)
+    branch = repo.active_branch
+    commit = branch.commit
+    longhash = str(commit)
     shorthash = longhash[0:7]
-    return flask.render_template('index.html', branch=branch,
+    return flask.render_template('index.html', branch=str(branch),
                                  shorthash=shorthash, longhash=longhash)
 
 ## Access Control Endpoints ##
