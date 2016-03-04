@@ -8,8 +8,6 @@ branches:
     - master
 services:
   - redis-server
-before_install:
-  - make git
 install:
   - make reqs
 before_script:
