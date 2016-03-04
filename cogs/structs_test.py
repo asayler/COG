@@ -384,6 +384,7 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
             self.assertEqual(prereq_grade, grade_out)
         except AssertionError as e:
             print(extra_out)
+            raise
         reporter.delete()
 
         # Test Pass
@@ -396,6 +397,7 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
             self.assertEqual(new_grade, grade_out)
         except AssertionError as e:
             print(extra_out)
+            raise
         reporter.delete()
 
         # Setup Fail
@@ -408,6 +410,7 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
             self.assertEqual(prereq_grade, grade_out)
         except AssertionError as e:
             print(extra_out)
+            raise
         reporter.delete()
 
         # Test Fail
@@ -420,6 +423,7 @@ class ReporterTestCase(test_common_backend.UUIDHashMixin,
             self.assertEqual(0, grade_out)
         except AssertionError as e:
             print(extra_out)
+            raise
         reporter.delete()
 
     def test_file_report_moodle_higher(self):

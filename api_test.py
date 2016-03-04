@@ -436,6 +436,7 @@ class CogsApiRootTestCase(CogsApiTestCase):
             self.assertEqual(res.status_code, 200)
         except AssertionError as e:
             print(res.data)
+            raise
         self.assertTrue(res.data)
 
 ## Auth Tests ##
