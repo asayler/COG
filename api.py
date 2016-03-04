@@ -61,7 +61,7 @@ repo = git.Repo(cogs.config.ROOT_PATH)
 
 ### Logging ###
 
-if cogs.config.LOGGING_ENABLED and not app.testing:
+if cogs.config.LOGGING_ENABLED:
 
     import logging
     import logging.handlers
