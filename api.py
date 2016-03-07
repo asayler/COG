@@ -370,16 +370,21 @@ def filter_asns_runable(asn_list):
 def get_root():
 
     app.logger.debug("GET ROOT")
-    repo = git.Repo(cogs.config.ROOT_PATH)
     try:
-        branch = str(repo.active_branch)
-    except TypeError as e:
-        branch = "Detached"
-    commit = repo.commit()
-    longhash = str(commit)
-    shorthash = longhash[0:7]
-    return flask.render_template('index.html', branch=str(branch),
-                                 shorthash=shorthash, longhash=longhash)
+        repo = git.Repo(cogs.config.ROOT_PATH)
+    except git.exc.InvalidGitRepositoryError as err:
+        return flask.render_template('index.html', branch="None",
+                                     shorthash="None", longhash="")
+    else:
+        try:
+            branch = str(repo.active_branch)
+        except TypeError as err:
+            branch = "Detached"
+        commit = repo.commit()
+        longhash = str(commit)
+        shorthash = longhash[0:7]
+        return flask.render_template('index.html', branch=branch,
+                                     shorthash=shorthash, longhash=longhash)
 
 ## Access Control Endpoints ##
 
