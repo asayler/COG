@@ -371,6 +371,10 @@ def get_root():
 
     app.logger.debug("GET ROOT")
     repo = git.Repo(cogs.config.ROOT_PATH)
+    try:
+        branch = str(repo.active_branch)
+    except TypeError as e:
+        brnach = "Detached"
     commit = repo.commit()
     longhash = str(commit)
     shorthash = longhash[0:7]
