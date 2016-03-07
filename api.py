@@ -371,8 +371,7 @@ def get_root():
 
     app.logger.debug("GET ROOT")
     repo = git.Repo(cogs.config.ROOT_PATH)
-    branch = repo.active_branch
-    commit = branch.commit
+    commit = repo.commit()
     longhash = str(commit)
     shorthash = longhash[0:7]
     return flask.render_template('index.html', branch=str(branch),
