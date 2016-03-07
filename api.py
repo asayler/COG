@@ -374,7 +374,7 @@ def get_root():
     try:
         branch = str(repo.active_branch)
     except TypeError as e:
-        brnach = "Detached"
+        branch = "Detached"
     commit = repo.commit()
     longhash = str(commit)
     shorthash = longhash[0:7]
