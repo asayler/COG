@@ -137,7 +137,7 @@ def test(asn, sub, tst, run):
     # Limit output size
     olen = len(output)
     mlen = config.CORE_MAX_OUTPUT
-    if olen > mlen
+    if olen > mlen:
         msg = "Output length '{}' exceeds max of '{}'. Truncating...".format(olen, mlen)
         logger.warning(msg)
         output = output[:config.CORE_MAX_OUTPUT]

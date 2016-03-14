@@ -10,7 +10,7 @@ import os
 config = ConfigParser.SafeConfigParser(allow_no_value=True)
 
 # Sections
-SEC_REDIS = "core"
+SEC_CORE = "core"
 config.add_section(SEC_CORE)
 SEC_REDIS = "redis"
 config.add_section(SEC_REDIS)
