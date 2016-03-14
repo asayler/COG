@@ -52,4 +52,4 @@ if __name__ == "__main__":
     srv = cogs.structs.Server()
     
     orphans = cleanup_orphaned_files(srv)
-    print("Cleanup up {} orphaned files".format(len(orphans)))
+    print("Cleaned up {} orphaned files".format(len(orphans)))
