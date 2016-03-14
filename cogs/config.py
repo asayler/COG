@@ -10,6 +10,8 @@ import os
 config = ConfigParser.SafeConfigParser(allow_no_value=True)
 
 # Sections
+SEC_REDIS = "core"
+config.add_section(SEC_CORE)
 SEC_REDIS = "redis"
 config.add_section(SEC_REDIS)
 SEC_FILESTORAGE = "filestorage"
@@ -32,6 +34,7 @@ SCRIPTS_PATH = os.path.realpath("{:s}/{:s}".format(ROOT_PATH, "scripts"))
 CONF_PATH = os.path.realpath("{:s}/{:s}".format(ROOT_PATH, "cog.conf"))
 
 # Set Default Vals
+config.set(SEC_CORE, 'MAX_OUTPUT', "1000000")
 config.set(SEC_REDIS, 'HOST', "localhost")
 config.set(SEC_REDIS, 'PORT', "6379")
 config.set(SEC_REDIS, 'DB', "4")
@@ -60,6 +63,7 @@ DEFAULT_UPLOAD_PATH = "/tmp/cogs/uploads"
 config.read(CONF_PATH)
 
 # Get Env Var Overrides
+CORE_MAX_OUTPUT = int(os.environ.get('COGS_CORE_MAX_OUTPUT', config.get(SEC_CORE, 'MAX_OUTPUT')))
 REDIS_HOST = os.environ.get('COGS_REDIS_HOST', config.get(SEC_REDIS, 'HOST'))
 REDIS_PORT = int(os.environ.get('COGS_REDIS_PORT', config.get(SEC_REDIS, 'PORT')))
 REDIS_DB = int(os.environ.get('COGS_REDIS_DB', config.get(SEC_REDIS, 'DB')))

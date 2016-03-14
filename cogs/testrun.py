@@ -8,6 +8,7 @@ import traceback
 import time
 import logging
 
+import config
 import env_local
 import builder_make
 import builder_cmd
@@ -132,6 +133,15 @@ def test(asn, sub, tst, run):
     retcode = int(retcode)
     score = float(score)
     output = str(output)
+
+    # Limit output size
+    olen = len(output)
+    mlen = config.CORE_MAX_OUTPUT
+    if olen > mlen
+        msg = "Output length '{}' exceeds max of '{}'. Truncating...".format(olen, mlen)
+        logger.warning(msg)
+        output = output[:config.CORE_MAX_OUTPUT]
+        output += "\n" + msg
 
     # Report Results
     reporters = tst.get_reporters()
