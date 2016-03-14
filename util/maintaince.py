@@ -5,19 +5,27 @@
 # Spring 2016
 # University of Colorado
 
+import time
+
 import cogs.structs
+
+ORPHAN_AGE = 3600 #seconds
 
 def cleanup_orphaned_files(srv):
 
     attached = list_attached_files(srv)
     files = srv.list_files()
     orphans = files - attached
+    deleted = set()
 
     for fle_uid in orphans:
         fle = srv.get_file(fle_uid)
-        fle.delete()
+        mod_time = fle.get_dict()['modified_time']
+        if (time.time() - mod_time) > ORPHAN_AGE:
+            fle.delete()
+            deleted.add(fle_uid)
 
-    return orphans
+    return deleted
 
 def list_attached_files(srv):
 
