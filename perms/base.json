@@ -1,6 +1,5 @@
 {"groups": {
     "ANY": [
-        {"ep": "/tokens/",                 "method": "GET" },
         {"ep": "/my/token/",               "method": "GET" },
         {"ep": "/my/username/",            "method": "GET" },
         {"ep": "/my/useruuid/",            "method": "GET" },

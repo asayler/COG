@@ -388,7 +388,6 @@ def get_root():
 
 ## Access Control Endpoints ##
 
-@app.route("/{}/".format(_TOKENS_KEY), methods=['GET'])
 @app.route("/my/{}/".format(_TOKEN_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()

@@ -452,16 +452,6 @@ class CogsApiAuthTestCase(CogsApiObjectHelpers, CogsApiTestCase):
     def tearDown(self):
         super(CogsApiAuthTestCase, self).tearDown()
 
-    def test_tokens_get(self):
-        res = self.open_user('GET', '/tokens/', user=self.admin)
-        self.assertEqual(res.status_code, 200)
-        res_obj = json.loads(res.data)
-        self.assertTrue(res_obj)
-        res_keys = res_obj.keys()
-        self.assertEqual(len(res_keys), 1)
-        token = res_obj['token']
-        self.assertEqual(token, self.admin['token'])
-
     def test_my_token_get(self):
         res = self.open_user('GET', '/my/token/', user=self.admin)
         self.assertEqual(res.status_code, 200)

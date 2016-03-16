@@ -2,7 +2,6 @@
 
 GET     /                                               Welcome Message
 
-GET     /tokens/                                        Get User Auth Token
 GET     /my/token/                                      Get User Auth Token
 GET     /my/username/                                   Get User Username
 GET     /my/useruuid/                                   Get User User UUID
