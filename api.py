@@ -361,6 +361,17 @@ def filter_asns_runable(asn_list):
 
     return asns_runable
 
+def filter_subs_owner(sub_list):
+
+    subs_owner = []
+
+    for sub_uuid in sub_list:
+        sub = srv.get_submission(sub_uuid)
+        if uuid.UUID(sub['owner']) == flask.g.user.uuid:
+            subs_owner.append(sub_uuid)
+
+    return subs_owner
+
 
 ### Endpoints ###
 
@@ -404,11 +415,27 @@ def my_username():
 
 @app.route("/my/{}/".format(_USERUUID_KEY), methods=['GET'])
 @httpauth.login_required
-@auth.requires_auth_route()
 def my_useruuid():
     useruuid = str(flask.g.user.uuid)
     out = {_USERUUID_KEY: useruuid}
     return flask.jsonify(out)
+
+@app.route("/my/{}/<asn_uid>/{}/".format(_ASSIGNMENTS_KEY, _SUBMISSIONS_KEY), methods=['GET'])
+@httpauth.login_required
+def my_assignment_submissions(asn_uid):
+
+    # Get Assignment
+    asn = srv.get_assignment(asn_uid)
+
+    # Get Submissions Filtered by Owner
+    sub_lst = process_objects(asn.list_submissions, None,
+                              func_filter=filter_subs_owner)
+
+    # Build Output
+    out = {_SUBMISSIONS_KEY: sub_lst}
+    return flask.jsonify(out)
+
+## User Endpoints ##
 
 @app.route("/{}/".format(_USERS_KEY), methods=['GET'])
 @httpauth.login_required

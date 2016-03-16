@@ -5,6 +5,18 @@ GET     /                                               Welcome Message
 GET     /my/token/                                      Get User Auth Token
 GET     /my/username/                                   Get User Username
 GET     /my/useruuid/                                   Get User User UUID
+#GET     /my/files/                                      List User's Files
+#GET     /my/reporters/                                  List User's Reporters
+#GET     /my/assignments/                                List User's Assignments
+#GET     /my/assignments/<ID>/tests/                     List User's Tests by Assignment
+GET     /my/assignments/<ID>/submissions/               List User's Submissions by Assignment
+#GET     /my/tests/                                      List User's Tests
+#GET     /my/tests/<ID>/files/                           List User's Files by Test
+#GET     /my/tests/<ID>/reporters/                       List User's Reporters by Test
+#GET     /my/submissions/                                List User's Submissions
+#GET     /my/submissions/<ID>/files/                     List User's Files by Submission
+#GET     /my/submissions/<ID>/runs/                      List User's Runs by Submission
+#GET     /my/runs/                                       List User's Runs
 
 GET     /users/                                         List Users
 GET     /users/<ID>/                                    Show User
