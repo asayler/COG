@@ -386,11 +386,10 @@ def get_root():
         return flask.render_template('index.html', branch=branch,
                                      shorthash=shorthash, longhash=longhash)
 
-## Access Control Endpoints ##
+## My Endpoints ##
 
 @app.route("/my/{}/".format(_TOKEN_KEY), methods=['GET'])
 @httpauth.login_required
-@auth.requires_auth_route()
 def my_token():
     token = flask.g.user['token']
     out = {_TOKEN_KEY: token}
@@ -398,7 +397,6 @@ def my_token():
 
 @app.route("/my/{}/".format(_USERNAME_KEY), methods=['GET'])
 @httpauth.login_required
-@auth.requires_auth_route()
 def my_username():
     username = flask.g.user['username']
     out = {_USERNAME_KEY: username}

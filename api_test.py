@@ -439,18 +439,14 @@ class CogsApiRootTestCase(CogsApiTestCase):
             raise
         self.assertTrue(res.data)
 
-## Auth Tests ##
-class CogsApiAuthTestCase(CogsApiObjectHelpers, CogsApiTestCase):
+## My Tests ##
+class CogsApiMyTestCase(CogsApiObjectHelpers, CogsApiTestCase):
 
     def setUp(self):
-        super(CogsApiAuthTestCase, self).setUp()
-        self.user_url = "/users/"
-        self.user_key = "users"
-        self.admin_url = "/admins/"
-        self.admin_key = "admins"
+        super(CogsApiMyTestCase, self).setUp()
 
     def tearDown(self):
-        super(CogsApiAuthTestCase, self).tearDown()
+        super(CogsApiMyTestCase, self).tearDown()
 
     def test_my_token_get(self):
         res = self.open_user('GET', '/my/token/', user=self.admin)
@@ -481,6 +477,19 @@ class CogsApiAuthTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         self.assertEqual(len(res_keys), 1)
         useruuid = res_obj['useruuid']
         self.assertEqual(useruuid, self.admin_uuid)
+
+## User Tests ##
+class CogsApiUserTestCase(CogsApiObjectHelpers, CogsApiTestCase):
+
+    def setUp(self):
+        super(CogsApiUserTestCase, self).setUp()
+        self.user_url = "/users/"
+        self.user_key = "users"
+        self.admin_url = "/admins/"
+        self.admin_key = "admins"
+
+    def tearDown(self):
+        super(CogsApiUserTestCase, self).tearDown()
 
     def test_user_list(self):
         usr_set = self.lst_objects(self.user_url, self.user_key, user=self.admin)
