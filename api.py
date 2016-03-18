@@ -477,7 +477,7 @@ def my_submission_runs(sub_uid):
 
 @app.route("/my/{}/".format(_RUNS_KEY), methods=['GET'])
 @httpauth.login_required
-def my_runs(sub_uid):
+def my_runs():
 
     # Get Runs Filtered by Owner
     run_lst = process_objects(srv.list_runs, None,
