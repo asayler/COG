@@ -13,7 +13,7 @@ GET     /my/assignments/<ID>/submissions/               List User's Submissions 
 #GET     /my/tests/                                      List User's Tests
 #GET     /my/tests/<ID>/files/                           List User's Files by Test
 #GET     /my/tests/<ID>/reporters/                       List User's Reporters by Test
-#GET     /my/submissions/                                List User's Submissions
+GET     /my/submissions/                                List User's Submissions
 #GET     /my/submissions/<ID>/files/                     List User's Files by Submission
 #GET     /my/submissions/<ID>/runs/                      List User's Runs by Submission
 #GET     /my/runs/                                       List User's Runs

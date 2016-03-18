@@ -528,6 +528,48 @@ class CogsApiMyTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         # Cleanup Assignmnt
         asn = self.delete_object('/assignments/', asn_uuid, user=self.admin)
 
+    def test_my_submissions(self):
+
+        # Create Assignment
+        asn_uuids = self.create_objects('/assignments/', 'assignments',
+                                        cogs.test_common.ASSIGNMENT_TESTDICT,
+                                        json_data=True, user=self.admin)
+        asn_uuid = asn_uuids.pop()
+
+        # Set URLs
+        url_create = '/assignments/{}/submissions/'.format(asn_uuid)
+        url_lst_filter = '/my/submissions/'
+        url_obj = '/submissions/'
+        sub_key = 'submissions'
+
+        # Get Object List (Empty)
+        objects_out = self.lst_objects(url_lst_filter, sub_key, user=self.nonadmin)
+        self.assertEqual(set([]), objects_out)
+
+        # Create Submissions
+        objects_in = set([])
+        for i in range(10):
+            obj_lst = self.create_objects(url_create, sub_key,
+                                          cogs.test_common.SUBMISSION_TESTDICT,
+                                          json_data=True, user=self.nonadmin)
+            for obj_uuid in obj_lst:
+                objects_in.add(obj_uuid)
+
+        # Get Object List (Full)
+        objects_out = self.lst_objects(url_lst_filter, sub_key, user=self.nonadmin)
+        self.assertEqual(objects_in, objects_out)
+
+        # Cleanup Submissions
+        for obj_uuid in objects_in:
+            obj = self.delete_object(url_obj, obj_uuid, user=self.nonadmin)
+
+        # Get Object List (Empty)
+        objects_out = self.lst_objects(url_lst_filter, sub_key, user=self.nonadmin)
+        self.assertEqual(set([]), objects_out)
+
+        # Cleanup Assignmnt
+        asn = self.delete_object('/assignments/', asn_uuid, user=self.admin)
+
 ## User Tests ##
 class CogsApiUserTestCase(CogsApiObjectHelpers, CogsApiTestCase):
 

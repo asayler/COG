@@ -7,7 +7,9 @@
 
 # pylint: disable=no-name-in-module
 
+
 ### Imports ###
+
 import time
 import os
 import uuid
@@ -429,6 +431,18 @@ def my_assignment_submissions(asn_uid):
 
     # Get Submissions Filtered by Owner
     sub_lst = process_objects(asn.list_submissions, None,
+                              func_filter=filter_subs_owner)
+
+    # Build Output
+    out = {_SUBMISSIONS_KEY: sub_lst}
+    return flask.jsonify(out)
+
+@app.route("/my/{}/".format(_SUBMISSIONS_KEY), methods=['GET'])
+@httpauth.login_required
+def my_submissions():
+
+    # Get Submissions Filtered by Owner
+    sub_lst = process_objects(srv.list_submissions, None,
                               func_filter=filter_subs_owner)
 
     # Build Output
