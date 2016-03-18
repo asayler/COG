@@ -365,14 +365,25 @@ def filter_asns_runable(asn_list):
 
 def filter_subs_owner(sub_list):
 
-    subs_owner = []
+    subs_by_owner = []
 
     for sub_uuid in sub_list:
         sub = srv.get_submission(sub_uuid)
         if uuid.UUID(sub['owner']) == flask.g.user.uuid:
-            subs_owner.append(sub_uuid)
+            subs_by_owner.append(sub_uuid)
 
-    return subs_owner
+    return subs_by_owner
+
+def filter_runs_owner(run_list):
+
+    runs_by_owner = []
+
+    for run_uuid in run_list:
+        run = srv.get_run(run_uuid)
+        if uuid.UUID(run['owner']) == flask.g.user.uuid:
+            runs_by_owner.append(run_uuid)
+
+    return runs_by_owner
 
 
 ### Endpoints ###
@@ -448,6 +459,34 @@ def my_submissions():
     # Build Output
     out = {_SUBMISSIONS_KEY: sub_lst}
     return flask.jsonify(out)
+
+@app.route("/my/{}/<sub_uid>/{}/".format(_SUBMISSIONS_KEY, _RUNS_KEY), methods=['GET'])
+@httpauth.login_required
+def my_submission_runs(sub_uid):
+
+    # Get Submsission
+    sub = srv.get_submission(sub_uid)
+
+    # Get Runs Filtered by Owner
+    run_lst = process_objects(sub.list_runs, None,
+                              func_filter=filter_runs_owner)
+
+    # Build Output
+    out = {_RUNS_KEY: run_lst}
+    return flask.jsonify(out)
+
+@app.route("/my/{}/".format(_RUNS_KEY), methods=['GET'])
+@httpauth.login_required
+def my_runs(sub_uid):
+
+    # Get Runs Filtered by Owner
+    run_lst = process_objects(srv.list_runs, None,
+                              func_filter=filter_runs_owner)
+
+    # Build Output
+    out = {_RUNS_KEY: run_lst}
+    return flask.jsonify(out)
+
 
 ## User Endpoints ##
 
