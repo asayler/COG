@@ -167,7 +167,7 @@ def test(asn, sub, tst, run):
                     output += "\n" + extra_output
             except Exception as e:
                 msg = "WARNING: Reporter Error: {:s}".format(e)
-                msg += "\n{}".format(status, traceback.format_exc())
+                msg += "\n{}".format(traceback.format_exc())
                 output += "\n" + msg
                 status = "complete-error-reporter"
                 logger.error(msg)
