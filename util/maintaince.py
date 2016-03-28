@@ -20,7 +20,7 @@ def cleanup_orphaned_files(srv):
 
     for fle_uid in orphans:
         fle = srv.get_file(fle_uid)
-        mod_time = fle.get_dict()['modified_time']
+        mod_time = float(fle.get_dict()['modified_time'])
         if (time.time() - mod_time) > ORPHAN_AGE:
             fle.delete()
             deleted.add(fle_uid)
