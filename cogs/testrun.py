@@ -171,13 +171,14 @@ def test(asn, sub, tst, run):
                 output += "\n" + msg
                 status = "complete-error-reporter"
                 logger.error(msg)
-            if score_out != score:
-                msg = "WARNING: "
-                msg += "Grader lowered score from {:.2f} to {:.2f}".format(score, score_out)
-                output += "\n" + msg
-                status = "complete-warning-reporter"
-                logger.info(msg)
-                score = score_out
+            else:
+                if score_out != score:
+                    msg = "WARNING: "
+                    msg += "Grader lowered score from {:.2f} to {:.2f}".format(score, score_out)
+                    output += "\n" + msg
+                    status = "complete-warning-reporter"
+                    logger.info(msg)
+                    score = score_out
 
     # Cleanup
     run['status'] = 'cleaning_up'
