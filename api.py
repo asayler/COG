@@ -67,7 +67,7 @@ if cogs.config.LOGGING_ENABLED:
     import logging
     import logging.handlers
 
-    loggers = [app.logger, perms.logger, logging.getLogger('cogs')]
+    loggers = [app.logger, perms.logger, logging.getLogger('cogs'), logging.getLogger('moodle')]
 
     formatter_line = logging.Formatter('%(levelname)s: %(module)s - %(message)s')
     formatter_line_time = logging.Formatter('%(asctime)s %(levelname)s: %(module)s - %(message)s')
