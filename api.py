@@ -435,7 +435,7 @@ def my_useruuid():
 
 @app.route("/my/{}/<asn_uid>/{}/".format(_ASSIGNMENTS_KEY, _SUBMISSIONS_KEY), methods=['GET'])
 @httpauth.login_required
-def my_assignment_submissions(asn_uid):
+def my_assignments_submissions(asn_uid):
 
     # Get Assignment
     asn = srv.get_assignment(asn_uid)
@@ -462,7 +462,7 @@ def my_submissions():
 
 @app.route("/my/{}/<sub_uid>/{}/".format(_SUBMISSIONS_KEY, _RUNS_KEY), methods=['GET'])
 @httpauth.login_required
-def my_submission_runs(sub_uid):
+def my_submissions_runs(sub_uid):
 
     # Get Submsission
     sub = srv.get_submission(sub_uid)
