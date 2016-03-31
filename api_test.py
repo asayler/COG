@@ -452,6 +452,7 @@ class CogsApiMyTestCase(CogsApiObjectHelpers, CogsApiTestCase):
 
     def setUp(self):
         super(CogsApiMyTestCase, self).setUp()
+        api.auth.add_allowed_groups('POST', '/files/', [api.cogs.auth.SPECIAL_GROUP_ANY])
 
     def tearDown(self):
         super(CogsApiMyTestCase, self).tearDown()
@@ -615,7 +616,68 @@ class CogsApiMyTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         # Cleanup Assignmnt
         asn = self.delete_object('/assignments/', asn_uuid, user=self.admin)
 
-    def test_my_submission_runs(self):
+    def test_my_submissions_files(self):
+
+        # Create Assignment
+        asn_uuids = self.create_objects('/assignments/', 'assignments',
+                                        cogs.test_common.ASSIGNMENT_TESTDICT,
+                                        json_data=True, user=self.admin)
+        asn_uuid = asn_uuids.pop()
+
+        # Create Submission
+        sub_uuids = self.create_objects('/assignments/{}/submissions/'.format(asn_uuid),
+                                        'submissions',
+                                        cogs.test_common.SUBMISSION_TESTDICT,
+                                        json_data=True, user=self.nonadmin)
+        sub_uuid = sub_uuids.pop()
+
+        # Set URLs
+        url_attach = '/submissions/{}/files/'.format(sub_uuid)
+        url_lst_filter = '/my/submissions/{}/files/'.format(sub_uuid)
+        url_obj = '/files/'
+        obj_key = 'files'
+        file_path = "{:s}/{:s}".format(cogs.test_common.TEST_INPUT_PATH, "test1.txt")
+
+        # Get Object List (Empty)
+        objects_out = self.lst_objects(url_lst_filter, obj_key, user=self.nonadmin)
+        self.assertEqual(set([]), objects_out)
+
+        # Create and Attach FIles
+        objects_in = set([])
+        for i in range(10):
+            file_key = "test_file_{:d}".format(i)
+            file_name = "test_file_{:d}.txt".format(i)
+            obj_lst = self.create_objects(url_obj, obj_key,
+                                          {file_key: (file_path, file_name)},
+                                          json_data=False, user=self.nonadmin)
+            for obj_uuid in obj_lst:
+                objects_in.add(obj_uuid)
+        self.add_objects(url_attach, obj_key, objects_in, user=self.nonadmin)
+
+        # Get Object List (Full)
+        objects_out = self.lst_objects(url_lst_filter, obj_key, user=self.nonadmin)
+        self.assertEqual(objects_in, objects_out)
+
+        # Get Object List (Empty via Differnt User)
+        objects_out = self.lst_objects(url_lst_filter, obj_key, user=self.admin)
+        self.assertEqual(set([]), objects_out)
+
+        # Remove and Cleanup Files
+        self.rem_objects(url_attach, obj_key, objects_in, user=self.nonadmin)
+        for obj_uuid in objects_in:
+            obj = self.delete_object(url_obj, obj_uuid, user=self.nonadmin)
+
+        # Get Object List (Empty)
+        objects_out = self.lst_objects(url_lst_filter, obj_key, user=self.nonadmin)
+        self.assertEqual(set([]), objects_out)
+
+        # Cleanup Submission
+        asn = self.delete_object('/submissions/', sub_uuid, user=self.nonadmin)
+
+        # Cleanup Assignment
+        asn = self.delete_object('/assignments/', asn_uuid, user=self.admin)
+
+    def test_my_submissions_runs(self):
 
         # Create Assignment
         asn_uuids = self.create_objects('/assignments/', 'assignments',

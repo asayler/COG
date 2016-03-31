@@ -396,6 +396,17 @@ def filter_runs_owner(run_list):
 
     return runs_by_owner
 
+def filter_files_owner(fle_list):
+
+    fles_by_owner = []
+
+    for fle_uuid in fle_list:
+        fle = srv.get_file(fle_uuid)
+        if uuid.UUID(fle['owner']) == flask.g.user.uuid:
+            fles_by_owner.append(fle_uuid)
+
+    return fles_by_owner
+
 
 ### Endpoints ###
 
@@ -496,6 +507,21 @@ def my_submissions_runs(sub_uid):
 
     # Build Output
     out = {_RUNS_KEY: run_lst}
+    return flask.jsonify(out)
+
+@app.route("/my/{}/<sub_uid>/{}/".format(_SUBMISSIONS_KEY, _FILES_KEY), methods=['GET'])
+@httpauth.login_required
+def my_submissions_files(sub_uid):
+
+    # Get Submsission
+    sub = srv.get_submission(sub_uid)
+
+    # Get Runs Filtered by Owner
+    fle_lst = process_objects(sub.list_files, None,
+                              func_filter=filter_files_owner)
+
+    # Build Output
+    out = {_FILES_KEY: fle_lst}
     return flask.jsonify(out)
 
 @app.route("/my/{}/".format(_RUNS_KEY), methods=['GET'])
