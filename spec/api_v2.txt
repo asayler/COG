@@ -7,7 +7,7 @@ GET     /my/username/                                   Get User Username
 GET     /my/useruuid/                                   Get User User UUID
 #GET     /my/files/                                      List User's Files
 #GET     /my/reporters/                                  List User's Reporters
-#GET     /my/assignments/                                List User's Assignments
+GET     /my/assignments/                                List User's Assignments
 #GET     /my/assignments/<ID>/tests/                     List User's Tests by Assignment
 GET     /my/assignments/<ID>/submissions/               List User's Submissions by Assignment
 #GET     /my/tests/                                      List User's Tests

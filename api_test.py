@@ -486,7 +486,44 @@ class CogsApiMyTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         useruuid = res_obj['useruuid']
         self.assertEqual(useruuid, self.admin_uuid)
 
-    def test_my_assignment_submissions(self):
+    def test_my_assignments(self):
+
+        # Set URLs
+        url_create = '/assignments/'
+        url_lst_filter = '/my/assignments/'
+        url_obj = '/assignments/'
+        obj_key = 'assignments'
+
+        # Get Object List (Empty)
+        objects_out = self.lst_objects(url_lst_filter, obj_key, user=self.admin)
+        self.assertEqual(set([]), objects_out)
+
+        # Create Assignments
+        objects_in = set([])
+        for i in range(10):
+            obj_lst = self.create_objects(url_create, obj_key,
+                                          cogs.test_common.ASSIGNMENT_TESTDICT,
+                                          json_data=True, user=self.admin)
+            for obj_uuid in obj_lst:
+                objects_in.add(obj_uuid)
+
+        # Get Object List (Full)
+        objects_out = self.lst_objects(url_lst_filter, obj_key, user=self.admin)
+        self.assertEqual(objects_in, objects_out)
+
+        # Get Object List (Empty via Different User)
+        objects_out = self.lst_objects(url_lst_filter, obj_key, user=self.nonadmin)
+        self.assertEqual(set([]), objects_out)
+
+        # Cleanup Assignments
+        for obj_uuid in objects_in:
+            obj = self.delete_object(url_obj, obj_uuid, user=self.admin)
+
+        # Get Object List (Empty)
+        objects_out = self.lst_objects(url_lst_filter, obj_key, user=self.admin)
+        self.assertEqual(set([]), objects_out)
+
+    def test_my_assignments_submissions(self):
 
         # Create Assignment
         asn_uuids = self.create_objects('/assignments/', 'assignments',
