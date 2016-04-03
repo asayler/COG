@@ -487,6 +487,26 @@ class CogsApiMyTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         useruuid = res_obj['useruuid']
         self.assertEqual(useruuid, self.admin_uuid)
 
+    def test_my_isadmin(self):
+
+        # Test True
+        res = self.open_user('GET', '/my/isadmin/', user=self.admin)
+        self.assertEqual(res.status_code, 200)
+        res_obj = json.loads(res.data)
+        self.assertTrue(res_obj)
+        res_keys = res_obj.keys()
+        self.assertEqual(len(res_keys), 1)
+        self.assertTrue(res_obj['isadmin'])
+
+        # Test False
+        res = self.open_user('GET', '/my/isadmin/', user=self.nonadmin)
+        self.assertEqual(res.status_code, 200)
+        res_obj = json.loads(res.data)
+        self.assertTrue(res_obj)
+        res_keys = res_obj.keys()
+        self.assertEqual(len(res_keys), 1)
+        self.assertFalse(res_obj['isadmin'])
+
     def test_my_assignments(self):
 
         # Set URLs

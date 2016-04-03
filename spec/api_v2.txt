@@ -5,6 +5,7 @@ GET     /                                               Welcome Message
 GET     /my/token/                                      Get User Auth Token
 GET     /my/username/                                   Get User Username
 GET     /my/useruuid/                                   Get User User UUID
+GET     /my/isadmin/                                    Return whether or not a user is an admin
 #GET     /my/files/                                      List User's Files
 #GET     /my/reporters/                                  List User's Reporters
 GET     /my/assignments/                                List User's Assignments

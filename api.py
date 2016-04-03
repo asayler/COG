@@ -38,6 +38,7 @@ import perms
 _USERS_KEY = "users"
 _USERNAME_KEY = "username"
 _USERUUID_KEY = "useruuid"
+_ISADMIN_KEY = "isadmin"
 _ADMINS_KEY = "admins"
 _FILES_KEY = "files"
 _REPORTERS_KEY = "reporters"
@@ -453,6 +454,14 @@ def my_username():
 def my_useruuid():
     useruuid = str(flask.g.user.uuid)
     out = {_USERUUID_KEY: useruuid}
+    return flask.jsonify(out)
+
+@app.route("/my/{}/".format(_ISADMIN_KEY), methods=['GET'])
+@httpauth.login_required
+def my_isadmin():
+    useruuid = str(flask.g.user.uuid)
+    admins = auth.list_admins()
+    out = {_ISADMIN_KEY:(useruuid in admins)}
     return flask.jsonify(out)
 
 @app.route("/my/{}/".format(_ASSIGNMENTS_KEY), methods=['GET'])
