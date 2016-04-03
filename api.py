@@ -590,6 +590,25 @@ def list_admins():
 def process_user(obj_uuid):
     return process_object(auth.get_user, obj_uuid)
 
+@app.route("/{}/<usr_uid>/{}/<asn_uid>/{}/".format(_USERS_KEY, _ASSIGNMENTS_KEY, _SUBMISSIONS_KEY),
+           methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def user_assignments_submissions(usr_uid, asn_uid):
+
+    # Get Assignment
+    asn = srv.get_assignment(asn_uid)
+
+    # List Submissions
+    sub_lst = process_objects(asn.list_submissions, None)
+
+    # Filter by user
+    sub_lst = filter_subs_user(uuid.UUID(usr_uid), sub_lst)
+
+    # Build Output
+    out = {_SUBMISSIONS_KEY: sub_lst}
+    return flask.jsonify(out)
+
 @app.route("/{}/<usr_uuid>/{}/".format(_USERS_KEY, _SUBMISSIONS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
