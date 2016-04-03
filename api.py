@@ -609,16 +609,16 @@ def user_assignments_submissions(usr_uid, asn_uid):
     out = {_SUBMISSIONS_KEY: sub_lst}
     return flask.jsonify(out)
 
-@app.route("/{}/<usr_uuid>/{}/".format(_USERS_KEY, _SUBMISSIONS_KEY), methods=['GET'])
+@app.route("/{}/<usr_uid>/{}/".format(_USERS_KEY, _SUBMISSIONS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
-def user_submissions(usr_uuid):
+def user_submissions(usr_uid):
 
-    # Get Submissions
+    # List Submissions
     sub_lst = process_objects(srv.list_submissions, None)
 
     # Filter by user
-    sub_lst = filter_subs_user(uuid.UUID(usr_uuid), sub_lst)
+    sub_lst = filter_subs_user(uuid.UUID(usr_uid), sub_lst)
 
     # Build Output
     out = {_SUBMISSIONS_KEY: sub_lst}
@@ -643,16 +643,16 @@ def user_submissions_runs(usr_uid, sub_uid):
     out = {_RUNS_KEY: run_lst}
     return flask.jsonify(out)
 
-@app.route("/{}/<usr_uuid>/{}/".format(_USERS_KEY, _RUNS_KEY), methods=['GET'])
+@app.route("/{}/<usr_uid>/{}/".format(_USERS_KEY, _RUNS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
-def user_runs(usr_uuid):
+def user_runs(usr_uid):
 
-    # Get Runs
+    # List Runs
     run_lst = process_objects(srv.list_runs, None)
 
     # Filter by user
-    run_lst = filter_runs_user(uuid.UUID(usr_uuid), run_lst)
+    run_lst = filter_runs_user(uuid.UUID(usr_uid), run_lst)
 
     # Build Output
     out = {_RUNS_KEY: run_lst}

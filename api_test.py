@@ -800,10 +800,6 @@ class CogsApiMyTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         objects_out = self.lst_objects(url_lst_filter, obj_key, user=self.nonadmin)
         self.assertEqual(set([]), objects_out)
 
-        # Get Object List (Empty via Different User)
-        objects_out = self.lst_objects(url_lst_filter, obj_key, user=self.admin)
-        self.assertEqual(set([]), objects_out)
-
         # Create Runs
         objects_in = set([])
         for i in range(10):
@@ -815,6 +811,10 @@ class CogsApiMyTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         # Get Object List (Full)
         objects_out = self.lst_objects(url_lst_filter, obj_key, user=self.nonadmin)
         self.assertEqual(objects_in, objects_out)
+
+        # Get Object List (Empty via Different User)
+        objects_out = self.lst_objects(url_lst_filter, obj_key, user=self.admin)
+        self.assertEqual(set([]), objects_out)
 
         # Cleanup Submissions
         for obj_uuid in objects_in:
