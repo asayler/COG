@@ -841,7 +841,7 @@ class CogsApiUserTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         super(CogsApiUserTestCase, self).setUp()
         self.user_url = "/users/"
         self.user_key = "users"
-        self.admin_url = "/admins/"
+        self.admin_url = "/users/admins/"
         self.admin_key = "admins"
 
     def tearDown(self):
@@ -852,6 +852,11 @@ class CogsApiUserTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         self.assertEqual(len(usr_set), 2)
         self.assertTrue(self.admin_uuid in usr_set)
         self.assertTrue(self.nonadmin_uuid in usr_set)
+
+    def test_admin_list(self):
+        adm_set = self.lst_objects(self.admin_url, self.admin_key, user=self.admin)
+        self.assertEqual(len(adm_set), 1)
+        self.assertTrue(self.admin_uuid in adm_set)
 
     def test_user_get(self):
         usr_obj = self.get_object(self.user_url, self.admin_uuid, user=self.admin)
@@ -878,11 +883,6 @@ class CogsApiUserTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         self.assertEqual(len(res_keys), 1)
         useruuid = res_obj['useruuid']
         self.assertEqual(useruuid, self.admin_uuid)
-
-    def test_admin_list(self):
-        adm_set = self.lst_objects(self.admin_url, self.admin_key, user=self.admin)
-        self.assertEqual(len(adm_set), 1)
-        self.assertTrue(self.admin_uuid in adm_set)
 
 ## File Tests ##
 class CogsApiFileTestCase(CogsApiObjectTests, CogsApiTestCase):

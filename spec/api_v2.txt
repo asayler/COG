@@ -20,10 +20,10 @@ GET     /my/submissions/<ID>/runs/                      List User's Runs by Subm
 GET     /my/runs/                                       List User's Runs
 
 GET     /users/                                         List Users
+GET     /users/admins/                                  List Admins
 GET     /users/<ID>/                                    Show User
-GET     /users/useruuid/<username>                      Convert Username to User UUID
-GET     /users/username/<useruuid>                      Convert User UUID to Username
-GET     /admins/                                        List Admins
+GET     /users/useruuid/<username>/                     Convert Username to User UUID
+GET     /users/username/<useruuid>/                     Convert User UUID to Username
 
 GET     /files/                                         List All Files
 POST    /files/                                         Create New File

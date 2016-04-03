@@ -556,6 +556,12 @@ def list_users():
     out = {_USERS_KEY: uid_lst}
     return flask.jsonify(out)
 
+@app.route("/{}/{}/".format(_USERS_KEY, _ADMINS_KEY), methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def list_admins():
+    return process_uuid_list(auth.list_admins, None, None, _ADMINS_KEY)
+
 @app.route("/{}/<obj_uuid>/".format(_USERS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()
@@ -577,12 +583,6 @@ def uuid_to_user(useruuid):
     username = auth.get_user(useruuid)['username']
     out = {_USERNAME_KEY: username}
     return flask.jsonify(out)
-
-@app.route("/{}/".format(_ADMINS_KEY), methods=['GET'])
-@httpauth.login_required
-@auth.requires_auth_route()
-def process_admins():
-    return process_uuid_list(auth.list_admins, None, None, _ADMINS_KEY)
 
 ## File Endpoints ##
 
