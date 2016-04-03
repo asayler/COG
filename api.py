@@ -408,6 +408,17 @@ def filter_runs_owner(run_list):
 
     return runs_by_owner
 
+def filter_runs_user(usr_uuid, run_list):
+
+    runs_by_usr = []
+
+    for run_uuid in run_list:
+        run = srv.get_run(run_uuid)
+        if uuid.UUID(run['owner']) == usr_uuid:
+            runs_by_usr.append(run_uuid)
+
+    return runs_by_usr
+
 def filter_files_owner(fle_list):
 
     fles_by_owner = []
@@ -592,6 +603,21 @@ def user_submissions(usr_uuid):
 
     # Build Output
     out = {_SUBMISSIONS_KEY: sub_lst}
+    return flask.jsonify(out)
+
+@app.route("/{}/<usr_uuid>/{}/".format(_USERS_KEY, _RUNS_KEY), methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def user_runs(usr_uuid):
+
+    # Get Runs
+    run_lst = process_objects(srv.list_runs, None)
+
+    # Filter by user
+    run_lst = filter_runs_user(uuid.UUID(usr_uuid), run_lst)
+
+    # Build Output
+    out = {_RUNS_KEY: run_lst}
     return flask.jsonify(out)
 
 @app.route("/{}/{}/<username>/".format(_USERS_KEY, _USERUUID_KEY), methods=['GET'])
