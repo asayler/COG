@@ -386,6 +386,17 @@ def filter_subs_owner(sub_list):
 
     return subs_by_owner
 
+def filter_subs_user(usr_uuid, sub_list):
+
+    subs_by_usr = []
+
+    for sub_uuid in sub_list:
+        sub = srv.get_submission(sub_uuid)
+        if uuid.UUID(sub['owner']) == usr_uuid:
+            subs_by_usr.append(sub_uuid)
+
+    return subs_by_usr
+
 def filter_runs_owner(run_list):
 
     runs_by_owner = []
@@ -567,6 +578,21 @@ def list_admins():
 @auth.requires_auth_route()
 def process_user(obj_uuid):
     return process_object(auth.get_user, obj_uuid)
+
+@app.route("/{}/<usr_uuid>/{}/".format(_USERS_KEY, _SUBMISSIONS_KEY), methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def user_submissions(usr_uuid):
+
+    # Get Submissions
+    sub_lst = process_objects(srv.list_submissions, None)
+
+    # Filter by user
+    sub_lst = filter_subs_user(uuid.UUID(usr_uuid), sub_lst)
+
+    # Build Output
+    out = {_SUBMISSIONS_KEY: sub_lst}
+    return flask.jsonify(out)
 
 @app.route("/{}/{}/<username>/".format(_USERS_KEY, _USERUUID_KEY), methods=['GET'])
 @httpauth.login_required

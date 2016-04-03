@@ -862,6 +862,53 @@ class CogsApiUserTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         usr_obj = self.get_object(self.user_url, self.admin_uuid, user=self.admin)
         self.assertEqual(usr_obj, self.admin.get_dict())
 
+    def test_user_submissions(self):
+
+        # Create Assignment
+        asn_uuids = self.create_objects('/assignments/', 'assignments',
+                                        cogs.test_common.ASSIGNMENT_TESTDICT,
+                                        json_data=True, user=self.admin)
+        asn_uuid = asn_uuids.pop()
+
+        # Set URLs
+        url_create = '/assignments/{:s}/submissions/'.format(asn_uuid)
+        url_lst_filter_user = '/users/{:s}/submissions/'.format(self.nonadmin_uuid)
+        url_lst_filter_admin = '/users/{:s}/submissions/'.format(self.admin_uuid)
+        url_obj = '/submissions/'
+        obj_key = 'submissions'
+
+        # Get Object List (Empty)
+        objects_out = self.lst_objects(url_lst_filter_user, obj_key, user=self.admin)
+        self.assertEqual(set([]), objects_out)
+
+        # Create Submissions
+        objects_in = set([])
+        for i in range(10):
+            obj_lst = self.create_objects(url_create, obj_key,
+                                          cogs.test_common.SUBMISSION_TESTDICT,
+                                          json_data=True, user=self.nonadmin)
+            for obj_uuid in obj_lst:
+                objects_in.add(obj_uuid)
+
+        # Get Object List (Full)
+        objects_out = self.lst_objects(url_lst_filter_user, obj_key, user=self.admin)
+        self.assertEqual(objects_in, objects_out)
+
+        # Get Object List (Empty via Different User)
+        objects_out = self.lst_objects(url_lst_filter_admin, obj_key, user=self.admin)
+        self.assertEqual(set([]), objects_out)
+
+        # Cleanup Submissions
+        for obj_uuid in objects_in:
+            obj = self.delete_object(url_obj, obj_uuid, user=self.nonadmin)
+
+        # Get Object List (Empty)
+        objects_out = self.lst_objects(url_lst_filter_user, obj_key, user=self.admin)
+        self.assertEqual(set([]), objects_out)
+
+        # Cleanup Assignmnt
+        asn = self.delete_object('/assignments/', asn_uuid, user=self.admin)
+
     def test_user_username_get(self):
         ep = '{}username/{}/'.format(self.user_url, self.admin_uuid)
         res = self.open_user('GET', ep, user=self.admin)
