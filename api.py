@@ -624,6 +624,25 @@ def user_submissions(usr_uuid):
     out = {_SUBMISSIONS_KEY: sub_lst}
     return flask.jsonify(out)
 
+@app.route("/{}/<usr_uid>/{}/<sub_uid>/{}/".format(_USERS_KEY, _SUBMISSIONS_KEY, _RUNS_KEY),
+           methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def user_submissions_runs(usr_uid, sub_uid):
+
+    # Get Submission
+    sub = srv.get_submission(sub_uid)
+
+    # List Runs
+    run_lst = process_objects(sub.list_runs, None)
+
+    # Filter by user
+    run_lst = filter_runs_user(uuid.UUID(usr_uid), run_lst)
+
+    # Build Output
+    out = {_RUNS_KEY: run_lst}
+    return flask.jsonify(out)
+
 @app.route("/{}/<usr_uuid>/{}/".format(_USERS_KEY, _RUNS_KEY), methods=['GET'])
 @httpauth.login_required
 @auth.requires_auth_route()

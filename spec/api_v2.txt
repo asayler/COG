@@ -24,6 +24,7 @@ GET     /users/admins/                                  List Admins
 GET     /users/<ID>/                                    Show User
 GET     /users/<ID>/assignments/<ID>/submissions/       List User's Submissions by Assignment
 GET     /users/<ID>/submissions/                        List User's Submissions
+GET     /users/<ID>/submissions/<ID>/runs/              List User's Runs by Submission
 GET     /users/<ID>/runs/                               List User's Runs
 GET     /users/useruuid/<username>/                     Convert Username to User UUID
 GET     /users/username/<useruuid>/                     Convert User UUID to Username
