@@ -23,6 +23,7 @@ GET     /users/<ID>/submissions/<ID>/runs/              List User's Runs by Subm
 GET     /users/<ID>/runs/                               List User's Runs
 GET     /users/useruuid/<username>/                     Convert Username to User UUID
 GET     /users/username/<useruuid>/                     Convert User UUID to Username
+GET     /users/usernames/                               List Users w/ Usernames
 
 GET     /files/                                         List All Files
 POST    /files/                                         Create New File

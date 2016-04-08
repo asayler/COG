@@ -37,6 +37,7 @@ import perms
 
 _USERS_KEY = "users"
 _USERNAME_KEY = "username"
+_USERNAMES_KEY = "usernames"
 _USERUUID_KEY = "useruuid"
 _ISADMIN_KEY = "isadmin"
 _ADMINS_KEY = "admins"
@@ -576,6 +577,16 @@ def my_runs():
 def list_users():
     uid_lst = process_objects(auth.list_users, None)
     out = {_USERS_KEY: uid_lst}
+    return flask.jsonify(out)
+
+@app.route("/{}/{}/".format(_USERS_KEY, _USERNAMES_KEY), methods=['GET'])
+@httpauth.login_required
+@auth.requires_auth_route()
+def list_users_usernames():
+    usernames = {}
+    for uid in auth.list_users():
+        usernames[uid] = auth.get_user(uid)['username']
+    out = {_USERNAMES_KEY: usernames}
     return flask.jsonify(out)
 
 @app.route("/{}/{}/".format(_USERS_KEY, _ADMINS_KEY), methods=['GET'])

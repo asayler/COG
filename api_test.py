@@ -853,6 +853,17 @@ class CogsApiUserTestCase(CogsApiObjectHelpers, CogsApiTestCase):
         self.assertTrue(self.admin_uuid in usr_set)
         self.assertTrue(self.nonadmin_uuid in usr_set)
 
+    def test_user_list_usernames(self):
+        ep = '{}usernames/'.format(self.user_url)
+        res = self.open_user('GET', ep, user=self.admin)
+        self.assertEqual(res.status_code, 200)
+        res_obj = json.loads(res.data)
+        self.assertTrue(res_obj)
+        res_keys = res_obj.keys()
+        self.assertEqual(len(res_keys), 1)
+        usernames = res_obj['usernames']
+        self.assertEqual(usernames[self.admin_uuid], self.admin['username'])
+
     def test_admin_list(self):
         adm_set = self.lst_objects(self.admin_url, self.admin_key, user=self.admin)
         self.assertEqual(len(adm_set), 1)
