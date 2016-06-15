@@ -53,7 +53,7 @@ def cleanup_nonowner_users(srv, auth):
     deleted = set()
 
     for usr_uid in nonowner:
-        usr = auth.get_owner(usr_uid)
+        usr = auth.get_user(usr_uid)
         mod_time = float(usr.get_dict()['modified_time'])
         if (time.time() - mod_time) > ORPHAN_AGE:
             usr.delete()
