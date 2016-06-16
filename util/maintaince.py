@@ -24,6 +24,7 @@ def cleanup_orphaned_files(srv, test=False):
         fle = srv.get_file(fle_uid)
         mod_time = float(fle['modified_time'])
         if (time.time() - mod_time) > ORPHAN_AGE:
+            print("Removing file {}: {}".format(fle_uid, fle['name']))
             if not test:
                 fle.delete()
             deleted.add(fle_uid)
@@ -41,6 +42,7 @@ def cleanup_orphaned_reporters(srv, test=False):
         rpt = srv.get_reporter(rpt_uid)
         mod_time = float(rpt['modified_time'])
         if (time.time() - mod_time) > ORPHAN_AGE:
+            print("Removing reporter {}".format(rpt_uid))
             if not test:
                 rpt.delete()
             deleted.add(rpt_uid)
@@ -59,6 +61,7 @@ def cleanup_nonowner_users(srv, auth, test=False):
         usr = auth.get_user(usr_uid)
         mod_time = float(usr['modified_time'])
         if (time.time() - mod_time) > ORPHAN_AGE:
+            print("Removing user {}: {}".format(usr_uid, usr['username']))
             if not test:
                 usr.delete()
             deleted.add(usr_uid)
@@ -161,28 +164,16 @@ if __name__ == "__main__":
     print("Cleaning up orphaned files...")
     allfles = srv.list_files()
     orphans = cleanup_orphaned_files(srv, test=test)
-    for fle_uid in orphans:
-        fle = srv.get_file(fle_uid)
-        print("Removed file {}: {}".format(fle_uid, fle['name']))
     print("Cleaned up {} orphaned files of {} total files".format(len(orphans),
                                                                   len(allfles)))
-
     print("Cleaning up orphaned reporters...")
     allrpts = srv.list_reporters()
     orphans = cleanup_orphaned_reporters(srv, test=test)
-    for rpt_uid in orphans:
-        rpt = srv.get_reporter(rpt_uid)
-        print("Removed reporter {}".format(rpt_uid))
     print("Cleaned up {} orphaned reporters of {} total reporters".format(len(orphans),
                                                                           len(allrpts)))
-
     print("Cleaning up non-owner users...")
     allusers = auth.list_users()
     nonowners = cleanup_nonowner_users(srv, auth, test=test)
-    for usr_uid in nonowners:
-        usr = auth.get_user(usr_uid)
-        print("Removed user {}: {}".format(usr_uid, usr['username']))
     print("Cleaned up {} non-owner users of {} total users".format(len(nonowners),
                                                                    len(allusers)))
-
     sys.exit(0)
