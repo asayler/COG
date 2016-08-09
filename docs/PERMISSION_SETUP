@@ -1,3 +1,6 @@
+NOTE: These steps are no longer necessary. Use the util/permissions.py script instead.
+See util/permissions.py --help for usage details.
+
 ### To modify permissions (manually): ###
 
 # 1. From the API server, navigate to the cog-core src directory
