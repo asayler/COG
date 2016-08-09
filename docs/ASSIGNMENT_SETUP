@@ -1,3 +1,5 @@
+NOTE: These stips are no longer necessary. Use the COG CLI (https://github.com/asayler/COG-CLI) insetad.
+
 1. Create New Assignment
 curl -u <token>: -X POST -d '{"name": "<name>", "env": "<env>"}' \
 https://api-cog.cs.colorado.edu/assignments/
