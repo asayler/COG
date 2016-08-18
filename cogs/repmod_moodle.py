@@ -246,8 +246,12 @@ class Reporter(repmod.Reporter):
         logger.info(self._format_msg(msg))
 
         # Check Moodle User
-        if usr['auth'] != 'moodle':
-            msg = "repmod_moodle: Requires user with authmod 'moodle'"
+	if usr['auth'] == 'ldap':
+	    criteria = {'username': usr['username']}
+	    moodle_usr = self.ws.core_user_get_users(**criteria)
+	    usr['moodle_id'] = moodle_usr['id']
+        elif usr['auth'] != 'moodle':
+            msg = "repmod_moodle: Requires user with authmod 'moodle' or 'ldap'"
             logger.error(self._format_msg(msg))
             raise MoodleReporterError(msg)
 
