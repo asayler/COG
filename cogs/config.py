@@ -2,7 +2,7 @@
 
 # Andy Sayler
 # Summer 2014
-# Univerity of Colorado
+# University of Colorado
 
 import ConfigParser
 import os
@@ -24,6 +24,8 @@ SEC_REPMOD_MOODLE = "repmod_moodle"
 config.add_section(SEC_REPMOD_MOODLE)
 SEC_AUTHMOD_MOODLE = "authmod_moodle"
 config.add_section(SEC_AUTHMOD_MOODLE)
+SEC_AUTHMOD_LDAP = "authmod_ldap"
+config.add_section(SEC_AUTHMOD_LDAP)
 SEC_ENV_LOCAL = "env_local"
 config.add_section(SEC_ENV_LOCAL)
 
@@ -90,6 +92,10 @@ REPMOD_MOODLE_USERNAME = os.environ.get('COGS_REPMOD_MOODLE_USERNAME',
                                         config.get(SEC_REPMOD_MOODLE, 'USERNAME'))
 REPMOD_MOODLE_PASSWORD = os.environ.get('COGS_REPMOD_MOODLE_PASSWORD',
                                         config.get(SEC_REPMOD_MOODLE, 'PASSWORD'))
+AUTHMOD_LDAP_HOST = os.environ.get('COGS_AUTHMOD_LDAP_HOST',
+					config.get(SEC_AUTHMOD_LDAP, 'HOST'))
+AUTHMOD_LDAP_BASEDN = os.environ.get('COGS_AUTHMOD_LDAP_BASEDN',
+					config.get(SEC_AUTHMOD_LDAP, 'BASEDN'))
 ENV_LOCAL_LIMIT_TIME_CPU = float(os.environ.get('COGS_ENV_LOCAL_LIMIT_TIME_CPU',
                                                 config.get(SEC_ENV_LOCAL, 'LIMIT_TIME_CPU')))
 ENV_LOCAL_LIMIT_TIME_WALL = float(os.environ.get('COGS_ENV_LOCAL_LIMIT_TIME_WALL',
