@@ -20,6 +20,7 @@ import backend_redis as backend
 
 import authmod_moodle
 import authmod_test
+import authmod_ldap
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -209,6 +210,13 @@ class Auth(object):
                 return user_data
             else:
                 return False
+	elif auth_mod == 'ldap':
+	    authenticator = authmod_ldap.Authenticator()
+	    ldap_user = authenticator.auth_user(username, password)
+	    if ldap_user:
+
+	    else:
+		return False
         else:
             raise AuthenticationError("Unknown auth_mod: {:s}".format(auth_mod))
 
