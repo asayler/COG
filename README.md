@@ -51,6 +51,12 @@ $ make reqs
  without virtualenvs, you'll need to append `sudo` to the command
  above.*
 
+Setup conf:
+
+```
+$ sudo make conf
+```
+
 Testing
 -------
 
