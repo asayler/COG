@@ -8,6 +8,9 @@ branches:
     - master
 services:
   - redis-server
+before_install:
+  - sudo apt-get -q update
+  - sudo apt-get install -y libffi-dev libssl-dev dos2unix libldap2-dev libsasl2-dev
 install:
   - make reqs
 before_script:
