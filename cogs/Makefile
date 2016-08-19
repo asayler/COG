@@ -24,7 +24,6 @@ all:
 
 reqs: $(REQUIRMENTS)
 	$(PIP) install -r "$<" -U
-	sudo apt-get install dos2unix
 
 test:
 	$(EXPORT_PATH) && $(PYTHON) -m unittest discover -v -p $(UNITTEST_PATTERN)
