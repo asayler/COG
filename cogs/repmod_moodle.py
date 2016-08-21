@@ -252,8 +252,17 @@ class Reporter(repmod.Reporter):
             raise MoodleReporterError(msg)
 
         # Extract Vars
-        criteria = {'username': usr['username']}
-        moodle_usr = self.ws.core_user_get_users(**criteria)
+        result = self.ws.core_user_get_users([('username', usr['username'])])
+        moodle_usr_list = result['users']
+        if len(moodle_usr_list) < 1:
+            msg = "repmod_moodle: Username not found"
+            logger.error(self._format_msg(msg))
+            raise MoodleReporterError(msg)
+        elif len(moodle_usr_list) > 1:
+            msg = "repmod_moodle: multiple users found"
+            logger.error(self._format_msg(msg))
+            raise MoodleReporterError(msg)
+        moodle_usr = moodle_usr_list[0]
         usr['moodle_id'] = moodle_usr['id']
         usr_id = int(usr['moodle_id'])
         grade = float(grade)
