@@ -263,8 +263,7 @@ class Reporter(repmod.Reporter):
             logger.error(self._format_msg(msg))
             raise MoodleReporterError(msg)
         moodle_usr = moodle_usr_list[0]
-        usr['moodle_id'] = moodle_usr['id']
-        usr_id = int(usr['moodle_id'])
+        usr_id = int(moodle_usr['id'])
         grade = float(grade)
 
         # Check Due Date

@@ -214,15 +214,13 @@ class Auth(object):
 	    authenticator = authmod_ldap.Authenticator()
 	    ldap_user = authenticator.auth_user(username, password)
 	    if ldap_user:
-		user_data = {}
-		user_data['username'] = str(ldap_user['uid'])
-		user_data['first'] = str(ldap_user['cn'])
-		user_data['last'] = str(ldap_user['cn'])
-		user_data['email'] = str(ldap_user['email'])
-		return user_data
+		    user_data = {}
+		    user_data['username'] = str(ldap_user['uid'])
+		    user_data['first'] = str(ldap_user['cn']) ## cn contains full name
+		    user_data['email'] = str(ldap_user['email'])
+		    return user_data
 	    else:
-		return False
-        else:
+		    return False
             raise AuthenticationError("Unknown auth_mod: {:s}".format(auth_mod))
 
     def get_extra_user_schema(self, auth_mod):
