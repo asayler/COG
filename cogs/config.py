@@ -2,7 +2,7 @@
 
 # Andy Sayler
 # Summer 2014
-# Univerity of Colorado
+# University of Colorado
 
 import ConfigParser
 import os
@@ -24,6 +24,8 @@ SEC_REPMOD_MOODLE = "repmod_moodle"
 config.add_section(SEC_REPMOD_MOODLE)
 SEC_AUTHMOD_MOODLE = "authmod_moodle"
 config.add_section(SEC_AUTHMOD_MOODLE)
+SEC_AUTHMOD_LDAP = "authmod_ldap"
+config.add_section(SEC_AUTHMOD_LDAP)
 SEC_ENV_LOCAL = "env_local"
 config.add_section(SEC_ENV_LOCAL)
 
@@ -45,6 +47,8 @@ config.set(SEC_LOGGING, 'ENABLED', "True")
 config.set(SEC_LOGGING, 'PATH', "{:s}/logs".format(ROOT_PATH))
 config.set(SEC_AUTHMOD_MOODLE, 'HOST', None)
 config.set(SEC_AUTHMOD_MOODLE, 'SERVICE', None)
+config.set(SEC_AUTHMOD_LDAP, 'HOST', None)
+config.set(SEC_AUTHMOD_LDAP, 'BASEDN', None)
 config.set(SEC_REPMOD_MOODLE, 'HOST', None)
 config.set(SEC_REPMOD_MOODLE, 'SERVICE', None)
 config.set(SEC_REPMOD_MOODLE, 'USERNAME', None)
@@ -79,21 +83,25 @@ LOGGING_ENABLED = LOGGING_ENABLED.lower() in ['true', 'yes', 'on', '1']
 LOGGING_PATH = os.environ.get('COGS_LOGGING_PATH', config.get(SEC_LOGGING, 'PATH'))
 LOGGING_PATH = os.path.realpath(LOGGING_PATH)
 AUTHMOD_MOODLE_HOST = os.environ.get('COGS_AUTHMOD_MOODLE_HOST',
-                                     config.get(SEC_AUTHMOD_MOODLE, 'HOST'))
+                                    config.get(SEC_AUTHMOD_MOODLE, 'HOST'))
 AUTHMOD_MOODLE_SERVICE = os.environ.get('COGS_AUTHMOD_MOODLE_SERVICE',
-                                        config.get(SEC_AUTHMOD_MOODLE, 'SERVICE'))
+                                    config.get(SEC_AUTHMOD_MOODLE, 'SERVICE'))
 REPMOD_MOODLE_HOST = os.environ.get('COGS_REPMOD_MOODLE_HOST',
                                     config.get(SEC_REPMOD_MOODLE, 'HOST'))
 REPMOD_MOODLE_SERVICE = os.environ.get('COGS_REPMOD_MOODLE_SERVICE',
-                                       config.get(SEC_REPMOD_MOODLE, 'SERVICE'))
+                                    config.get(SEC_REPMOD_MOODLE, 'SERVICE'))
 REPMOD_MOODLE_USERNAME = os.environ.get('COGS_REPMOD_MOODLE_USERNAME',
-                                        config.get(SEC_REPMOD_MOODLE, 'USERNAME'))
+                                    config.get(SEC_REPMOD_MOODLE, 'USERNAME'))
 REPMOD_MOODLE_PASSWORD = os.environ.get('COGS_REPMOD_MOODLE_PASSWORD',
-                                        config.get(SEC_REPMOD_MOODLE, 'PASSWORD'))
+                                    config.get(SEC_REPMOD_MOODLE, 'PASSWORD'))
+AUTHMOD_LDAP_HOST = os.environ.get('COGS_AUTHMOD_LDAP_HOST',
+                                    config.get(SEC_AUTHMOD_LDAP, 'HOST'))
+AUTHMOD_LDAP_BASEDN = os.environ.get('COGS_AUTHMOD_LDAP_BASEDN',
+                                    config.get(SEC_AUTHMOD_LDAP, 'BASEDN'))
 ENV_LOCAL_LIMIT_TIME_CPU = float(os.environ.get('COGS_ENV_LOCAL_LIMIT_TIME_CPU',
-                                                config.get(SEC_ENV_LOCAL, 'LIMIT_TIME_CPU')))
+                                    config.get(SEC_ENV_LOCAL, 'LIMIT_TIME_CPU')))
 ENV_LOCAL_LIMIT_TIME_WALL = float(os.environ.get('COGS_ENV_LOCAL_LIMIT_TIME_WALL',
-                                                 config.get(SEC_ENV_LOCAL, 'LIMIT_TIME_WALL')))
+                                    config.get(SEC_ENV_LOCAL, 'LIMIT_TIME_WALL')))
 
 ENV_LOCAL_SANDBOX_SCRIPT = config.get(SEC_ENV_LOCAL, 'SANDBOX_SCRIPT')
 ENV_LOCAL_USER = config.get(SEC_ENV_LOCAL, 'USER')

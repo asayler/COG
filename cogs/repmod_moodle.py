@@ -245,14 +245,25 @@ class Reporter(repmod.Reporter):
         messages.append(msg)
         logger.info(self._format_msg(msg))
 
-        # Check Moodle User
-        if usr['auth'] != 'moodle':
-            msg = "repmod_moodle: Requires user with authmod 'moodle'"
+        # Check Moodle or LDAP User
+        if usr['auth'] != 'moodle' and usr['auth'] != 'ldap':
+            msg = "repmod_moodle: Requires user with authmod 'moodle' or 'ldap'"
             logger.error(self._format_msg(msg))
             raise MoodleReporterError(msg)
 
         # Extract Vars
-        usr_id = int(usr['moodle_id'])
+        result = self.ws.core_user_get_users([('username', usr['username'])])
+        moodle_usr_list = result['users']
+        if len(moodle_usr_list) < 1:
+            msg = "repmod_moodle: Username not found"
+            logger.error(self._format_msg(msg))
+            raise MoodleReporterError(msg)
+        elif len(moodle_usr_list) > 1:
+            msg = "repmod_moodle: multiple users found"
+            logger.error(self._format_msg(msg))
+            raise MoodleReporterError(msg)
+        moodle_usr = moodle_usr_list[0]
+        usr_id = int(moodle_usr['id'])
         grade = float(grade)
 
         # Check Due Date
