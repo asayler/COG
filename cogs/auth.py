@@ -193,8 +193,6 @@ class Auth(object):
                 user_data['first'] = str(moodle_user.first)
                 user_data['last'] = str(moodle_user.last)
                 user_data['email'] = str(moodle_user.email)
-                user_data['moodle_id'] = str(moodle_user.userid)
-                user_data['moodle_token'] = str(moodle_user.token)
                 return user_data
             else:
                 return False

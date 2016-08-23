@@ -10,7 +10,7 @@ import moodle.ws
 
 import config
 
-EXTRA_USER_SCHEMA = ['moodle_id', 'moodle_token']
+EXTRA_USER_SCHEMA = []
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
