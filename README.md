@@ -1,7 +1,7 @@
 COG: Computerized Online Grading
 ================================
 
-By [Andy Sayler](https://www.andysayler.com)
+By [Andy Sayler](https://www.andysayler.com) and [Others](CONTRIBUTORS)  
 University of Colorado, Boulder
 
 About
