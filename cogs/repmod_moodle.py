@@ -309,6 +309,7 @@ class Reporter(repmod.Reporter):
                 msg += "is greater than current grade ({:.2f}): ".format(grade)
                 msg += "No grade written to Moodle"
                 logger.warning(self._format_msg(msg))
+                messages.append(msg)
                 return grade, "\n".join(messages)
 
         # Limit Output
