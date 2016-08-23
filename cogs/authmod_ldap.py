@@ -40,8 +40,8 @@ class Authenticator(object):
         l.set_option(ldap.OPT_REFERRALS, 0)
         l.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
         l.set_option(ldap.OPT_X_TLS,ldap.OPT_X_TLS_DEMAND)
-        l.set_option( ldap.OPT_X_TLS_DEMAND, True )
-        l.set_option( ldap.OPT_DEBUG_LEVEL, 255 )
+        l.set_option(ldap.OPT_X_TLS_DEMAND, True)
+        l.set_option(ldap.OPT_DEBUG_LEVEL, 255)
 
         search_filter = "uid="+username
 
