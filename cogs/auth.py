@@ -16,6 +16,8 @@ import logging
 
 import flask
 
+import config
+
 import backend_redis as backend
 
 import authmod_moodle
@@ -31,8 +33,6 @@ logger.addHandler(logging.NullHandler())
 
 _USER_SCHEMA = ['username', 'first', 'last', 'auth', 'token', 'email']
 _GROUP_SCHEMA = ['name']
-
-DEFAULT_AUTHMOD = 'ldap'
 
 SPECIAL_GROUP_ADMIN = '99999999-9999-9999-9999-999999999999'
 SPECIAL_GROUP_ANY = '00000000-0000-0000-0000-000000000000'
@@ -330,7 +330,7 @@ class User(backend.SchemaHash, backend.TSHash, backend.Hash):
 
         # Set Authmod
         if not authmod:
-            authmod = DEFAULT_AUTHMOD
+            authmod = config.CORE_DEFAULT_AUTHMOD
 
         # Confirm user does not exist
         if auth.auth_userpass(username, password) is not None:
