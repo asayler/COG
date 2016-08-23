@@ -1,0 +1,52 @@
+# COG Sample Config File
+#
+# Copy to cog.conf for use
+#
+# Most of these values may be commented out
+# to fall back to the default values found in
+# ./cogs/config.py.
+
+[core]
+max_output: 1000000
+default_authmod: ldap
+
+[redis]
+host: localhost
+port: 6379
+db: 4
+password: <Redis Password>
+
+[filestorage]
+# Path should be r/w by COG user, but not by others
+path: <COG Path>
+
+[logging]
+enabled: True
+# Directory must exist
+path: /var/log/cog
+
+[repmod_moodle]
+host: https://<Moodle Host>
+service: Grading_Serv
+# User must have grading read and write privileges to courses
+# (e.g. Instructor-level access) and must also have the
+# "moodle/user:viewalldetails" permission.
+username: cog-test
+password: <Moodle Password>
+
+# If LDAP authmod is being used
+[authmod_ldap]
+host: ldaps://<address>:636
+basedn: ou=users,dc=cs,dc=colorado.edu
+
+# If Moodle authmod is being used
+[authmod_moodle]
+host: https://<Moodle Host>
+service: Grading_Serv
+
+[env_local]
+# Requires ability for COG user to passwordless sudo to nobody:nogroup
+user: nobody
+group: nogroup
+limit_time_cpu: 1
+limit_time_wall: 10
