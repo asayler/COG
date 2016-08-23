@@ -36,7 +36,7 @@ $ make git
 Install apt reqs:
 
 ```
-$ sudo apt-get install -y libffi-dev libssl-dev dos2unix
+$ sudo apt-get install -y libffi-dev libssl-dev libldap2-dev libsasl2-dev dos2unix
 $ sudo apt-get install -y redis-server
 ```
 
