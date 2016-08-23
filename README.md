@@ -57,6 +57,27 @@ Setup conf:
 $ sudo make conf
 ```
 
+Administration
+-----------
+
+To list, add, or remove admins:
+
+```
+$ cd <COG Repo>
+$ export PYTHONPATH=$(pwd)
+$ ./util/permissions.py <command>
+```
+* Note: Users must already exits in the COG DB before they can be added as admins.
+  Have them log into COG at least once prior to elevating their access. *
+
+To run garabage collection:
+
+```
+$ cd <COG Repo>
+$ export PYTHONPATH=$(pwd)
+$ ./util/maintaince.py
+```
+
 Testing
 -------
 
