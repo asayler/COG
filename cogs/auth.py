@@ -210,24 +210,34 @@ class Auth(object):
                 return user_data
             else:
                 return False
-	elif auth_mod == 'ldap':
-	    authenticator = authmod_ldap.Authenticator()
-	    ldap_user = authenticator.auth_user(username, password)
-	    if ldap_user:
-		    user_data = {}
-		    user_data['username'] = str(ldap_user['uid'])
-		    user_data['first'] = str(ldap_user['cn']) ## cn contains full name
-		    user_data['email'] = str(ldap_user['email'])
-		    return user_data
-	    else:
-		    return False
+        elif auth_mod == 'ldap':
+            authenticator = authmod_ldap.Authenticator()
+            ldap_user = authenticator.auth_user(username, password)
+            if ldap_user:
+                user_data = {}
+                user_data['username'] = str(ldap_user['uid'])
+                # cn contains full name -- attempt to split
+                full_name=str(ldap_user['cn']).split()
+                if len(full_name) == 0:
+                    user_data['first'] = ""
+                    user_data['last'] = ""
+                elif len(full_name) == 1:
+                    user_data['first'] = full_name[0]
+                    user_data['last'] = ""
+                else:
+                    user_data['first'] = " ".join(full_name[:-1])
+                    user_data['last'] = full_name[-1]
+                user_data['email'] = str(ldap_user['email'])
+                return user_data
+            else:
+                return False
             raise AuthenticationError("Unknown auth_mod: {:s}".format(auth_mod))
 
     def get_extra_user_schema(self, auth_mod):
         if auth_mod == 'moodle':
             return authmod_moodle.EXTRA_USER_SCHEMA
-	elif auth_mod == 'ldap':
-	    return authmod_ldap.EXTRA_USER_SCHEMA
+        elif auth_mod == 'ldap':
+            return authmod_ldap.EXTRA_USER_SCHEMA
         elif auth_mod == 'test':
             return authmod_test.EXTRA_USER_SCHEMA
         else:
