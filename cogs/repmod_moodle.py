@@ -136,7 +136,7 @@ class Reporter(repmod.Reporter):
                 if asn:
                     break
             else:
-                msg = "repmod_moodle: cm_id '{}' not found".format(cmid)
+                msg = "repmod_moodle: cm_id '{}' not found".format(cm_id)
                 logger.error(self._format_msg(msg))
                 raise MoodleReporterError(msg)
         else:
