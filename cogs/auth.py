@@ -213,9 +213,9 @@ class Auth(object):
             ldap_user = authenticator.auth_user(username, password)
             if ldap_user:
                 user_data = {}
-                user_data['username'] = str(ldap_user['uid'])
+                user_data['username'] = str(ldap_user['uid'][0])
                 # cn contains full name -- attempt to split
-                full_name=str(ldap_user['cn']).split()
+                full_name=str(ldap_user['cn'][0]).split()
                 if len(full_name) == 0:
                     user_data['first'] = ""
                     user_data['last'] = ""
@@ -225,7 +225,7 @@ class Auth(object):
                 else:
                     user_data['first'] = " ".join(full_name[:-1])
                     user_data['last'] = full_name[-1]
-                user_data['email'] = str(ldap_user['email'])
+                user_data['email'] = str(ldap_user['email'][0])
                 return user_data
             else:
                 return False
